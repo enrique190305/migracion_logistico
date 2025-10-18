@@ -7,6 +7,8 @@ const Login = ({ onLogin }) => {
     contraseña: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -15,15 +17,45 @@ const Login = ({ onLogin }) => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simular delay de autenticación
-    setTimeout(() => {
-      onLogin(formData);
+    // Validaciones básicas
+    if (!formData.usuario.trim()) {
+      setError('Por favor ingrese su usuario');
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+    
+    if (!formData.contraseña) {
+      setError('Por favor ingrese su contraseña');
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      console.log('🔐 Login: Enviando credenciales al AuthManager...');
+      
+      // Llamar a la función de login del AuthManager
+      const result = await onLogin(formData);
+      
+      if (!result.success) {
+        setError(result.message || 'Error en el login');
+      }
+      // Si es exitoso, AuthManager manejará la redirección
+      
+    } catch (error) {
+      console.error('💥 Login: Error crítico:', error);
+      setError('Error interno del sistema. Intente nuevamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -74,10 +106,29 @@ const Login = ({ onLogin }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
+            {/* Mostrar errores si los hay */}
+            {error && (
+              <div className="error-message" style={{
+                backgroundColor: '#ffebee',
+                color: '#c62828',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                border: '1px solid #ffcdd2',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>❌</span>
+                {error}
+              </div>
+            )}
+
             <div className="form-group">
               <label htmlFor="usuario">Usuario</label>
-              <div className="input-container">
-                <span className="input-icon">👤</span>
+              <div className={`input-container ${isLoading ? 'disabled' : ''}`}>
+                <span className="input-icon">👥</span>
                 <input
                   type="text"
                   id="usuario"
@@ -85,29 +136,49 @@ const Login = ({ onLogin }) => {
                   value={formData.usuario}
                   onChange={handleChange}
                   required
-                  placeholder=""
+                  placeholder="Ingrese su usuario"
+                  disabled={isLoading}
+                  autoComplete="username"
                 />
               </div>
             </div>
 
             <div className="form-group">
               <label htmlFor="contraseña">Contraseña</label>
-              <div className="input-container">
-                <span className="input-icon">🔒</span>
+              <div className={`input-container ${isLoading ? 'disabled' : ''}`} style={{ position: 'relative' }}>
+                <span className="input-icon">🔐</span>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   id="contraseña"
                   name="contraseña"
                   value={formData.contraseña}
                   onChange={handleChange}
                   required
                   placeholder="Ingrese su contraseña"
+                  disabled={isLoading}
+                  autoComplete="current-password"
                 />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="password-toggle"
+                  disabled={isLoading}
+                  title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPassword ? 'HIDE' : 'SHOW'}
+                </button>
               </div>
             </div>
 
             <button type="submit" className="login-button" disabled={isLoading}>
-              {isLoading ? 'INICIANDO SESIÓN...' : 'INICIAR SESIÓN'}
+              {isLoading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>⏳</span>
+                  INICIANDO SESIÓN...
+                </span>
+              ) : (
+                'INICIAR SESIÓN'
+              )}
             </button>
           </form>
 

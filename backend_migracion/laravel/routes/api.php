@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OrdenCompraServicioController;
 use App\Http\Controllers\OrdenPedidoController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +78,14 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/check-admin', [AuthController::class, 'checkAdminPermissions']);
+    });
+
+    // Rutas del Dashboard (para todos los usuarios autenticados)
+    Route::prefix('dashboard')->group(function () {
+        Route::get('/stats', [DashboardController::class, 'getStats']);
+        Route::get('/activity', [DashboardController::class, 'getRecentActivity']);
+        Route::get('/alerts', [DashboardController::class, 'getSystemAlerts']);
+        Route::get('/summary', [DashboardController::class, 'getDashboardSummary']);
     });
 
     // Rutas para usuarios generales (tanto admin como usuario)

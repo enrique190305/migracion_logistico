@@ -188,37 +188,95 @@
   position: relative;
   display: flex;
   align-items: center;
+  background: white;
+  border: 2px solid #ecf0f1;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.input-container:focus-within {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .input-icon {
-  position: absolute;
-  left: 15px;
-  font-size: 1.1rem;
-  color: #bdc3c7;
-  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 45px;
+  height: 52px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-right: 1px solid #ecf0f1;
+  font-size: 1.2rem;
+  color: #6c757d;
+  font-weight: 500;
+  flex-shrink: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
 .input-container input {
-  width: 100%;
-  padding: 15px 15px 15px 45px;
-  border: 2px solid #ecf0f1;
-  border-radius: 8px;
+  flex: 1;
+  padding: 15px 15px;
+  border: none;
   font-size: 1rem;
   color: #2c3e50;
-  background: white;
-  transition: all 0.3s ease;
+  background: transparent;
+  outline: none;
   box-sizing: border-box;
 }
 
 .input-container input:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
 .input-container input::placeholder {
-  color: #bdc3c7;
+  color: #95a5a6;
   font-size: 0.95rem;
+}
+
+.input-container.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.input-container.disabled input {
+  cursor: not-allowed;
+}
+
+/* Botón para mostrar/ocultar contraseña */
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+  border: 1px solid #dee2e6;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  color: #6c757d;
+  z-index: 3;
+  min-width: 40px;
+  text-align: center;
+}
+
+.password-toggle:hover {
+  background: linear-gradient(135deg, #dee2e6, #e9ecef);
+  border-color: #adb5bd;
+  color: #495057;
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.password-toggle:active {
+  transform: translateY(-50%) scale(0.95);
 }
 
 /* Botón de Login */

@@ -1,13 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import './Layout.css';
 
-const Layout = ({ onLogout }) => {
+const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // Usar el usuario de props si está disponible, sino del localStorage
+  const user = propUser || JSON.parse(localStorage.getItem('user') || '{}');
+  
+  // Verificar si el usuario es administrador
+  const isAdmin = user?.permissions?.is_admin || user?.id_rol === 1 || false;
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -61,6 +66,8 @@ const Layout = ({ onLogout }) => {
         onToggle={toggleSidebar}
         activeModule={activeModule}
         onModuleChange={handleModuleChange}
+        isAdmin={isAdmin}
+        user={user}
       />
       
       <div className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -83,8 +90,11 @@ const Layout = ({ onLogout }) => {
                 <span>👤</span>
               </div>
               <div className="user-details">
-                <span className="user-name">{user.name || 'admin'}</span>
-                <span className="user-role">{user.role || 'Administrador'}</span>
+                <span className="user-name">{user.nombre || user.name || 'Usuario'}</span>
+                <span className="user-role">
+                  {user.role || user.permissions?.role_name || (isAdmin ? 'Administrador' : 'Usuario')}
+                  {!isAdmin && ' (Acceso Limitado)'}
+                </span>
               </div>
             </div>
             <button className="logout-btn" onClick={onLogout}>
@@ -108,7 +118,12 @@ const Layout = ({ onLogout }) => {
             <span>✅ Sistema operativo</span>
           </div>
           <div className="session-info">
-            <span>Usuario: {user.name || 'admin'} ({user.role || 'Administrador'}) | Sesión iniciada: 16/10/2025 19:41</span>
+            <span>
+              Usuario: {user.nombre || user.name || 'Usuario'} 
+              ({user.role || user.permissions?.role_name || (isAdmin ? 'Administrador' : 'Usuario')})
+              {!isAdmin && ' - Acceso Limitado'}
+              | Sesión iniciada: {new Date().toLocaleDateString('es-PE')}
+            </span>
           </div>
         </footer>
       </div>
@@ -118,8 +133,107 @@ const Layout = ({ onLogout }) => {
 
 // Componente para el Dashboard de resumen
 const DashboardContent = () => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Importar el servicio del dashboard
+  const { dashboardService } = require('../../services/authService');
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        console.log('🔄 Cargando datos del dashboard...');
+        setIsLoading(true);
+        setError(null);
+
+        // Cargar datos del dashboard
+        const result = await dashboardService.getDashboardSummary();
+        
+        if (result.success) {
+          setDashboardData(result.data);
+          console.log('✅ Dashboard cargado exitosamente');
+        } else {
+          // Usar datos de fallback si hay error pero tenemos datos
+          if (result.data) {
+            setDashboardData(result.data);
+            setError('Datos cargados con conectividad limitada');
+          } else {
+            throw new Error(result.message);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Error al cargar dashboard:', err);
+        setError('Error al cargar datos del dashboard');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
+  // Mostrar loading
+  if (isLoading) {
+    return (
+      <div className="dashboard-content">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '400px',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          <div style={{ fontSize: '48px' }}>📊</div>
+          <h3>Cargando Dashboard...</h3>
+          <p>Obteniendo datos del sistema...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar error si no hay datos
+  if (!dashboardData && error) {
+    return (
+      <div className="dashboard-content">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '400px',
+          flexDirection: 'column',
+          gap: '20px',
+          color: '#e74c3c'
+        }}>
+          <div style={{ fontSize: '48px' }}>⚠️</div>
+          <h3>Error al cargar Dashboard</h3>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = dashboardData?.stats || {};
+  const activities = dashboardData?.recent_activity || [];
+  const alerts = dashboardData?.alerts || [];
+
   return (
     <div className="dashboard-content">
+      {/* Mostrar alerta de conectividad si hay problemas */}
+      {error && (
+        <div style={{
+          backgroundColor: '#fff3cd',
+          color: '#856404',
+          padding: '10px 15px',
+          borderRadius: '5px',
+          marginBottom: '20px',
+          border: '1px solid #ffeaa7'
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
+
       <div className="dashboard-grid">
         {/* Estadísticas principales */}
         <div className="stats-section">
@@ -128,28 +242,28 @@ const DashboardContent = () => {
             <div className="stat-card blue">
               <div className="stat-icon">📦</div>
               <div className="stat-info">
-                <h3>267</h3>
+                <h3>{stats.productos_registrados || 0}</h3>
                 <p>Productos Registrados</p>
               </div>
             </div>
             <div className="stat-card green">
               <div className="stat-icon">📋</div>
               <div className="stat-info">
-                <h3>9</h3>
+                <h3>{stats.proyectos_activos || 0}</h3>
                 <p>Proyectos Activos</p>
               </div>
             </div>
             <div className="stat-card purple">
               <div className="stat-icon">📈</div>
               <div className="stat-info">
-                <h3>27</h3>
+                <h3>{stats.movimientos_mes || 0}</h3>
                 <p>Movimientos este mes</p>
               </div>
             </div>
             <div className="stat-card orange">
               <div className="stat-icon">👥</div>
               <div className="stat-info">
-                <h3>15</h3>
+                <h3>{stats.personal_activo || 0}</h3>
                 <p>Personal Activo</p>
               </div>
             </div>
@@ -160,30 +274,27 @@ const DashboardContent = () => {
         <div className="activity-section">
           <h2>Actividad Reciente</h2>
           <div className="activity-list">
-            <div className="activity-item">
-              <div className="activity-icon">📥</div>
-              <div className="activity-info">
-                <h4>Ingreso de materiales</h4>
-                <p>Se registraron 50 unidades de cemento</p>
-                <span className="activity-time">Hace 2 horas</span>
+            {activities.length > 0 ? (
+              activities.map((activity, index) => (
+                <div key={index} className="activity-item">
+                  <div className="activity-icon">{activity.icon}</div>
+                  <div className="activity-info">
+                    <h4>{activity.title}</h4>
+                    <p>{activity.description}</p>
+                    <span className="activity-time">{activity.time}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="activity-item">
+                <div className="activity-icon">📋</div>
+                <div className="activity-info">
+                  <h4>Sin actividad reciente</h4>
+                  <p>No hay movimientos registrados</p>
+                  <span className="activity-time">Ahora</span>
+                </div>
               </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-icon">📋</div>
-              <div className="activity-info">
-                <h4>Nueva orden de compra</h4>
-                <p>OC-2025-001 creada para proveedor ABC</p>
-                <span className="activity-time">Hace 4 horas</span>
-              </div>
-            </div>
-            <div className="activity-item">
-              <div className="activity-icon">✅</div>
-              <div className="activity-info">
-                <h4>Orden aprobada</h4>
-                <p>OC-2025-002 aprobada y enviada</p>
-                <span className="activity-time">Hace 6 horas</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -191,20 +302,25 @@ const DashboardContent = () => {
         <div className="alerts-section">
           <h2>Alertas del Sistema</h2>
           <div className="alerts-list">
-            <div className="alert-item warning">
-              <div className="alert-icon">⚠️</div>
-              <div className="alert-info">
-                <h4>Stock bajo</h4>
-                <p>5 productos por debajo del stock mínimo</p>
+            {alerts.length > 0 ? (
+              alerts.map((alert, index) => (
+                <div key={index} className={`alert-item ${alert.type}`}>
+                  <div className="alert-icon">{alert.icon}</div>
+                  <div className="alert-info">
+                    <h4>{alert.title}</h4>
+                    <p>{alert.description}</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="alert-item info">
+                <div className="alert-icon">✅</div>
+                <div className="alert-info">
+                  <h4>Sistema operativo</h4>
+                  <p>No hay alertas pendientes</p>
+                </div>
               </div>
-            </div>
-            <div className="alert-item info">
-              <div className="alert-icon">ℹ️</div>
-              <div className="alert-info">
-                <h4>Mantenimiento programado</h4>
-                <p>Actualización del sistema el 20/10/2025</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

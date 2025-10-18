@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange }) => {
+const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin, user }) => {
   const [expandedCategories, setExpandedCategories] = useState({
     compras: true,
     materiales: false,
@@ -9,6 +9,8 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange }) => {
     personal: false,
     aprobacion: false
   });
+
+  console.log('🔍 Sidebar: Usuario es admin?', isAdmin);
 
   const menuCategories = [
     {
@@ -58,9 +60,10 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange }) => {
     },
     {
       id: 'aprobacion',
-      title: 'Aprobación',
+      title: 'Aprobación (Solo Admin)',
       icon: '✅',
       color: '#8e44ad',
+      adminOnly: true, // Marcar como solo para administradores
       items: [
         { id: 'aprobacion-ordenes', title: 'Aprobación de Órdenes', icon: '✅' }
       ]
@@ -76,6 +79,14 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange }) => {
   };
 
   const handleItemClick = (itemId) => {
+    // Verificar si es un módulo que requiere permisos de admin
+    const restrictedModules = ['aprobacion-ordenes'];
+    
+    if (restrictedModules.includes(itemId) && !isAdmin) {
+      alert('🚫 Acceso Denegado\n\nEste módulo está disponible únicamente para usuarios con rol de Administrador.\n\nContacte al administrador del sistema si necesita acceso.');
+      return;
+    }
+    
     onModuleChange(itemId);
   };
 
@@ -111,41 +122,71 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange }) => {
         </div>
 
         {/* Categorías del Menú */}
-        {menuCategories.map(category => (
-          <div key={category.id} className="menu-category">
-            <div 
-              className={`category-header ${expandedCategories[category.id] ? 'expanded' : ''}`}
-              onClick={() => toggleCategory(category.id)}
-              style={{ '--category-color': category.color }}
-            >
-              <span className="category-icon">{category.icon}</span>
-              {!isCollapsed && (
-                <>
-                  <span className="category-title">{category.title}</span>
-                  <span className="expand-icon">
-                    {expandedCategories[category.id] ? '▼' : '▶'}
-                  </span>
-                </>
+        {menuCategories.map(category => {
+          // Ocultar categorías solo para admin si el usuario no es admin
+          if (category.adminOnly && !isAdmin) {
+            return null;
+          }
+
+          return (
+            <div key={category.id} className="menu-category">
+              <div 
+                className={`category-header ${expandedCategories[category.id] ? 'expanded' : ''} ${category.adminOnly && !isAdmin ? 'disabled' : ''}`}
+                onClick={() => toggleCategory(category.id)}
+                style={{ '--category-color': category.color }}
+              >
+                <span className="category-icon">{category.icon}</span>
+                {!isCollapsed && (
+                  <>
+                    <span className="category-title">{category.title}</span>
+                    <span className="expand-icon">
+                      {expandedCategories[category.id] ? '▼' : '▶'}
+                    </span>
+                  </>
+                )}
+              </div>
+              
+              {!isCollapsed && expandedCategories[category.id] && (
+                <div className="category-items">
+                  {category.items.map(item => (
+                    <div 
+                      key={item.id}
+                      className={`menu-item ${activeModule === item.id ? 'active' : ''}`}
+                      onClick={() => handleItemClick(item.id)}
+                    >
+                      <span className="menu-icon">{item.icon}</span>
+                      <span className="menu-title">{item.title}</span>
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            
-            {!isCollapsed && expandedCategories[category.id] && (
-              <div className="category-items">
-                {category.items.map(item => (
-                  <div 
-                    key={item.id}
-                    className={`menu-item ${activeModule === item.id ? 'active' : ''}`}
-                    onClick={() => handleItemClick(item.id)}
-                  >
-                    <span className="menu-icon">{item.icon}</span>
-                    <span className="menu-title">{item.title}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
+
+      {/* Información del Usuario */}
+      {!isCollapsed && (
+        <div className="user-info-sidebar">
+          <div className="user-status">
+            <div className="user-avatar-small">
+              <span>{isAdmin ? '👑' : '👤'}</span>
+            </div>
+            <div className="user-details-small">
+              <span className="user-name-small">{user?.nombre || 'Usuario'}</span>
+              <span className={`user-role-small ${isAdmin ? 'admin' : 'user'}`}>
+                {isAdmin ? 'Administrador' : 'Usuario'}
+              </span>
+            </div>
+          </div>
+          {!isAdmin && (
+            <div className="access-notice">
+              <span className="notice-icon">ℹ️</span>
+              <span className="notice-text">Acceso limitado - Algunos módulos restringidos</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Ayuda */}
       <div className="sidebar-footer">
