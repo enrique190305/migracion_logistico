@@ -36,6 +36,10 @@ Route::prefix('ordenes')->group(function () {
     Route::get('/correlativo-oc', [OrdenCompraServicioController::class, 'obtenerSiguienteCorrelativoOC']);
     Route::get('/correlativo-os', [OrdenCompraServicioController::class, 'obtenerSiguienteCorrelativoOS']);
     
+    // Órdenes de Pedido (para OC/OS)
+    Route::get('/ordenes-pedido-pendientes', [OrdenCompraServicioController::class, 'obtenerOrdenesPedidoPendientes']);
+    Route::get('/ordenes-pedido/{id}', [OrdenCompraServicioController::class, 'obtenerOrdenPedido']);
+    
     // Guardar órdenes
     Route::post('/compra', [OrdenCompraServicioController::class, 'guardarOrdenCompra']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);

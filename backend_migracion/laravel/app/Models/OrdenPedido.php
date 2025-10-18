@@ -17,6 +17,7 @@ class OrdenPedido extends Model
         'fecha_pedido',
         'observacion',
         'estado',
+        'estado_compra',
         'prioridad',
         'fecha_requerida',
         'usuario_solicitante',

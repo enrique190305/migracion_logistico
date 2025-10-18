@@ -16,6 +16,7 @@ class OrdenCompra extends Model
     protected $fillable = [
         'correlativo',
         'id_empresa',
+        'id_orden_pedido',
         'id_proveedor',
         'id_forma_pago',
         'id_moneda',
@@ -53,6 +54,11 @@ class OrdenCompra extends Model
     public function moneda()
     {
         return $this->belongsTo(Moneda::class, 'id_moneda', 'id_moneda');
+    }
+
+    public function ordenPedido()
+    {
+        return $this->belongsTo(OrdenPedido::class, 'id_orden_pedido', 'id_orden_pedido');
     }
 
     public function detalles()

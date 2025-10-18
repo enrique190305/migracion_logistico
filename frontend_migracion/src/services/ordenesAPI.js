@@ -128,6 +128,19 @@ export const obtenerSiguienteCorrelativoOC = () => fetchAPI('/correlativo-oc');
  */
 export const obtenerSiguienteCorrelativoOS = () => fetchAPI('/correlativo-os');
 
+/**
+ * Obtener órdenes de pedido en estado PENDIENTE
+ * @returns {Promise<Array>} Lista de órdenes de pedido pendientes
+ */
+export const obtenerOrdenesPedidoPendientes = () => fetchAPI('/ordenes-pedido-pendientes');
+
+/**
+ * Obtener detalle de una orden de pedido específica
+ * @param {number} id - ID de la orden de pedido
+ * @returns {Promise<Object>} Datos completos de la orden de pedido
+ */
+export const obtenerOrdenPedido = (id) => fetchAPI(`/ordenes-pedido/${id}`);
+
 // ============================================
 // ENDPOINTS DE CREACIÓN (POST)
 // ============================================
@@ -162,6 +175,8 @@ export default {
   obtenerMonedas,
   obtenerSiguienteCorrelativoOC,
   obtenerSiguienteCorrelativoOS,
+  obtenerOrdenesPedidoPendientes,
+  obtenerOrdenPedido,
   
   // Creación
   guardarOrdenCompra,

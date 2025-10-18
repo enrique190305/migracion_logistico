@@ -29,36 +29,14 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 -- =====================================================
--- PASO 2: ELIMINAR COLUMNA id_empresa DE PROYECTO_ALMACEN
--- =====================================================
-
--- Verificar si existe la columna
-SET @columna_existe = (
-  SELECT COUNT(*) 
-  FROM INFORMATION_SCHEMA.COLUMNS 
-  WHERE TABLE_SCHEMA = 'oc_compra' 
-    AND TABLE_NAME = 'PROYECTO_ALMACEN' 
-    AND COLUMN_NAME = 'id_empresa'
-);
-
-SET @sql_drop_column = IF(@columna_existe > 0,
-  'ALTER TABLE PROYECTO_ALMACEN DROP COLUMN id_empresa',
-  'SELECT "Columna id_empresa no existe, continuando..." AS Info'
-);
-
-PREPARE stmt FROM @sql_drop_column;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- =====================================================
--- PASO 3: CREAR TABLA INTERMEDIA EMPRESA_PROYECTO
+-- PASO 2: CREAR TABLA INTERMEDIA EMPRESA_PROYECTO
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS EMPRESA_PROYECTO (
   id_empresa_proyecto INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT 'ID único de la relación',
   id_empresa INT(11) NOT NULL COMMENT 'FK: Empresa participante',
   id_proyecto INT(11) NOT NULL COMMENT 'FK: Proyecto',
-  fecha_asignacion DATE NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de asignación',
+  fecha_asignacion DATE NULL COMMENT 'Fecha de asignación',
   observaciones TEXT NULL COMMENT 'Observaciones sobre la participación',
   fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del registro',
   usuario_creacion VARCHAR(50) NULL COMMENT 'Usuario que creó el registro',
@@ -87,56 +65,73 @@ CREATE TABLE IF NOT EXISTS EMPRESA_PROYECTO (
   COMMENT='Tabla intermedia N:N entre empresas y proyectos';
 
 -- =====================================================
--- PASO 4: MIGRAR DATOS EXISTENTES (si los hay)
+-- PASO 3: MIGRAR DATOS EXISTENTES
 -- =====================================================
 
--- Si ya tenías datos en PROYECTO_ALMACEN con id_empresa, 
--- puedes migrarlos manualmente aquí. Ejemplo:
+-- Migrar todos los proyectos existentes con su empresa actual
+-- a la tabla intermedia EMPRESA_PROYECTO
+-- IMPORTANTE: Esto se hace ANTES de eliminar la columna id_empresa
+INSERT INTO EMPRESA_PROYECTO (id_empresa, id_proyecto, fecha_asignacion, observaciones)
+SELECT 
+  id_empresa,
+  id_proyecto,
+  COALESCE(fecha_creacion, CURDATE()) AS fecha_asignacion,
+  'Migrado automáticamente desde PROYECTO_ALMACEN' AS observaciones
+FROM PROYECTO_ALMACEN
+WHERE id_empresa IS NOT NULL
+ON DUPLICATE KEY UPDATE 
+  fecha_asignacion = VALUES(fecha_asignacion),
+  observaciones = VALUES(observaciones);
 
--- INSERT INTO EMPRESA_PROYECTO (id_empresa, id_proyecto, porcentaje_participacion, es_principal)
--- SELECT id_empresa, id_proyecto, 100.00, 1
--- FROM PROYECTO_ALMACEN_OLD
--- WHERE id_empresa IS NOT NULL;
+-- Verificar migración
+SELECT 
+  COUNT(*) AS 'Total Proyectos Migrados',
+  id_empresa AS 'Empresa'
+FROM EMPRESA_PROYECTO
+GROUP BY id_empresa;
 
 -- =====================================================
--- PASO 5: DATOS DE EJEMPLO
+-- PASO 4: ELIMINAR COLUMNA id_empresa DE PROYECTO_ALMACEN
 -- =====================================================
 
--- Asignar proyectos existentes a empresas
--- Proyecto 1: INCAVO
-INSERT INTO EMPRESA_PROYECTO (id_empresa, id_proyecto, fecha_asignacion)
-VALUES (1, 1, CURDATE())
-ON DUPLICATE KEY UPDATE fecha_asignacion = CURDATE();
-
--- Proyecto 2: Compartido entre INCAVO y GAIA
-INSERT INTO EMPRESA_PROYECTO (id_empresa, id_proyecto, fecha_asignacion)
-VALUES 
-  (1, 2, CURDATE()),
-  (2, 2, CURDATE())
-ON DUPLICATE KEY UPDATE fecha_asignacion = CURDATE();
-
--- Proyecto 3: GAIA
-INSERT INTO EMPRESA_PROYECTO (id_proyecto, id_empresa, fecha_asignacion)
-SELECT p.id_proyecto, 2, CURDATE()
-FROM PROYECTO_ALMACEN p
-WHERE p.nombre_proyecto LIKE '%GAIA%'
-  AND NOT EXISTS (
-    SELECT 1 FROM EMPRESA_PROYECTO ep 
-    WHERE ep.id_proyecto = p.id_proyecto
-  )
-LIMIT 1
-ON DUPLICATE KEY UPDATE fecha_asignacion = CURDATE();
-
--- Asignar todos los demás proyectos sin asignación a empresa 1 por defecto
-INSERT INTO EMPRESA_PROYECTO (id_proyecto, id_empresa, fecha_asignacion)
-SELECT p.id_proyecto, 1, CURDATE()
-FROM PROYECTO_ALMACEN p
-WHERE NOT EXISTS (
-  SELECT 1 FROM EMPRESA_PROYECTO ep WHERE ep.id_proyecto = p.id_proyecto
+-- Ahora sí, después de migrar los datos, eliminamos la columna
+-- Verificar si existe la columna
+SET @columna_existe = (
+  SELECT COUNT(*) 
+  FROM INFORMATION_SCHEMA.COLUMNS 
+  WHERE TABLE_SCHEMA = 'oc_compra' 
+    AND TABLE_NAME = 'PROYECTO_ALMACEN' 
+    AND COLUMN_NAME = 'id_empresa'
 );
 
+SET @sql_drop_column = IF(@columna_existe > 0,
+  'ALTER TABLE PROYECTO_ALMACEN DROP COLUMN id_empresa',
+  'SELECT "Columna id_empresa no existe, continuando..." AS Info'
+);
+
+PREPARE stmt FROM @sql_drop_column;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- =====================================================
--- PASO 6: MODIFICAR ORDEN_PEDIDO
+-- PASO 5: DATOS ADICIONALES (Opcional)
+-- =====================================================
+
+-- Si necesitas crear relaciones adicionales (proyectos compartidos), puedes hacerlo aquí
+-- Ejemplo: Asignar el proyecto 2 también a la empresa 2 (GAIA)
+-- INSERT INTO EMPRESA_PROYECTO (id_empresa, id_proyecto, fecha_asignacion, observaciones)
+-- VALUES (2, 2, CURDATE(), 'Proyecto compartido con GAIA')
+-- ON DUPLICATE KEY UPDATE fecha_asignacion = CURDATE();
+
+-- Ejemplo: Proyecto compartido entre dos empresas
+-- INSERT INTO EMPRESA_PROYECTO (id_empresa, id_proyecto, fecha_asignacion, observaciones)
+-- VALUES 
+--   (1, 9, CURDATE(), 'INCAVO - Empresa principal'),
+--   (2, 9, CURDATE(), 'GAIA - Empresa colaboradora')
+-- ON DUPLICATE KEY UPDATE fecha_asignacion = CURDATE();
+
+-- =====================================================
+-- PASO 6: MODIFICAR ORDEN_PEDIDO (Opcional)
 -- =====================================================
 
 -- Ahora ORDEN_PEDIDO solo necesita id_proyecto
@@ -170,7 +165,7 @@ ORDER BY p.nombre_proyecto, e.razon_social;
 SELECT 
   p.nombre_proyecto,
   COUNT(DISTINCT ep.id_empresa) AS Num_Empresas,
-  GROUP_CONCAT(e.razon_social ORDER BY ep.porcentaje_participacion DESC SEPARATOR ', ') AS Empresas_Participantes
+  GROUP_CONCAT(e.razon_social ORDER BY e.razon_social SEPARATOR ', ') AS Empresas_Participantes
 FROM PROYECTO_ALMACEN p
 LEFT JOIN EMPRESA_PROYECTO ep ON p.id_proyecto = ep.id_proyecto
 LEFT JOIN EMPRESA e ON ep.id_empresa = e.id_empresa

@@ -11,6 +11,9 @@ use App\Models\OrdenCompra;
 use App\Models\OrdenServicio;
 use App\Models\DetalleOrdenCompra;
 use App\Models\DetalleOrdenServicio;
+use App\Models\OrdenPedido;
+use App\Models\DetalleOrdenPedido;
+use App\Models\ProyectoAlmacen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -217,6 +220,95 @@ class OrdenCompraServicioController extends Controller
     }
 
     /**
+     * Obtener órdenes de pedido en estado PENDIENTE
+     */
+    public function obtenerOrdenesPedidoPendientes()
+    {
+        try {
+            $ordenes = OrdenPedido::with(['empresa', 'proyecto', 'detalles.producto'])
+                ->where('estado', 'PENDIENTE')
+                ->orderBy('fecha_pedido', 'desc')
+                ->get()
+                ->map(function ($orden) {
+                    return [
+                        'id_orden_pedido' => $orden->id_orden_pedido,
+                        'correlativo' => $orden->correlativo,
+                        'id_empresa' => $orden->id_empresa,
+                        'razon_social' => $orden->empresa ? $orden->empresa->razon_social : null,
+                        'id_proyecto' => $orden->id_proyecto,
+                        'proyecto_nombre' => $orden->proyecto ? $orden->proyecto->nombre_proyecto : null,
+                        'proyecto_bodega' => $orden->proyecto ? $orden->proyecto->bodega : null,
+                        'fecha_pedido' => $orden->fecha_pedido,
+                        'observacion' => $orden->observacion,
+                        'detalles' => $orden->detalles->map(function ($detalle) {
+                            return [
+                                'id_detalle' => $detalle->id_detalle_pedido,
+                                'codigo_producto' => $detalle->codigo_producto,
+                                'descripcion' => $detalle->producto ? $detalle->producto->descripcion : null,
+                                'unidad_medida' => $detalle->producto ? $detalle->producto->unidad : null,
+                                'cantidad_solicitada' => $detalle->cantidad_solicitada,
+                                'observacion' => $detalle->observacion
+                            ];
+                        })
+                    ];
+                });
+
+            return response()->json($ordenes, 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener órdenes de pedido pendientes',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener detalle de una orden de pedido específica
+     */
+    public function obtenerOrdenPedido($id)
+    {
+        try {
+            $orden = OrdenPedido::with(['empresa', 'proyecto', 'detalles.producto'])
+                ->where('id_orden_pedido', $id)
+                ->first();
+
+            if (!$orden) {
+                return response()->json([
+                    'error' => 'Orden de pedido no encontrada'
+                ], 404);
+            }
+
+            return response()->json([
+                'id_orden_pedido' => $orden->id_orden_pedido,
+                'correlativo' => $orden->correlativo,
+                'id_empresa' => $orden->id_empresa,
+                'razon_social' => $orden->empresa ? $orden->empresa->razon_social : null,
+                'id_proyecto' => $orden->id_proyecto,
+                'proyecto_nombre' => $orden->proyecto ? $orden->proyecto->nombre_proyecto : null,
+                'proyecto_bodega' => $orden->proyecto ? $orden->proyecto->bodega : null,
+                'fecha_pedido' => $orden->fecha_pedido,
+                'observacion' => $orden->observacion,
+                'estado' => $orden->estado,
+                'detalles' => $orden->detalles->map(function ($detalle) {
+                    return [
+                        'id_detalle' => $detalle->id_detalle_pedido,
+                        'codigo_producto' => $detalle->codigo_producto,
+                        'descripcion' => $detalle->producto ? $detalle->producto->descripcion : null,
+                        'unidad_medida' => $detalle->producto ? $detalle->producto->unidad : null,
+                        'cantidad_solicitada' => $detalle->cantidad_solicitada,
+                        'observacion' => $detalle->observacion
+                    ];
+                })
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener orden de pedido',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Obtener siguiente correlativo para Orden de Compra
      */
     public function obtenerSiguienteCorrelativoOC()
@@ -274,11 +366,13 @@ class OrdenCompraServicioController extends Controller
 
     /**
      * Guardar Orden de Compra con sus detalles
+     * Incluye lógica de compra directa (<= 500) y vinculación con Orden de Pedido
      */
     public function guardarOrdenCompra(Request $request)
     {
         // Validación de datos
         $validator = Validator::make($request->all(), [
+            'id_orden_pedido' => 'required|integer|exists:ORDEN_PEDIDO,id_orden_pedido',
             'correlativo' => 'required|string|max:20',
             'id_empresa' => 'required|integer|exists:EMPRESA,id_empresa',
             'id_proveedor' => 'required|integer|exists:PROVEEDOR,id_proveedor',
@@ -286,7 +380,8 @@ class OrdenCompraServicioController extends Controller
             'fecha_oc' => 'required|date',
             'fecha_requerida' => 'nullable|date',
             'igv' => 'required|numeric|min:0',
-            'total_general' => 'required|numeric|min:500', // MÍNIMO 500
+            'total_general' => 'required|numeric|min:0',
+            'es_compra_directa' => 'nullable|boolean',
             'detalles' => 'required|array|min:1',
             'detalles.*.codigo_producto' => 'required|string|exists:PRODUCTO,codigo_producto',
             'detalles.*.cantidad' => 'required|integer|min:1',
@@ -301,57 +396,97 @@ class OrdenCompraServicioController extends Controller
                 'errores' => $validator->errors()
             ], 422);
         }
-        
-        // VALIDACIÓN ADICIONAL: Verificar monto mínimo de 500
-        if ($request->total_general < 500) {
-            return response()->json([
-                'error' => 'Monto mínimo no alcanzado',
-                'mensaje' => 'El total de la orden debe ser mayor o igual a S/. 500.00'
-            ], 422);
-        }
 
         DB::beginTransaction();
 
         try {
-            // Crear Orden de Compra
-            $ordenCompra = OrdenCompra::create([
-                'correlativo' => $request->correlativo,
-                'id_empresa' => $request->id_empresa,
-                'id_proveedor' => $request->id_proveedor,
-                'id_moneda' => $request->id_moneda,
-                'fecha_oc' => $request->fecha_oc,
-                'fecha_requerida' => $request->fecha_requerida,
-                'igv' => $request->igv,
-                'total_general' => $request->total_general,
-                'estado' => 'pendiente',
-                'usuario_creacion' => $request->usuario ?? 'sistema',
-                'fecha_creacion' => now()
-            ]);
+            // Validar que la orden de pedido esté en estado PENDIENTE
+            $ordenPedido = OrdenPedido::where('id_orden_pedido', $request->id_orden_pedido)
+                ->where('estado', 'PENDIENTE')
+                ->first();
 
-            // Crear detalles de la orden
-            foreach ($request->detalles as $detalle) {
-                DetalleOrdenCompra::create([
-                    'id_oc' => $ordenCompra->id_oc,
-                    'codigo_producto' => $detalle['codigo_producto'],
-                    'cantidad' => $detalle['cantidad'],
-                    'precio_unitario' => $detalle['precio_unitario'],
-                    'subtotal' => $detalle['subtotal'],
-                    'total' => $detalle['total']
-                ]);
+            if (!$ordenPedido) {
+                return response()->json([
+                    'error' => 'Orden de pedido no válida',
+                    'mensaje' => 'La orden de pedido no existe o ya fue procesada'
+                ], 422);
             }
 
-            DB::commit();
+            // Determinar si es compra directa (total <= 500)
+            $esCompraDirecta = $request->total_general <= 500;
 
-            return response()->json([
-                'mensaje' => 'Orden de compra creada exitosamente',
-                'id_oc' => $ordenCompra->id_oc,
-                'correlativo' => $ordenCompra->correlativo
-            ], 201);
+            if ($esCompraDirecta) {
+                // COMPRA DIRECTA: Registrar directamente en Kardex/Ingreso Directo
+                // TODO: Implementar lógica de ingreso directo al Kardex
+                
+                // Actualizar estado de orden de pedido
+                $ordenPedido->update([
+                    'estado_compra' => 'COMPRA_DIRECTA',
+                    'estado' => 'PROCESADA',
+                    'fecha_modificacion' => now(),
+                    'usuario_modificacion' => $request->usuario ?? 'sistema'
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'mensaje' => 'Compra directa registrada exitosamente',
+                    'tipo' => 'COMPRA_DIRECTA',
+                    'total' => $request->total_general,
+                    'orden_pedido' => $ordenPedido->correlativo
+                ], 201);
+
+            } else {
+                // ORDEN DE COMPRA NORMAL (total > 500)
+                $ordenCompra = OrdenCompra::create([
+                    'correlativo' => $request->correlativo,
+                    'id_empresa' => $request->id_empresa,
+                    'id_orden_pedido' => $request->id_orden_pedido,
+                    'id_proveedor' => $request->id_proveedor,
+                    'id_moneda' => $request->id_moneda,
+                    'fecha_oc' => $request->fecha_oc,
+                    'fecha_requerida' => $request->fecha_requerida,
+                    'igv' => $request->igv,
+                    'total_general' => $request->total_general,
+                    'estado' => 'pendiente',
+                    'usuario_creacion' => $request->usuario ?? 'sistema',
+                    'fecha_creacion' => now()
+                ]);
+
+                // Crear detalles de la orden
+                foreach ($request->detalles as $detalle) {
+                    DetalleOrdenCompra::create([
+                        'id_oc' => $ordenCompra->id_oc,
+                        'codigo_producto' => $detalle['codigo_producto'],
+                        'cantidad' => $detalle['cantidad'],
+                        'precio_unitario' => $detalle['precio_unitario'],
+                        'subtotal' => $detalle['subtotal'],
+                        'total' => $detalle['total']
+                    ]);
+                }
+
+                // Actualizar estado de orden de pedido
+                $ordenPedido->update([
+                    'estado_compra' => 'OC_GENERADA',
+                    'fecha_modificacion' => now(),
+                    'usuario_modificacion' => $request->usuario ?? 'sistema'
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    'mensaje' => 'Orden de compra creada exitosamente',
+                    'tipo' => 'ORDEN_COMPRA',
+                    'id_oc' => $ordenCompra->id_oc,
+                    'correlativo' => $ordenCompra->correlativo,
+                    'orden_pedido' => $ordenPedido->correlativo
+                ], 201);
+            }
 
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json([
-                'error' => 'Error al guardar orden de compra',
+                'error' => 'Error al procesar la orden',
                 'mensaje' => $e->getMessage()
             ], 500);
         }
