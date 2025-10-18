@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
+import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import './Layout.css';
 
 const Layout = ({ onLogout }) => {
@@ -20,6 +21,8 @@ const Layout = ({ onLogout }) => {
     switch (activeModule) {
       case 'dashboard':
         return <DashboardContent />;
+      case 'orden-pedido':
+        return <OrdenPedido />;
       case 'ordenes-compra':
         return <OrdenesCompraServicio />;
       case 'registro-productos':
@@ -228,6 +231,7 @@ const ModuleContent = ({ title, icon }) => {
 // Función helper para obtener títulos de módulos
 const getModuleTitle = (moduleId) => {
   const titles = {
+    'orden-pedido': 'Orden de Pedido',
     'ordenes-compra': 'Órdenes de Compra/Servicio',
     'registro-productos': 'Registro de Productos',
     'eliminar-oc': 'Eliminar OC/OS',

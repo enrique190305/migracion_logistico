@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OrdenCompraServicioController;
+use App\Http\Controllers\OrdenPedidoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +37,29 @@ Route::prefix('ordenes')->group(function () {
     // Guardar órdenes
     Route::post('/compra', [OrdenCompraServicioController::class, 'guardarOrdenCompra']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Órdenes de Pedido
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('pedidos')->group(function () {
+    
+    // Catálogos
+    Route::get('/empresas', [OrdenPedidoController::class, 'getEmpresas']);
+    Route::get('/proyectos/{id_empresa}', [OrdenPedidoController::class, 'getProyectosByEmpresa']);
+    Route::get('/productos', [OrdenPedidoController::class, 'getProductos']);
+    
+    // Correlativo
+    Route::get('/correlativo', [OrdenPedidoController::class, 'getCorrelativo']);
+    
+    // CRUD Órdenes de Pedido
+    Route::get('/', [OrdenPedidoController::class, 'index']);
+    Route::post('/', [OrdenPedidoController::class, 'store']);
+    Route::get('/{id}', [OrdenPedidoController::class, 'show']);
+    Route::delete('/{id}', [OrdenPedidoController::class, 'destroy']);
 });
 
 // Rutas públicas (sin autenticación)

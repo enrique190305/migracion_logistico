@@ -17,6 +17,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange }) => {
       icon: '🛒',
       color: '#4a90e2',
       items: [
+        { id: 'orden-pedido', title: 'Orden de Pedido', icon: '📝' },
         { id: 'ordenes-compra', title: 'Órdenes de Compra/Servicio', icon: '📋' },
         { id: 'registro-productos', title: 'Registro de Productos', icon: '📦' },
         { id: 'eliminar-oc', title: 'Eliminar OC/OS', icon: '🗑️' }

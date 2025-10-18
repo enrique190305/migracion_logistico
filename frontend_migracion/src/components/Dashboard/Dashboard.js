@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './Dashboard.css';
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
+import OrdenPedido from '../OrdenPedido/OrdenPedido';
 
 const Dashboard = ({ onLogout }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -9,6 +10,12 @@ const Dashboard = ({ onLogout }) => {
 
   const menuItems = [
     // Fila 1 - Azul (Órdenes y Productos)
+    { 
+      title: 'Orden de Pedido', 
+      icon: '📝', 
+      color: '#667eea',
+      category: 'pedido'
+    },
     { 
       title: 'Órdenes de Compra/Servicio', 
       icon: '📋', 
@@ -142,6 +149,7 @@ const Dashboard = ({ onLogout }) => {
 
         {/* Renderizar el módulo correspondiente */}
         <main className="dashboard-main-modulo">
+          {moduloActivo === 'pedido' && <OrdenPedido />}
           {moduloActivo === 'compras' && <OrdenesCompraServicio />}
           {moduloActivo === 'productos' && <div className="modulo-placeholder">Módulo de Registro de Productos (En desarrollo)</div>}
           {moduloActivo === 'eliminar' && <div className="modulo-placeholder">Módulo de Eliminar OC/OS (En desarrollo)</div>}
