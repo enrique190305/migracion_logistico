@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
+import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import './Layout.css';
 
 const Layout = ({ onLogout }) => {
@@ -20,7 +21,7 @@ const Layout = ({ onLogout }) => {
       case 'dashboard':
         return <DashboardContent />;
       case 'ordenes-compra':
-        return <ModuleContent title="Órdenes de Compra/Servicio" icon="📋" />;
+        return <OrdenesCompraServicio />;
       case 'registro-productos':
         return <ModuleContent title="Registro de Productos" icon="📦" />;
       case 'eliminar-oc':

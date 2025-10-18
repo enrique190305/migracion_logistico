@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Dashboard.css';
+import OrdenesCompraServicio from '../OrdenesCompraServicio';
 
 const Dashboard = ({ onLogout }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const [vistaActual, setVistaActual] = useState('menu'); // 'menu' o nombre del módulo
+  const [moduloActivo, setModuloActivo] = useState(null);
 
   const menuItems = [
     // Fila 1 - Azul (Órdenes y Productos)
@@ -96,8 +99,66 @@ const Dashboard = ({ onLogout }) => {
 
   const handleMenuClick = (item) => {
     console.log(`Navegando a: ${item.title}`);
-    // Aquí se implementará la navegación entre módulos
+    setVistaActual('modulo');
+    setModuloActivo(item.category);
   };
+
+  const volverAlMenu = () => {
+    setVistaActual('menu');
+    setModuloActivo(null);
+  };
+
+  // Si estamos en una vista de módulo, mostrar el componente correspondiente
+  if (vistaActual === 'modulo') {
+    return (
+      <div className="dashboard-container">
+        {/* Header con botón de volver */}
+        <header className="dashboard-header">
+          <div className="header-left">
+            <button className="btn-volver" onClick={volverAlMenu}>
+              ← Volver al Menú
+            </button>
+            <div className="logo-container">
+              <div className="logo-icon">PM</div>
+              <div className="logo-text">
+                <h1>Sistema de Compras y Almacén</h1>
+              </div>
+            </div>
+          </div>
+          
+          <div className="header-right">
+            <div className="user-info">
+              <div className="user-avatar">👤</div>
+              <div className="user-details">
+                <span className="user-name">{user.name || 'admin'}</span>
+                <span className="user-role">{user.role || 'Administrador'}</span>
+              </div>
+            </div>
+            <button className="logout-btn" onClick={onLogout}>
+              <span className="logout-icon">🚪</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Renderizar el módulo correspondiente */}
+        <main className="dashboard-main-modulo">
+          {moduloActivo === 'compras' && <OrdenesCompraServicio />}
+          {moduloActivo === 'productos' && <div className="modulo-placeholder">Módulo de Registro de Productos (En desarrollo)</div>}
+          {moduloActivo === 'eliminar' && <div className="modulo-placeholder">Módulo de Eliminar OC/OS (En desarrollo)</div>}
+          {moduloActivo === 'ingreso' && <div className="modulo-placeholder">Módulo de Ingreso de Materiales (En desarrollo)</div>}
+          {moduloActivo === 'traslado' && <div className="modulo-placeholder">Módulo de Traslado de Materiales (En desarrollo)</div>}
+          {moduloActivo === 'salida' && <div className="modulo-placeholder">Módulo de Salida de Materiales (En desarrollo)</div>}
+          {moduloActivo === 'proveedores' && <div className="modulo-placeholder">Módulo de Registro de Proveedores (En desarrollo)</div>}
+          {moduloActivo === 'editar' && <div className="modulo-placeholder">Módulo de Editar Proveedores (En desarrollo)</div>}
+          {moduloActivo === 'proyecto' && <div className="modulo-placeholder">Módulo de Registro de Proyecto (En desarrollo)</div>}
+          {moduloActivo === 'personal' && <div className="modulo-placeholder">Módulo de Registro de Personal (En desarrollo)</div>}
+          {moduloActivo === 'kardex' && <div className="modulo-placeholder">Módulo de Kardex (En desarrollo)</div>}
+          {moduloActivo === 'familia' && <div className="modulo-placeholder">Módulo de Registro de Familia (En desarrollo)</div>}
+          {moduloActivo === 'aprobacion' && <div className="modulo-placeholder">Módulo de Aprobación de Órdenes (En desarrollo)</div>}
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">
