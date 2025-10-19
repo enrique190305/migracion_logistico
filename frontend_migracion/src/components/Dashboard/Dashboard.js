@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './Dashboard.css';
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import OrdenPedido from '../OrdenPedido/OrdenPedido';
+import Aprobacion from '../Aprobacion/Aprobacion'; 
+import Kardex from '../Kardex/Kardex ';
 
 const Dashboard = ({ onLogout }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -160,9 +162,9 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'editar' && <div className="modulo-placeholder">Módulo de Editar Proveedores (En desarrollo)</div>}
           {moduloActivo === 'proyecto' && <div className="modulo-placeholder">Módulo de Registro de Proyecto (En desarrollo)</div>}
           {moduloActivo === 'personal' && <div className="modulo-placeholder">Módulo de Registro de Personal (En desarrollo)</div>}
-          {moduloActivo === 'kardex' && <div className="modulo-placeholder">Módulo de Kardex (En desarrollo)</div>}
+          {moduloActivo === 'kardex' && <Kardex />}
           {moduloActivo === 'familia' && <div className="modulo-placeholder">Módulo de Registro de Familia (En desarrollo)</div>}
-          {moduloActivo === 'aprobacion' && <div className="modulo-placeholder">Módulo de Aprobación de Órdenes (En desarrollo)</div>}
+          {moduloActivo === 'aprobacion' && <Aprobacion />}
         </main>
       </div>
     );

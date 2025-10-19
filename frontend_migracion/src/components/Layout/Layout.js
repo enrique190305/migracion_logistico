@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import OrdenPedido from '../OrdenPedido/OrdenPedido';
+import Aprobacion from '../Aprobacion/Aprobacion';
+import Kardex from '../Kardex/Kardex';
 import './Layout.css';
 
 const Layout = ({ onLogout, user: propUser }) => {
@@ -49,11 +51,11 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'registro-personal':
         return <ModuleContent title="Registro de Personal" icon="👥" />;
       case 'kardex':
-        return <ModuleContent title="Kardex" icon="📈" />;
+        return <Kardex />;
       case 'registro-familia':
         return <ModuleContent title="Registro de Familia" icon="👥" />;
       case 'aprobacion-ordenes':
-        return <ModuleContent title="Aprobación de Órdenes" icon="✅" />;
+        return <Aprobacion />;
       default:
         return <DashboardContent />;
     }

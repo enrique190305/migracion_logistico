@@ -1,8 +1,10 @@
 <?php
 
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OrdenCompraServicioController;
+use App\Http\Controllers\Api\AprobacionController; // ✅ AGREGAR ESTA LÍNEA
 use App\Http\Controllers\OrdenPedidoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -66,6 +68,22 @@ Route::prefix('pedidos')->group(function () {
     Route::post('/', [OrdenPedidoController::class, 'store']);
     Route::get('/{id}', [OrdenPedidoController::class, 'show']);
     Route::delete('/{id}', [OrdenPedidoController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - APROBACIÓN (✅ CORREGIDO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('aprobacion')->group(function () {
+    // ✅ CAMBIADO A AprobacionController
+    Route::get('/ordenes-compra', [AprobacionController::class, 'listarOrdenesCompraPendientes']);
+    Route::get('/ordenes-servicio', [AprobacionController::class, 'listarOrdenesServicioPendientes']);
+    Route::get('/ordenes-compra/{id}/detalles', [AprobacionController::class, 'obtenerDetallesOrdenCompra']);
+    Route::get('/ordenes-servicio/{id}/detalles', [AprobacionController::class, 'obtenerDetallesOrdenServicio']);
+    Route::put('/ordenes-compra/{id}/estado', [AprobacionController::class, 'actualizarEstadoOrdenCompra']);
+    Route::put('/ordenes-servicio/{id}/estado', [AprobacionController::class, 'actualizarEstadoOrdenServicio']);
 });
 
 // Rutas públicas (sin autenticación)
@@ -135,9 +153,7 @@ Route::middleware(['jwt.auth'])->group(function () {
                     'success' => true,
                     'message' => 'Lista de aprobaciones pendientes',
                     'data' => [
-                        'pending_approvals' => [
-                            // Aquí irían las aprobaciones pendientes
-                        ]
+                        'pending_approvals' => []
                     ]
                 ]);
             });
@@ -164,9 +180,7 @@ Route::middleware(['jwt.auth'])->group(function () {
                     'success' => true,
                     'message' => 'Lista de usuarios del sistema',
                     'data' => [
-                        'users' => [
-                            // Aquí iría la lista de usuarios
-                        ]
+                        'users' => []
                     ]
                 ]);
             });
