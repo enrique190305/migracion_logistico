@@ -9,7 +9,7 @@ class OrdenCompra extends Model
 {
     use HasFactory;
 
-    protected $table = 'ORDEN_COMPRA';
+    protected $table = 'orden_compra';
     protected $primaryKey = 'id_oc';
     public $timestamps = false;
 

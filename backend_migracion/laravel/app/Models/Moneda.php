@@ -9,7 +9,7 @@ class Moneda extends Model
 {
     use HasFactory;
 
-    protected $table = 'MONEDA';
+    protected $table = 'moneda';
     protected $primaryKey = 'id_moneda';
     public $timestamps = false;
 

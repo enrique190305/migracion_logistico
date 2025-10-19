@@ -9,7 +9,7 @@ class DetalleOrdenServicio extends Model
 {
     use HasFactory;
 
-    protected $table = 'DETALLE_OS';
+    protected $table = 'detalle_os';
     protected $primaryKey = 'id_detalle_os';
     public $timestamps = false;
 

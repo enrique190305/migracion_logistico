@@ -9,7 +9,7 @@ class DetalleOrdenCompra extends Model
 {
     use HasFactory;
 
-    protected $table = 'DETALLE_OC';
+    protected $table = 'detalle_oc';
     protected $primaryKey = 'id_detalle';
     public $timestamps = false;
 

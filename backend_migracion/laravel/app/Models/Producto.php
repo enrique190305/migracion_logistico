@@ -9,7 +9,7 @@ class Producto extends Model
 {
     use HasFactory;
 
-    protected $table = 'PRODUCTO';
+    protected $table = 'producto';
     protected $primaryKey = 'codigo_producto';
     public $incrementing = false;
     protected $keyType = 'string';

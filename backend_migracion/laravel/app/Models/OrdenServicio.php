@@ -9,13 +9,14 @@ class OrdenServicio extends Model
 {
     use HasFactory;
 
-    protected $table = 'ORDEN_SERVICIO';
+    protected $table = 'orden_servicio';
     protected $primaryKey = 'id_os';
     public $timestamps = false;
 
     protected $fillable = [
         'correlativo',
         'id_empresa',
+        'id_orden_pedido',
         'id_proveedor',
         'id_forma_pago',
         'id_moneda',

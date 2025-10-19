@@ -372,18 +372,18 @@ class OrdenCompraServicioController extends Controller
     {
         // Validación de datos
         $validator = Validator::make($request->all(), [
-            'id_orden_pedido' => 'required|integer|exists:ORDEN_PEDIDO,id_orden_pedido',
+            'id_orden_pedido' => 'nullable|integer|exists:orden_pedido,id_orden_pedido',
             'correlativo' => 'required|string|max:20',
-            'id_empresa' => 'required|integer|exists:EMPRESA,id_empresa',
-            'id_proveedor' => 'required|integer|exists:PROVEEDOR,id_proveedor',
-            'id_moneda' => 'required|integer|exists:MONEDA,id_moneda',
+            'id_empresa' => 'required|integer|exists:empresa,id_empresa',
+            'id_proveedor' => 'required|integer|exists:proveedor,id_proveedor',
+            'id_moneda' => 'required|integer|exists:moneda,id_moneda',
             'fecha_oc' => 'required|date',
             'fecha_requerida' => 'nullable|date',
             'igv' => 'required|numeric|min:0',
             'total_general' => 'required|numeric|min:0',
-            'es_compra_directa' => 'nullable|boolean',
+            'estado' => 'nullable|string|max:50',
             'detalles' => 'required|array|min:1',
-            'detalles.*.codigo_producto' => 'required|string|exists:PRODUCTO,codigo_producto',
+            'detalles.*.codigo_producto' => 'required|string|exists:producto,codigo_producto',
             'detalles.*.cantidad' => 'required|integer|min:1',
             'detalles.*.precio_unitario' => 'required|numeric|min:0',
             'detalles.*.subtotal' => 'required|numeric|min:0',
@@ -400,29 +400,32 @@ class OrdenCompraServicioController extends Controller
         DB::beginTransaction();
 
         try {
-            // Validar que la orden de pedido esté en estado PENDIENTE
-            $ordenPedido = OrdenPedido::where('id_orden_pedido', $request->id_orden_pedido)
-                ->where('estado', 'PENDIENTE')
-                ->first();
+            // Si tiene orden de pedido, validar que esté pendiente
+            $ordenPedido = null;
+            if ($request->id_orden_pedido) {
+                $ordenPedido = OrdenPedido::where('id_orden_pedido', $request->id_orden_pedido)
+                    ->where('estado', 'PENDIENTE')
+                    ->first();
 
-            if (!$ordenPedido) {
-                return response()->json([
-                    'error' => 'Orden de pedido no válida',
-                    'mensaje' => 'La orden de pedido no existe o ya fue procesada'
-                ], 422);
+                if (!$ordenPedido) {
+                    return response()->json([
+                        'error' => 'Orden de pedido no válida',
+                        'mensaje' => 'La orden de pedido no existe o ya fue procesada'
+                    ], 422);
+                }
             }
 
-            // Determinar si es compra directa (total <= 500)
-            $esCompraDirecta = $request->total_general <= 500;
+            // Determinar si es compra directa (total <= 500) y tiene orden de pedido
+            $esCompraDirecta = $request->total_general <= 500 && $ordenPedido;
 
             if ($esCompraDirecta) {
                 // COMPRA DIRECTA: Registrar directamente en Kardex/Ingreso Directo
                 // TODO: Implementar lógica de ingreso directo al Kardex
                 
-                // Actualizar estado de orden de pedido
+                // Actualizar estado de orden de pedido a COMPLETADO
                 $ordenPedido->update([
                     'estado_compra' => 'COMPRA_DIRECTA',
-                    'estado' => 'PROCESADA',
+                    'estado' => 'COMPLETADO',
                     'fecha_modificacion' => now(),
                     'usuario_modificacion' => $request->usuario ?? 'sistema'
                 ]);
@@ -437,7 +440,7 @@ class OrdenCompraServicioController extends Controller
                 ], 201);
 
             } else {
-                // ORDEN DE COMPRA NORMAL (total > 500)
+                // ORDEN DE COMPRA NORMAL
                 $ordenCompra = OrdenCompra::create([
                     'correlativo' => $request->correlativo,
                     'id_empresa' => $request->id_empresa,
@@ -448,7 +451,7 @@ class OrdenCompraServicioController extends Controller
                     'fecha_requerida' => $request->fecha_requerida,
                     'igv' => $request->igv,
                     'total_general' => $request->total_general,
-                    'estado' => 'pendiente',
+                    'estado' => $request->estado ?? 'PENDIENTE',
                     'usuario_creacion' => $request->usuario ?? 'sistema',
                     'fecha_creacion' => now()
                 ]);
@@ -465,12 +468,15 @@ class OrdenCompraServicioController extends Controller
                     ]);
                 }
 
-                // Actualizar estado de orden de pedido
-                $ordenPedido->update([
-                    'estado_compra' => 'OC_GENERADA',
-                    'fecha_modificacion' => now(),
-                    'usuario_modificacion' => $request->usuario ?? 'sistema'
-                ]);
+                // Si tiene orden de pedido, actualizar su estado a COMPLETADO
+                if ($ordenPedido) {
+                    $ordenPedido->update([
+                        'estado_compra' => 'OC_GENERADA',
+                        'estado' => 'COMPLETADO',
+                        'fecha_modificacion' => now(),
+                        'usuario_modificacion' => $request->usuario ?? 'sistema'
+                    ]);
+                }
 
                 DB::commit();
 
@@ -479,7 +485,9 @@ class OrdenCompraServicioController extends Controller
                     'tipo' => 'ORDEN_COMPRA',
                     'id_oc' => $ordenCompra->id_oc,
                     'correlativo' => $ordenCompra->correlativo,
-                    'orden_pedido' => $ordenPedido->correlativo
+                    'total' => $ordenCompra->total_general,
+                    'orden_pedido' => $ordenPedido ? $ordenPedido->correlativo : null,
+                    'estado_compra' => $ordenPedido ? 'COMPLETADO' : null
                 ], 201);
             }
 
@@ -499,10 +507,11 @@ class OrdenCompraServicioController extends Controller
     {
         // Validación de datos
         $validator = Validator::make($request->all(), [
+            'id_orden_pedido' => 'nullable|integer|exists:orden_pedido,id_orden_pedido',
             'correlativo' => 'required|string|max:20',
-            'id_empresa' => 'required|integer|exists:EMPRESA,id_empresa',
-            'id_proveedor' => 'required|integer|exists:PROVEEDOR,id_proveedor',
-            'id_moneda' => 'required|integer|exists:MONEDA,id_moneda',
+            'id_empresa' => 'required|integer|exists:empresa,id_empresa',
+            'id_proveedor' => 'required|integer|exists:proveedor,id_proveedor',
+            'id_moneda' => 'required|integer|exists:moneda,id_moneda',
             'fecha_servicio' => 'required|date',
             'fecha_requerida' => 'nullable|date',
             'contacto' => 'nullable|string|max:100',
@@ -512,7 +521,8 @@ class OrdenCompraServicioController extends Controller
             'latitud' => 'nullable|string|max:50',
             'longitud' => 'nullable|string|max:50',
             'igv' => 'required|numeric|min:0',
-            'total_general' => 'required|numeric|min:500', // MÍNIMO 500
+            'total_general' => 'required|numeric|min:0',
+            'estado' => 'nullable|string|max:50',
             'detalles' => 'required|array|min:1',
             'detalles.*.codigo_servicio' => 'required|string|max:20',
             'detalles.*.descripcion' => 'required|string|max:255',
@@ -529,14 +539,6 @@ class OrdenCompraServicioController extends Controller
                 'errores' => $validator->errors()
             ], 422);
         }
-        
-        // VALIDACIÓN ADICIONAL: Verificar monto mínimo de 500
-        if ($request->total_general < 500) {
-            return response()->json([
-                'error' => 'Monto mínimo no alcanzado',
-                'mensaje' => 'El total de la orden debe ser mayor o igual a S/. 500.00'
-            ], 422);
-        }
 
         DB::beginTransaction();
 
@@ -545,6 +547,7 @@ class OrdenCompraServicioController extends Controller
             $ordenServicio = OrdenServicio::create([
                 'correlativo' => $request->correlativo,
                 'id_empresa' => $request->id_empresa,
+                'id_orden_pedido' => $request->id_orden_pedido,
                 'id_proveedor' => $request->id_proveedor,
                 'id_moneda' => $request->id_moneda,
                 'fecha_servicio' => $request->fecha_servicio,
@@ -557,7 +560,7 @@ class OrdenCompraServicioController extends Controller
                 'longitud' => $request->longitud,
                 'igv' => $request->igv,
                 'total_general' => $request->total_general,
-                'estado' => 'pendiente',
+                'estado' => $request->estado ?? 'PENDIENTE',
                 'usuario_creacion' => $request->usuario ?? 'sistema',
                 'fecha_creacion' => now()
             ]);
@@ -576,12 +579,28 @@ class OrdenCompraServicioController extends Controller
                 ]);
             }
 
+            // Si tiene orden de pedido, actualizar su estado a COMPLETADO
+            if ($request->id_orden_pedido) {
+                $ordenPedido = OrdenPedido::find($request->id_orden_pedido);
+                if ($ordenPedido) {
+                    $ordenPedido->update([
+                        'estado_compra' => 'OS_GENERADA',
+                        'estado' => 'COMPLETADO',
+                        'fecha_modificacion' => now(),
+                        'usuario_modificacion' => $request->usuario ?? 'sistema'
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return response()->json([
                 'mensaje' => 'Orden de servicio creada exitosamente',
+                'tipo' => 'ORDEN_SERVICIO',
                 'id_os' => $ordenServicio->id_os,
-                'correlativo' => $ordenServicio->correlativo
+                'correlativo' => $ordenServicio->correlativo,
+                'total' => $ordenServicio->total_general,
+                'estado_compra' => $request->id_orden_pedido ? 'COMPLETADO' : null
             ], 201);
 
         } catch (Exception $e) {
