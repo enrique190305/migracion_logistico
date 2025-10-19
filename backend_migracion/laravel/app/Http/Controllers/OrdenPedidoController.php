@@ -37,18 +37,15 @@ class OrdenPedidoController extends Controller
         try {
             // Obtener proyectos de la empresa a través de la tabla intermedia
             $proyectos = ProyectoAlmacen::select(
-                    'PROYECTO_ALMACEN.id_proyecto',
-                    'PROYECTO_ALMACEN.nombre_proyecto',
-                    'PROYECTO_ALMACEN.bodega',
-                    'PROYECTO_ALMACEN.estado',
-                    'EMPRESA_PROYECTO.porcentaje_participacion',
-                    'EMPRESA_PROYECTO.es_principal'
+                    'proyecto_almacen.id_proyecto',
+                    'proyecto_almacen.nombre_proyecto',
+                    'proyecto_almacen.bodega',
+                    'proyecto_almacen.estado'
                 )
-                ->join('EMPRESA_PROYECTO', 'PROYECTO_ALMACEN.id_proyecto', '=', 'EMPRESA_PROYECTO.id_proyecto')
-                ->where('EMPRESA_PROYECTO.id_empresa', $id_empresa)
-                ->orderBy('EMPRESA_PROYECTO.es_principal', 'DESC')
-                ->orderBy('EMPRESA_PROYECTO.porcentaje_participacion', 'DESC')
-                ->orderBy('PROYECTO_ALMACEN.nombre_proyecto', 'ASC')
+                ->join('empresa_proyecto', 'proyecto_almacen.id_proyecto', '=', 'empresa_proyecto.id_proyecto')
+                ->where('empresa_proyecto.id_empresa', $id_empresa)
+                ->where('proyecto_almacen.estado', 'Activo')
+                ->orderBy('proyecto_almacen.nombre_proyecto', 'ASC')
                 ->get();
 
             return response()->json($proyectos);

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class DetalleOrdenPedido extends Model
 {
-    protected $table = 'DETALLE_ORDEN_PEDIDO'; // Tabla en MAYÚSCULAS
+    protected $table = 'detalle_orden_pedido'; // Tabla en minúsculas (coincide con BD)
     protected $primaryKey = 'id_detalle_pedido';
     public $timestamps = false;
 

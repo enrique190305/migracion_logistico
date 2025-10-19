@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrdenPedido extends Model
 {
-    protected $table = 'ORDEN_PEDIDO'; // Tabla en MAYÚSCULAS
+    protected $table = 'orden_pedido'; // Tabla en minúsculas (coincide con BD)
     protected $primaryKey = 'id_orden_pedido';
     public $timestamps = false;
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProyectoAlmacen extends Model
 {
-    protected $table = 'PROYECTO_ALMACEN'; // Tabla en MAYÚSCULAS
+    protected $table = 'proyecto_almacen'; // Tabla en minúsculas (coincide con BD)
     protected $primaryKey = 'id_proyecto';
     public $timestamps = false;
 
