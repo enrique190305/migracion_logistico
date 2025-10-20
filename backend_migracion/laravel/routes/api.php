@@ -4,7 +4,8 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OrdenCompraServicioController;
-use App\Http\Controllers\Api\AprobacionController; // ✅ AGREGAR ESTA LÍNEA
+use App\Http\Controllers\Api\AprobacionController;
+use App\Http\Controllers\KardexController;
 use App\Http\Controllers\OrdenPedidoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -45,6 +46,26 @@ Route::prefix('ordenes')->group(function () {
     // Guardar órdenes
     Route::post('/compra', [OrdenCompraServicioController::class, 'guardarOrdenCompra']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - KARDEX (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('kardex')->group(function () {
+    // Inventario actual
+    Route::get('/inventario', [KardexController::class, 'getInventario']);
+    
+    // Historial de movimientos
+    Route::get('/historial', [KardexController::class, 'getHistorial']);
+    
+    // Kardex de un producto específico
+    Route::get('/producto/{codigo}', [KardexController::class, 'getKardexProducto']);
+    
+    // Stock actual de un producto
+    Route::get('/stock/{codigo}/{proyecto?}', [KardexController::class, 'getStockProducto']);
 });
 
 /*
