@@ -80,15 +80,26 @@
 }
 
 .tab-badge {
-  background: rgba(255, 255, 255, 0.3);
-  padding: 2px 10px;
-  border-radius: 12px;
+  background: #667eea; /* Fondo morado */
+  color: white; /* Texto blanco */
+  padding: 3px 12px;
+  border-radius: 15px;
   font-size: 12px;
-  font-weight: bold;
+  font-weight: 700;
+  min-width: 30px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
 }
 
 .tab-button.active .tab-badge {
-  background: rgba(255, 255, 255, 0.4);
+  background: #ffc107; /* Amarillo cuando está activo */
+  color: #333; /* Texto oscuro */
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.5);
+}
+
+.tab-button:not(.active) .tab-badge {
+  background: #667eea; /* Morado cuando NO está activo */
+  color: white;
 }
 
 /* Estadísticas */
