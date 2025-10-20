@@ -87,9 +87,9 @@ class AprobacionController extends Controller
             
             $detalles = $orden->detalles->map(function ($detalle) {
                 return [
-                    'codigo_producto' => $detalle->producto->codigo ?? 'N/A',
-                    'descripcion' => $detalle->descripcion ?? 'N/A',
-                    'unidad' => $detalle->unidad ?? 'UND',
+                    'codigo_producto' => $detalle->codigo_producto ?? 'N/A',
+                    'descripcion' => $detalle->producto->descripcion ?? 'N/A',
+                    'unidad' => $detalle->producto->unidad_medida ?? 'UND',
                     'cantidad' => $detalle->cantidad,
                     'precio_unitario' => $detalle->precio_unitario,
                     'subtotal' => $detalle->cantidad * $detalle->precio_unitario
@@ -118,7 +118,7 @@ class AprobacionController extends Controller
                     'unidad' => $detalle->unidad ?? 'UND',
                     'cantidad' => $detalle->cantidad,
                     'precio_unitario' => $detalle->precio_unitario,
-                    'subtotal' => $detalle->cantidad * $detalle->precio_unitario
+                    'subtotal' => $detalle->subtotal ?? ($detalle->cantidad * $detalle->precio_unitario)
                 ];
             });
 
