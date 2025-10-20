@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './OrdenesCompraServicio.css';
 import * as API from '../../services/ordenesAPI';
 
@@ -34,6 +34,8 @@ const OrdenesCompraServicio = () => {
   const [proveedor, setProveedor] = useState('');
   const [moneda, setMoneda] = useState('');
   const [infoProveedor, setInfoProveedor] = useState(''); // Información adicional del proveedor
+  const [showModalProveedor, setShowModalProveedor] = useState(false);
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   
   // Estados para Detalles del Servicio
   const [latitud, setLatitud] = useState('');
@@ -48,6 +50,8 @@ const OrdenesCompraServicio = () => {
   const [unidadMedida, setUnidadMedida] = useState('');
   const [cantidad, setCantidad] = useState('');
   const [subtotal, setSubtotal] = useState('0.00');
+  const [busquedaProducto, setBusquedaProducto] = useState('');
+  const [mostrarListaProductos, setMostrarListaProductos] = useState(false);
   
   // Estado para detectar compra directa
   const [esCompraDirecta, setEsCompraDirecta] = useState(false);
@@ -132,6 +136,42 @@ const OrdenesCompraServicio = () => {
     const cant = parseFloat(cantidad) || 0;
     setSubtotal((precio * cant).toFixed(2));
   }, [precioUnitario, cantidad]);
+  
+  // Cerrar lista de productos al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const comboboxContainer = event.target.closest('.form-group');
+      const clickedInput = event.target.closest('input[placeholder="Seleccione producto..."]');
+      
+      if (mostrarListaProductos && !clickedInput && !comboboxContainer) {
+        setMostrarListaProductos(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [mostrarListaProductos]);
+  
+  // Sincronizar busquedaProducto con descripcion seleccionada
+  useEffect(() => {
+    if (descripcion && !busquedaProducto) {
+      setBusquedaProducto(descripcion);
+    }
+  }, [descripcion, busquedaProducto]);
+  
+  // ============ FUNCIONES HELPER ============
+  
+  /**
+   * Obtener el símbolo de moneda según el ID de moneda seleccionado
+   */
+  const obtenerSimboloMoneda = () => {
+    if (!moneda) return 'S/'; // Por defecto SOLES
+    
+    const monedaSeleccionada = monedas.find(m => m.id === parseInt(moneda));
+    return monedaSeleccionada?.simbolo || 'S/';
+  };
+  
+  // ============ MANEJADORES DE EVENTOS ============
   
   // Manejar selección de Orden de Pedido
   const handleOrdenPedidoChange = async (ordenPedidoId) => {
@@ -236,6 +276,9 @@ const OrdenesCompraServicio = () => {
       try {
         const detalleProveedor = await API.obtenerDetalleProveedor(proveedorId);
         
+        // Guardar el proveedor seleccionado completo
+        setProveedorSeleccionado(detalleProveedor);
+        
         // Construir la información del proveedor
         const info = `RUC: ${detalleProveedor.ruc || 'N/A'}
 Dirección: ${detalleProveedor.direccion || 'N/A'}
@@ -248,9 +291,11 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
       } catch (err) {
         console.error('Error al obtener detalle del proveedor:', err);
         setInfoProveedor('');
+        setProveedorSeleccionado(null);
       }
     } else {
       setInfoProveedor('');
+      setProveedorSeleccionado(null);
     }
   };
   
@@ -331,14 +376,15 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
     }
     
     const { total: totalCalculado } = calcularTotales();
+    const simboloMoneda = obtenerSimboloMoneda();
     
     // Detectar si es compra directa (≤ 500) - SOLO SI HAY ORDEN DE PEDIDO
     if (idOrdenPedido && totalCalculado <= 500) {
       // Mostrar confirmación para compra directa
       const confirmar = window.confirm(
         `💰 COMPRA DIRECTA DETECTADA\n\n` +
-        `Total: S/. ${totalCalculado.toFixed(2)}\n\n` +
-        `⚠️ Como el total es menor o igual a S/. 500.00, esta orden se procesará como COMPRA DIRECTA.\n\n` +
+        `Total: ${simboloMoneda} ${totalCalculado.toFixed(2)}\n\n` +
+        `⚠️ Como el total es menor o igual a ${simboloMoneda} 500.00, esta orden se procesará como COMPRA DIRECTA.\n\n` +
         `Los productos se agregarán directamente al Kardex sin generar Orden de Compra/Servicio.\n\n` +
         `¿Desea continuar?`
       );
@@ -354,7 +400,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
         
       const confirmar = window.confirm(
         `📋 ${tipoOrden === 'compra' ? 'ORDEN DE COMPRA' : 'ORDEN DE SERVICIO'}\n\n` +
-        `Total: S/. ${totalCalculado.toFixed(2)}\n\n` +
+        `Total: ${simboloMoneda} ${totalCalculado.toFixed(2)}\n\n` +
         `Se generará una ${tipoOrden === 'compra' ? 'Orden de Compra' : 'Orden de Servicio'} ${tipoMensaje}.\n\n` +
         `¿Desea continuar?`
       );
@@ -434,12 +480,15 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
         response = await API.guardarOrdenServicio(ordenData);
       }
       
+      // Obtener símbolo de moneda para los mensajes
+      const simboloMoneda = obtenerSimboloMoneda();
+      
       // Mostrar mensaje según el tipo de respuesta
       if (response.tipo === 'COMPRA_DIRECTA') {
         alert(
           `✅ ${response.mensaje}\n\n` +
           `💰 COMPRA DIRECTA PROCESADA\n\n` +
-          `Total: S/. ${response.total}\n\n` +
+          `Total: ${simboloMoneda} ${response.total}\n\n` +
           `Los productos han sido agregados directamente al Kardex sin generar OC/OS.\n\n` +
           `Estado de la Orden de Pedido: ${response.estado_compra}`
         );
@@ -447,7 +496,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
         alert(
           `✅ ${response.mensaje}\n\n` +
           `Correlativo: ${response.correlativo}\n` +
-          `Total: S/. ${response.total}\n\n` +
+          `Total: ${simboloMoneda} ${response.total}\n\n` +
           (response.estado_compra ? `Estado de la Orden de Pedido: ${response.estado_compra}` : 'Sin vincular a Orden de Pedido')
         );
       }
@@ -682,7 +731,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             </div>
             <div className="card-body">
               <div className="form-row">
-                <div className="form-group" style={{ flex: '2' }}>
+                <div className="form-group" style={{ width: '100%' }}>
                   <label>Proveedor:</label>
                   <select 
                     value={proveedor} 
@@ -697,7 +746,9 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                     ))}
                   </select>
                 </div>
-                <div className="form-group" style={{ flex: '1' }}>
+              </div>
+              <div className="form-row">
+                <div className="form-group" style={{ width: '100%' }}>
                   <label>Moneda:</label>
                   <select 
                     value={moneda} 
@@ -714,23 +765,25 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                 </div>
               </div>
               <div className="form-row">
-                <div className="form-group" style={{ width: '100%' }}>
-                  <label>Información del Proveedor:</label>
-                  <textarea 
-                    className="form-textarea"
-                    placeholder="Información adicional del proveedor..."
-                    value={infoProveedor}
-                    readOnly
-                    rows="4"
-                    style={{ 
-                      backgroundColor: '#f0f0f0', 
-                      cursor: 'not-allowed',
-                      resize: 'none',
-                      width: '100%',
-                      fontFamily: 'monospace',
-                      fontSize: '13px'
+                <div className="form-group" style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                  <button 
+                    className="btn-ver-proveedor"
+                    onClick={() => setShowModalProveedor(true)}
+                    disabled={!proveedor}
+                    style={{
+                      padding: '10px 20px',
+                      backgroundColor: proveedor ? '#2196f3' : '#ccc',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: proveedor ? 'pointer' : 'not-allowed',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      transition: 'all 0.3s'
                     }}
-                  />
+                  >
+                    👁️ Ver Información del Proveedor
+                  </button>
                 </div>
               </div>
             </div>
@@ -844,22 +897,128 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             </div>
             
             <div className="form-row">
-              <div className="form-group form-group-large">
+              <div className="form-group" style={{ flex: '3' }}>
                 <label>Descripción:</label>
-                <select 
-                  value={descripcion} 
-                  onChange={(e) => handleDescripcionChange(e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">Seleccione producto...</option>
-                  {productos.map(prod => (
-                    <option key={prod.codigo} value={prod.descripcion}>
-                      {prod.descripcion}
-                    </option>
-                  ))}
-                </select>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    value={busquedaProducto}
+                    onChange={(e) => {
+                      setBusquedaProducto(e.target.value);
+                      setDescripcion(''); // Limpiar selección al escribir
+                      setMostrarListaProductos(true);
+                    }}
+                    onFocus={() => setMostrarListaProductos(true)}
+                    className="form-input"
+                    placeholder="Seleccione producto..."
+                    autoComplete="off"
+                    style={{
+                      paddingRight: '30px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <span style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    pointerEvents: 'none',
+                    color: '#666'
+                  }}>▼</span>
+                  
+                  {/* Lista desplegable con posicionamiento absoluto */}
+                  {mostrarListaProductos && (
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '100%',
+                      left: 0,
+                      right: 0,
+                      maxHeight: '350px',
+                      overflowY: 'auto',
+                      backgroundColor: 'white',
+                      border: '2px solid #667eea',
+                      borderRadius: '8px',
+                      zIndex: 9999,
+                      boxShadow: '0 -8px 32px rgba(102, 126, 234, 0.3)',
+                      marginBottom: '8px'
+                    }}>
+                      {productos
+                        .filter(prod => {
+                          const searchTerm = busquedaProducto.toLowerCase();
+                          return prod.descripcion.toLowerCase().includes(searchTerm) ||
+                                 prod.codigo.toLowerCase().includes(searchTerm);
+                        })
+                        .slice(0, 15)
+                        .map(prod => (
+                          <div
+                            key={prod.codigo}
+                            onClick={() => {
+                              handleDescripcionChange(prod.descripcion);
+                              setBusquedaProducto(prod.descripcion);
+                              setMostrarListaProductos(false);
+                            }}
+                            style={{
+                              padding: '12px 15px',
+                              cursor: 'pointer',
+                              borderBottom: '1px solid #f0f0f0',
+                              transition: 'background-color 0.2s',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '4px'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#f0f4ff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'white';
+                            }}
+                          >
+                            <div style={{ 
+                              display: 'flex', 
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}>
+                              <strong style={{ color: '#667eea', fontSize: '13px' }}>
+                                {prod.codigo}
+                              </strong>
+                              <span style={{ 
+                                fontSize: '11px', 
+                                color: '#999',
+                                backgroundColor: '#f5f5f5',
+                                padding: '2px 8px',
+                                borderRadius: '10px'
+                              }}>
+                                {prod.unidad}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '14px', color: '#333' }}>
+                              {prod.descripcion}
+                            </div>
+                          </div>
+                        ))
+                      }
+                      {productos.filter(prod => {
+                        const searchTerm = busquedaProducto.toLowerCase();
+                        return prod.descripcion.toLowerCase().includes(searchTerm) ||
+                               prod.codigo.toLowerCase().includes(searchTerm);
+                      }).length === 0 && (
+                        <div style={{ 
+                          padding: '20px', 
+                          textAlign: 'center',
+                          color: '#999' 
+                        }}>
+                          <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
+                          <div>No se encontraron productos</div>
+                          <div style={{ fontSize: '12px', marginTop: '4px' }}>
+                            Intente con otro término de búsqueda
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="form-group form-group-small">
+              <div className="form-group" style={{ flex: '1' }}>
                 <label>U. Medida:</label>
                 <input 
                   type="text" 
@@ -909,7 +1068,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             <div className="form-row">
               <div className="form-group subtotal-group">
                 <label>Subtotal:</label>
-                <div className="subtotal-display">S/ {subtotal}</div>
+                <div className="subtotal-display">{obtenerSimboloMoneda()} {subtotal}</div>
               </div>
               <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
                 <button className="btn-insertar" onClick={handleInsertarProducto}>
@@ -972,8 +1131,8 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                             }}
                           />
                         </td>
-                        <td>S/ {producto.subtotal.toFixed(2)}</td>
-                        <td>S/ {producto.total.toFixed(2)}</td>
+                        <td>{obtenerSimboloMoneda()} {producto.subtotal.toFixed(2)}</td>
+                        <td>{obtenerSimboloMoneda()} {producto.total.toFixed(2)}</td>
                         <td>
                           <button 
                             className="btn-eliminar"
@@ -1033,15 +1192,15 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             <div className="card-body">
               <div className="resumen-row">
                 <span className="resumen-label">Subtotal:</span>
-                <span className="resumen-valor">S/ {subtotalGeneral.toFixed(2)}</span>
+                <span className="resumen-valor">{obtenerSimboloMoneda()} {subtotalGeneral.toFixed(2)}</span>
               </div>
               <div className="resumen-row">
                 <span className="resumen-label">IGV (18%):</span>
-                <span className="resumen-valor">S/ {igv.toFixed(2)}</span>
+                <span className="resumen-valor">{obtenerSimboloMoneda()} {igv.toFixed(2)}</span>
               </div>
               <div className="resumen-row resumen-total">
                 <span className="resumen-label">TOTAL:</span>
-                <span className="resumen-valor">S/ {total.toFixed(2)}</span>
+                <span className="resumen-valor">{obtenerSimboloMoneda()} {total.toFixed(2)}</span>
               </div>
               
               {/* Indicador de tipo de compra */}
@@ -1065,14 +1224,14 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                       <>
                         <div style={{ marginBottom: '5px' }}>💰 COMPRA DIRECTA</div>
                         <div style={{ fontWeight: 'normal', fontSize: '12px' }}>
-                          Total ≤ S/. 500.00 - Los productos irán directo al Kardex
+                          Total ≤ {obtenerSimboloMoneda()} 500.00 - Los productos irán directo al Kardex
                         </div>
                       </>
                     ) : (
                       <>
                         <div style={{ marginBottom: '5px' }}>📋 ORDEN DE COMPRA/SERVICIO</div>
                         <div style={{ fontWeight: 'normal', fontSize: '12px' }}>
-                          Total &gt; S/. 500.00 - Se generará OC/OS normal
+                          Total &gt; {obtenerSimboloMoneda()} 500.00 - Se generará OC/OS normal
                         </div>
                       </>
                     )}
@@ -1083,6 +1242,59 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
           </div>
         </div>
       </div>
+
+      {/* Modal de Información del Proveedor */}
+      {showModalProveedor && proveedorSeleccionado && (
+        <div className="modal-overlay" onClick={() => setShowModalProveedor(false)}>
+          <div className="modal-content modal-detalle" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📦 Información del Proveedor</h2>
+              <button className="modal-close" onClick={() => setShowModalProveedor(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div className="proveedor-info-grid">
+                <div className="info-item">
+                  <strong>Nombre/Razón Social:</strong>
+                  <span>{proveedorSeleccionado.nombre || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>RUC:</strong>
+                  <span>{proveedorSeleccionado.ruc || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Dirección:</strong>
+                  <span>{proveedorSeleccionado.direccion || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Contacto:</strong>
+                  <span>{proveedorSeleccionado.contacto || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Celular:</strong>
+                  <span>{proveedorSeleccionado.celular || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Correo:</strong>
+                  <span>{proveedorSeleccionado.correo || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Forma de Pago:</strong>
+                  <span>{proveedorSeleccionado.formaPago || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>Servicio:</strong>
+                  <span>{proveedorSeleccionado.servicio || 'N/A'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-cerrar" onClick={() => setShowModalProveedor(false)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -45,7 +45,7 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: visible; /* Cambiado de 'hidden' a 'visible' para permitir dropdown */
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   animation: fadeIn 0.5s ease-out;
 }
@@ -61,6 +61,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  border-radius: 12px 12px 0 0; /* Agregar border-radius ya que overflow ahora es visible */
 }
 
 .card-icon {
@@ -77,6 +78,8 @@
 
 .card-body {
   padding: 20px;
+  overflow: visible; /* Asegurar que el dropdown no se corte */
+  position: relative; /* Necesario para el posicionamiento absoluto del dropdown */
 }
 
 /* Grids */
@@ -509,5 +512,74 @@
   
   .card-body {
     padding: 15px;
+  }
+}
+
+/* ============================================ */
+/* NUEVOS ESTILOS PARA MODAL DE PROVEEDOR */
+/* ============================================ */
+
+.proveedor-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 10px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-item strong {
+  color: #667eea;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  color: #333;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.btn-ver-proveedor:hover:not(:disabled) {
+  background-color: #1976d2 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+}
+
+.btn-cerrar {
+  padding: 10px 30px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.3s;
+}
+
+.btn-cerrar:hover {
+  background-color: #5a6268;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+@media (max-width: 768px) {
+  .proveedor-info-grid {
+    grid-template-columns: 1fr;
   }
 }

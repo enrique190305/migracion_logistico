@@ -25,8 +25,8 @@ class AprobacionController extends Controller
                     return [
                         'id_oc' => $orden->id_oc,
                         'codigo_oc' => $orden->correlativo,
-                        'empresa' => $orden->empresa->nombre ?? 'N/A',
-                        'razon_social' => $orden->proveedor->razon_social ?? 'N/A',
+                        'empresa' => $orden->empresa->razon_social ?? $orden->empresa->nombre_comercial ?? 'N/A',
+                        'razon_social' => $orden->proveedor->nombre ?? 'N/A',
                         'fecha_creacion' => $orden->fecha_oc,
                         'fecha_requerida' => $orden->fecha_requerida,
                         'moneda' => $orden->moneda->nombre ?? 'PEN',
@@ -58,8 +58,8 @@ class AprobacionController extends Controller
                     return [
                         'id_os' => $orden->id_os,
                         'codigo_os' => $orden->correlativo,
-                        'empresa' => $orden->empresa->nombre ?? 'N/A',
-                        'razon_social' => $orden->proveedor->razon_social ?? 'N/A',
+                        'empresa' => $orden->empresa->razon_social ?? $orden->empresa->nombre_comercial ?? 'N/A',
+                        'razon_social' => $orden->proveedor->nombre ?? 'N/A',
                         'fecha_creacion' => $orden->fecha_servicio,
                         'fecha_requerida' => $orden->fecha_requerida,
                         'moneda' => $orden->moneda->nombre ?? 'PEN',

@@ -206,9 +206,20 @@ class OrdenCompraServicioController extends Controller
     public function obtenerMonedas()
     {
         try {
-            $monedas = Moneda::select('id_moneda as id', 'tipo_moneda as nombre')
-                ->orderBy('tipo_moneda')
-                ->get();
+            $monedas = Moneda::all()->map(function ($moneda) {
+                // Determinar el símbolo según el tipo de moneda
+                $simbolo = 'S/'; // Por defecto SOLES
+                if (stripos($moneda->tipo_moneda, 'DOLAR') !== false || 
+                    stripos($moneda->tipo_moneda, 'DÓLAR') !== false) {
+                    $simbolo = '$';
+                }
+                
+                return [
+                    'id' => $moneda->id_moneda,
+                    'nombre' => $moneda->tipo_moneda,
+                    'simbolo' => $simbolo
+                ];
+            });
 
             return response()->json($monedas, 200);
         } catch (Exception $e) {
