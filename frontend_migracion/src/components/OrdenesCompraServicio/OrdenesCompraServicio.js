@@ -899,7 +899,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             <div className="form-row">
               <div className="form-group" style={{ flex: '3' }}>
                 <label>Descripción:</label>
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'relative', width: '100%' }}>
                   <input
                     type="text"
                     value={busquedaProducto}
@@ -913,6 +913,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                     placeholder="Seleccione producto..."
                     autoComplete="off"
                     style={{
+                      width: '100%',
                       paddingRight: '30px',
                       cursor: 'pointer'
                     }}
