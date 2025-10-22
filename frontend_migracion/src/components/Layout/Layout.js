@@ -12,6 +12,8 @@ import RegistroProductos from '../RegistroProductos/RegistroProductos';
 import EliminarOCS from '../EliminarOCS/EliminarOCS';
 import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
+import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
+
 
 const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -64,7 +66,7 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'kardex':
         return <Kardex />;
       case 'registro-familia':
-        return <ModuleContent title="Registro de Familia" icon="👥" />;
+        return <RegistroFamilia />;
       case 'aprobacion-ordenes':
         return <Aprobacion />;
       default:

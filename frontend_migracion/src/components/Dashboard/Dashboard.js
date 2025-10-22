@@ -11,6 +11,8 @@ import RegistroProductos from '../RegistroProductos/RegistroProductos';
 import EliminarOCS from '../EliminarOCS/EliminarOCS';
 import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
+import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
+
 
 const Dashboard = ({ onLogout }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -186,7 +188,7 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'proyecto' && <RegistroProyecto />}
           {moduloActivo === 'personal' && <div className="modulo-placeholder">Módulo de Registro de Personal (En desarrollo)</div>}
           {moduloActivo === 'kardex' && <Kardex />}
-          {moduloActivo === 'familia' && <div className="modulo-placeholder">Módulo de Registro de Familia (En desarrollo)</div>}
+          {moduloActivo === 'familia' && <RegistroFamilia />}
           {moduloActivo === 'aprobacion' && <Aprobacion />}
         </main>
       </div>
