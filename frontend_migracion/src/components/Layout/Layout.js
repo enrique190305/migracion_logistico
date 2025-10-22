@@ -5,6 +5,7 @@ import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import Aprobacion from '../Aprobacion/Aprobacion';
 import Kardex from '../Kardex/Kardex';
 import './Layout.css';
+import RegistroProyecto from '../RegistroProyecto/RegistroProyecto';
 
 const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -47,7 +48,7 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'editar-proveedores':
         return <ModuleContent title="Editar Proveedores" icon="✏️" />;
       case 'registro-proyecto':
-        return <ModuleContent title="Registro de Proyecto" icon="📊" />;
+        return <RegistroProyecto />;
       case 'registro-personal':
         return <ModuleContent title="Registro de Personal" icon="👥" />;
       case 'kardex':

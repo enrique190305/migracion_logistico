@@ -4,6 +4,7 @@ import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import Aprobacion from '../Aprobacion/Aprobacion'; 
 import Kardex from '../Kardex/Kardex ';
+import RegistroProyecto from '../RegistroProyecto/RegistroProyecto';
 
 const Dashboard = ({ onLogout }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -160,7 +161,7 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'salida' && <div className="modulo-placeholder">Módulo de Salida de Materiales (En desarrollo)</div>}
           {moduloActivo === 'proveedores' && <div className="modulo-placeholder">Módulo de Registro de Proveedores (En desarrollo)</div>}
           {moduloActivo === 'editar' && <div className="modulo-placeholder">Módulo de Editar Proveedores (En desarrollo)</div>}
-          {moduloActivo === 'proyecto' && <div className="modulo-placeholder">Módulo de Registro de Proyecto (En desarrollo)</div>}
+          {moduloActivo === 'proyecto' && <RegistroProyecto />}
           {moduloActivo === 'personal' && <div className="modulo-placeholder">Módulo de Registro de Personal (En desarrollo)</div>}
           {moduloActivo === 'kardex' && <Kardex />}
           {moduloActivo === 'familia' && <div className="modulo-placeholder">Módulo de Registro de Familia (En desarrollo)</div>}
@@ -169,7 +170,7 @@ const Dashboard = ({ onLogout }) => {
       </div>
     );
   }
-
+ 
   return (
     <div className="dashboard-container">
       {/* Header */}
