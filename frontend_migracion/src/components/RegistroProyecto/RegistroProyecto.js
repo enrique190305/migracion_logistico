@@ -5,13 +5,16 @@ import './RegistroProyecto.css';
 const RegistroProyecto = () => {
   // Estados principales
   const [paso, setPaso] = useState(1); // Control de pasos del wizard
+  const [empresas, setEmpresas] = useState([]);
   const [bodegas, setBodegas] = useState([]);
   const [proyectos, setProyectos] = useState([]);
   const [subproyectos, setSubproyectos] = useState([]);
+  const [personas, setPersonas] = useState([]);
   
   // Estado del formulario
   const [formData, setFormData] = useState({
     // Paso 1: Bodega y Almacén
+    razon_social_id: '',
     bodega_id: '',
     ubicacion: '',
     departamento: '',
@@ -27,8 +30,7 @@ const RegistroProyecto = () => {
     
     // Datos adicionales
     descripcion: '',
-    fecha_inicio: '',
-    fecha_fin: '',
+    fecha_registro: new Date().toISOString().split('T')[0], // Fecha actual
     responsable: '',
     estado: 'activo'
   });
@@ -39,18 +41,38 @@ const RegistroProyecto = () => {
 
   // Cargar datos iniciales
   useEffect(() => {
+    cargarEmpresas();
     cargarBodegas();
     cargarProyectos();
+    cargarPersonas();
   }, []);
 
+  const cargarEmpresas = async () => {
+    try {
+      // En producción, esto sería una llamada al backend
+      // const response = await fetch('API_URL/empresas');
+      // const data = await response.json();
+      
+      // Simulación temporal
+      setEmpresas([
+        { id: 1, razon_social: 'EMPRESA ABC S.A.C.', ruc: '20123456789' },
+        { id: 2, razon_social: 'CONSTRUCTORA XYZ S.R.L.', ruc: '20987654321' },
+        { id: 3, razon_social: 'SERVICIOS GENERALES SAC', ruc: '20456789123' }
+      ]);
+    } catch (error) {
+      console.error('Error al cargar empresas:', error);
+    }
+  };
+
   const cargarBodegas = async () => {
-    // Simulación de carga de bodegas
+    // Simulación de carga de bodegas con empresa
     // En producción, esto sería una llamada al backend
     setBodegas([
-      { id: 1, nombre: 'Bodega Lima Centro', departamento: 'Lima' },
-      { id: 2, nombre: 'Bodega Callao', departamento: 'Callao' },
-      { id: 3, nombre: 'Bodega Arequipa', departamento: 'Arequipa' },
-      { id: 4, nombre: 'Bodega Cusco', departamento: 'Cusco' }
+      { id: 1, nombre: 'Bodega Lima Centro', ubicacion: 'Lima', departamento: 'Lima', id_empresa: 1 },
+      { id: 2, nombre: 'Bodega Lima Sur', ubicacion: 'Lima', departamento: 'Lima', id_empresa: 1 },
+      { id: 3, nombre: 'Bodega Callao', ubicacion: 'Callao', departamento: 'Callao', id_empresa: 2 },
+      { id: 4, nombre: 'Bodega Arequipa', ubicacion: 'Arequipa', departamento: 'Arequipa', id_empresa: 2 },
+      { id: 5, nombre: 'Bodega Cusco', ubicacion: 'Cusco', departamento: 'Cusco', id_empresa: 3 }
     ]);
   };
 
@@ -75,8 +97,64 @@ const RegistroProyecto = () => {
     ]);
   };
 
+  const cargarPersonas = async () => {
+    try {
+      // Mock data - Reemplazar con llamada API real cuando esté disponible
+      const mockPersonas = [
+        { id: 1, nombre: 'Juan Carlos', apellido: 'García Pérez', cargo: 'Jefe de Proyecto' },
+        { id: 2, nombre: 'María Elena', apellido: 'Rodríguez López', cargo: 'Supervisor' },
+        { id: 3, nombre: 'Pedro Antonio', apellido: 'Martínez Silva', cargo: 'Coordinador' },
+        { id: 4, nombre: 'Ana Lucía', apellido: 'Fernández Torres', cargo: 'Jefe de Operaciones' },
+        { id: 5, nombre: 'Carlos Alberto', apellido: 'Sánchez Vargas', cargo: 'Gerente' },
+        { id: 6, nombre: 'Rosa María', apellido: 'Díaz Contreras', cargo: 'Asistente' },
+        { id: 7, nombre: 'Luis Miguel', apellido: 'Ramírez Castro', cargo: 'Supervisor' },
+        { id: 8, nombre: 'Carmen Julia', apellido: 'Torres Mendoza', cargo: 'Coordinadora' }
+      ];
+      setPersonas(mockPersonas);
+      
+      // Llamada API real (cuando esté disponible):
+      /*
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://127.0.0.1:8000/api/personas', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      setPersonas(data);
+      */
+    } catch (error) {
+      console.error('Error al cargar personas:', error);
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Si se selecciona una bodega, autocompletar ubicación
+    if (name === 'bodega_id') {
+      const bodegaSeleccionada = bodegas.find(b => b.id === parseInt(value));
+      if (bodegaSeleccionada) {
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          ubicacion: bodegaSeleccionada.ubicacion,
+          razon_social_id: bodegaSeleccionada.id_empresa
+        }));
+        return;
+      }
+    }
+    
+    // Si se resetea movil_tipo, limpiar movil_nombre
+    if (name === 'movil_tipo') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        movil_nombre: ''
+      }));
+      return;
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -96,8 +174,8 @@ const RegistroProyecto = () => {
   const validarPaso = (pasoActual) => {
     switch(pasoActual) {
       case 1:
-        if (!formData.bodega_id || !formData.ubicacion) {
-          alert('Por favor, seleccione una bodega y ubicación');
+        if (!formData.razon_social_id || !formData.bodega_id || !formData.ubicacion) {
+          alert('Por favor, seleccione una empresa, bodega y ubicación');
           return false;
         }
         return true;
@@ -108,8 +186,16 @@ const RegistroProyecto = () => {
         }
         return true;
       case 3:
-        if (!formData.movil_tipo || !formData.movil_nombre) {
-          alert('Por favor, complete la información del móvil');
+        if (!formData.movil_tipo) {
+          alert('Por favor, seleccione el tipo de móvil');
+          return false;
+        }
+        if (!formData.responsable) {
+          alert('Por favor, ingrese el responsable del proyecto');
+          return false;
+        }
+        if (formData.movil_tipo === 'con_proyecto' && !formData.movil_nombre) {
+          alert('Por favor, ingrese el nombre del proyecto');
           return false;
         }
         return true;
@@ -145,6 +231,7 @@ const RegistroProyecto = () => {
 
   const limpiarFormulario = () => {
     setFormData({
+      razon_social_id: '',
       bodega_id: '',
       ubicacion: '',
       departamento: '',
@@ -154,8 +241,7 @@ const RegistroProyecto = () => {
       movil_nombre: '',
       proyecto_padre_id: '',
       descripcion: '',
-      fecha_inicio: '',
-      fecha_fin: '',
+      fecha_registro: new Date().toISOString().split('T')[0], // Fecha actual
       responsable: '',
       estado: 'activo'
     });
@@ -259,53 +345,57 @@ const RegistroProyecto = () => {
             <p className="step-description">Seleccione la ubicación del proyecto</p>
 
             <div className="form-grid">
-              <div className="form-group">
-                <label>Bodega / Almacén *</label>
+              <div className="form-group full-width">
+                <label>Razón Social (Empresa) *</label>
                 <select
-                  name="bodega_id"
-                  value={formData.bodega_id}
+                  name="razon_social_id"
+                  value={formData.razon_social_id}
                   onChange={handleInputChange}
                   required
                 >
-                  <option value="">Seleccione una bodega</option>
-                  {bodegas.map(bodega => (
-                    <option key={bodega.id} value={bodega.id}>
-                      {bodega.nombre} - {bodega.departamento}
+                  <option value="">Seleccione una empresa</option>
+                  {empresas.map(empresa => (
+                    <option key={empresa.id} value={empresa.id}>
+                      {empresa.razon_social} {empresa.ruc ? `- RUC: ${empresa.ruc}` : ''}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div className="form-group">
-                <label>Ubicación *</label>
+                <label>Bodega / Almacén *</label>
                 <select
-                  name="ubicacion"
-                  value={formData.ubicacion}
+                  name="bodega_id"
+                  value={formData.bodega_id}
                   onChange={handleInputChange}
+                  disabled={!formData.razon_social_id}
                   required
                 >
-                  <option value="">Seleccione ubicación</option>
-                  <option value="lima">Lima</option>
-                  <option value="callao">Callao</option>
-                  <option value="arequipa">Arequipa</option>
-                  <option value="cusco">Cusco</option>
-                  <option value="otro">Otro Departamento</option>
+                  <option value="">
+                    {formData.razon_social_id ? 'Seleccione una bodega' : 'Primero seleccione una empresa'}
+                  </option>
+                  {bodegas
+                    .filter(bodega => bodega.id_empresa === parseInt(formData.razon_social_id))
+                    .map(bodega => (
+                      <option key={bodega.id} value={bodega.id}>
+                        {bodega.nombre} - {bodega.departamento}
+                      </option>
+                    ))}
                 </select>
               </div>
 
-              {formData.ubicacion === 'otro' && (
-                <div className="form-group full-width">
-                  <label>Especifique el Departamento *</label>
-                  <input
-                    type="text"
-                    name="departamento"
-                    value={formData.departamento}
-                    onChange={handleInputChange}
-                    placeholder="Ingrese el nombre del departamento"
-                    required
-                  />
-                </div>
-              )}
+              <div className="form-group">
+                <label>Ubicación *</label>
+                <input
+                  type="text"
+                  name="ubicacion"
+                  value={formData.ubicacion}
+                  readOnly
+                  placeholder="Se autocompletará al seleccionar bodega"
+                  className="input-readonly"
+                  required
+                />
+              </div>
             </div>
 
             <div className="form-actions">
@@ -418,20 +508,6 @@ const RegistroProyecto = () => {
                 </div>
               </div>
 
-              {formData.movil_tipo === 'sin_proyecto' && (
-                <div className="form-group full-width">
-                  <label>Nombre de la Persona *</label>
-                  <input
-                    type="text"
-                    name="movil_nombre"
-                    value={formData.movil_nombre}
-                    onChange={handleInputChange}
-                    placeholder="Ej: Juan Pérez"
-                    required
-                  />
-                </div>
-              )}
-
               {formData.movil_tipo === 'con_proyecto' && (
                 <>
                   <div className="form-group full-width">
@@ -456,16 +532,24 @@ const RegistroProyecto = () => {
                 </>
               )}
 
-              <div className="form-group full-width">
-                <label>Responsable del Proyecto</label>
-                <input
-                  type="text"
-                  name="responsable"
-                  value={formData.responsable}
-                  onChange={handleInputChange}
-                  placeholder="Nombre del responsable"
-                />
-              </div>
+              {formData.movil_tipo && (
+                <div className="form-group full-width">
+                  <label>Responsable del Proyecto *</label>
+                  <select
+                    name="responsable"
+                    value={formData.responsable}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Seleccione una persona</option>
+                    {personas.map(persona => (
+                      <option key={persona.id} value={persona.id}>
+                        {persona.nombre} {persona.apellido} - {persona.cargo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <div className="form-actions">
@@ -488,6 +572,12 @@ const RegistroProyecto = () => {
             <div className="resumen-container">
               <div className="resumen-section">
                 <h4>📍 Ubicación</h4>
+                <div className="resumen-item">
+                  <span className="resumen-label">Empresa:</span>
+                  <span className="resumen-value">
+                    {empresas.find(e => e.id === parseInt(formData.razon_social_id))?.razon_social || '-'}
+                  </span>
+                </div>
                 <div className="resumen-item">
                   <span className="resumen-label">Bodega:</span>
                   <span className="resumen-value">
@@ -513,16 +603,30 @@ const RegistroProyecto = () => {
                 <div className="resumen-item">
                   <span className="resumen-label">Tipo:</span>
                   <span className="resumen-value">
-                    {formData.movil_tipo === 'sin_proyecto' ? 'Persona' : 'Proyecto con Subproyectos'}
+                    {formData.movil_tipo === 'sin_proyecto' 
+                      ? 'Móvil sin Proyecto (Persona)' 
+                      : formData.movil_tipo === 'con_proyecto'
+                      ? 'Móvil con Proyecto (Con Subproyectos)'
+                      : '-'}
                   </span>
                 </div>
-                <div className="resumen-item">
-                  <span className="resumen-label">Nombre:</span>
-                  <span className="resumen-value">{formData.movil_nombre || '-'}</span>
-                </div>
+                {formData.movil_tipo === 'con_proyecto' && (
+                  <div className="resumen-item">
+                    <span className="resumen-label">Nombre del Proyecto:</span>
+                    <span className="resumen-value">{formData.movil_nombre || '-'}</span>
+                  </div>
+                )}
                 <div className="resumen-item">
                   <span className="resumen-label">Responsable:</span>
-                  <span className="resumen-value">{formData.responsable || '-'}</span>
+                  <span className="resumen-value">
+                    {formData.responsable 
+                      ? (() => {
+                          const persona = personas.find(p => p.id === parseInt(formData.responsable));
+                          return persona ? `${persona.nombre} ${persona.apellido}` : '-';
+                        })()
+                      : '-'
+                    }
+                  </span>
                 </div>
               </div>
 
@@ -537,26 +641,15 @@ const RegistroProyecto = () => {
                 />
               </div>
 
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Fecha de Inicio</label>
-                  <input
-                    type="date"
-                    name="fecha_inicio"
-                    value={formData.fecha_inicio}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label>Fecha de Fin (Estimada)</label>
-                  <input
-                    type="date"
-                    name="fecha_fin"
-                    value={formData.fecha_fin}
-                    onChange={handleInputChange}
-                  />
-                </div>
+              <div className="form-group full-width">
+                <label>Fecha de Registro</label>
+                <input
+                  type="date"
+                  name="fecha_registro"
+                  value={formData.fecha_registro}
+                  readOnly
+                  className="input-readonly"
+                />
               </div>
             </div>
 
