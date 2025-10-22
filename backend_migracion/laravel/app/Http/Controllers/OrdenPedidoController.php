@@ -141,7 +141,6 @@ class OrdenPedidoController extends Controller
                 'fecha_pedido' => $validated['fecha_pedido'],
                 'observacion' => $validated['observacion'] ?? null,
                 'estado' => 'PENDIENTE',
-                'prioridad' => 'MEDIA',
                 'fecha_creacion' => now(),
                 'usuario_creacion' => 'sistema' // TODO: Obtener usuario autenticado
             ]);

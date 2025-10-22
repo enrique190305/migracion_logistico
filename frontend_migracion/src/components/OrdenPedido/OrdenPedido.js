@@ -7,6 +7,7 @@ import {
   obtenerCorrelativo,
   guardarOrdenPedido
 } from '../../services/pedidosAPI';
+import Notificacion from './Notificacion';
 
 const OrdenPedido = () => {
   // Estados para catálogos
@@ -33,8 +34,28 @@ const OrdenPedido = () => {
 
   // Estados de UI
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  
+  // Estado para notificaciones personalizadas
+  const [notificacion, setNotificacion] = useState(null);
+
+  /**
+   * Mostrar notificación personalizada
+   */
+  const mostrarNotificacion = (tipo, titulo, mensaje, detalles = []) => {
+    setNotificacion({
+      tipo,
+      titulo,
+      mensaje,
+      detalles
+    });
+  };
+
+  /**
+   * Cerrar notificación
+   */
+  const cerrarNotificacion = () => {
+    setNotificacion(null);
+  };
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -59,7 +80,15 @@ const OrdenPedido = () => {
       setFechaPedido(hoy);
 
     } catch (err) {
-      setError('Error al cargar datos iniciales: ' + err.message);
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Datos',
+        'No se pudieron cargar los datos iniciales del formulario.',
+        [
+          { label: '❌ Error', valor: err.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Por favor recargue la página' }
+        ]
+      );
     } finally {
       setLoading(false);
     }
@@ -77,7 +106,15 @@ const OrdenPedido = () => {
         const proyectosData = await obtenerProyectosPorEmpresa(empresaId);
         setProyectos(proyectosData);
       } catch (err) {
-        setError('Error al cargar proyectos: ' + err.message);
+        mostrarNotificacion(
+          'error',
+          'Error al Cargar Proyectos',
+          'No se pudieron cargar los proyectos de la empresa seleccionada.',
+          [
+            { label: '❌ Error', valor: err.message || 'Error desconocido' },
+            { label: '🏢 Empresa', valor: empresas.find(e => e.id_empresa === parseInt(empresaId))?.razon_social || '' }
+          ]
+        );
       }
     }
   };
@@ -144,7 +181,14 @@ const OrdenPedido = () => {
       const nuevoCorrelativo = await obtenerCorrelativo();
       setCorrelativo(nuevoCorrelativo);
     } catch (err) {
-      setError('Error al obtener nuevo correlativo');
+      mostrarNotificacion(
+        'error',
+        'Error al Obtener Correlativo',
+        'No se pudo obtener el nuevo correlativo.',
+        [
+          { label: '❌ Error', valor: err.message || 'Error desconocido' }
+        ]
+      );
     }
   };
 
@@ -153,28 +197,61 @@ const OrdenPedido = () => {
     try {
       // Validaciones
       if (!idEmpresa) {
-        setError('Debe seleccionar una empresa');
+        mostrarNotificacion(
+          'warning',
+          'Empresa Requerida',
+          'Debe seleccionar una empresa antes de continuar.',
+          [
+            { label: '⚠️ Campo faltante', valor: 'Razón Social (Empresa)' },
+            { label: '📋 Acción', valor: 'Seleccione una empresa de la lista' }
+          ]
+        );
         return;
       }
       if (!idProyecto) {
-        setError('Debe seleccionar un proyecto');
+        mostrarNotificacion(
+          'warning',
+          'Proyecto Requerido',
+          'Debe seleccionar un proyecto antes de continuar.',
+          [
+            { label: '⚠️ Campo faltante', valor: 'Proyecto' },
+            { label: '🏢 Empresa', valor: empresas.find(e => e.id_empresa === parseInt(idEmpresa))?.razon_social || '' },
+            { label: '📋 Acción', valor: 'Seleccione un proyecto de la lista' }
+          ]
+        );
         return;
       }
       if (!fechaPedido) {
-        setError('Debe ingresar la fecha del pedido');
+        mostrarNotificacion(
+          'warning',
+          'Fecha Requerida',
+          'Debe ingresar la fecha del pedido.',
+          [
+            { label: '⚠️ Campo faltante', valor: 'Fecha de Creación' },
+            { label: '📋 Acción', valor: 'Ingrese una fecha válida' }
+          ]
+        );
         return;
       }
 
       // Validar detalles
       const detallesValidos = detalles.filter(d => d.codigoProducto && d.cantidadSolicitada > 0);
       if (detallesValidos.length === 0) {
-        setError('Debe agregar al menos un producto con cantidad');
+        mostrarNotificacion(
+          'warning',
+          'Productos Requeridos',
+          'Debe agregar al menos un producto con cantidad mayor a cero.',
+          [
+            { label: '⚠️ Problema', valor: 'No hay productos válidos' },
+            { label: '📦 Total de líneas', valor: detalles.length },
+            { label: '✓ Líneas válidas', valor: '0' },
+            { label: '📋 Acción', valor: 'Agregue productos y especifique cantidades' }
+          ]
+        );
         return;
       }
 
       setLoading(true);
-      setError('');
-      setSuccess('');
 
       // Preparar datos
       const ordenData = {
@@ -192,14 +269,40 @@ const OrdenPedido = () => {
 
       await guardarOrdenPedido(ordenData);
       
-      setSuccess('✅ Orden de pedido guardada exitosamente: ' + correlativo);
+      // Obtener datos para la notificación
+      const empresaSeleccionada = empresas.find(e => e.id_empresa === parseInt(idEmpresa));
+      const proyectoSeleccionado = proyectos.find(p => p.id_proyecto === parseInt(idProyecto));
+      
+      mostrarNotificacion(
+        'success',
+        'Orden de Pedido Guardada',
+        'La orden de pedido se ha registrado exitosamente en el sistema.',
+        [
+          { label: '📋 Correlativo', valor: correlativo },
+          { label: '🏢 Empresa', valor: empresaSeleccionada?.razon_social || '' },
+          { label: '📍 Proyecto', valor: proyectoSeleccionado?.nombre_proyecto || '' },
+          { label: '📦 Productos', valor: detallesValidos.length },
+          { label: '📅 Fecha', valor: new Date(fechaPedido).toLocaleDateString('es-PE') },
+          { label: '✅ Estado', valor: 'PENDIENTE' }
+        ]
+      );
+      
       setTimeout(() => {
         limpiarFormulario();
-        setSuccess('');
-      }, 3000);
+        cerrarNotificacion();
+      }, 4000);
 
     } catch (err) {
-      setError('❌ Error al guardar: ' + err.message);
+      mostrarNotificacion(
+        'error',
+        'Error al Guardar Orden',
+        'Ocurrió un error al intentar guardar la orden de pedido.',
+        [
+          { label: '❌ Error', valor: err.message || 'Error desconocido' },
+          { label: '📋 Correlativo', valor: correlativo },
+          { label: '🔧 Acción', valor: 'Verifique los datos e intente nuevamente' }
+        ]
+      );
     } finally {
       setLoading(false);
     }
@@ -212,9 +315,7 @@ const OrdenPedido = () => {
         <p className="orden-pedido-subtitle">Solicitud de productos para proyectos</p>
       </div>
 
-      {/* Mensajes */}
-      {error && <div className="mensaje-error">{error}</div>}
-      {success && <div className="mensaje-exito">{success}</div>}
+      {/* Mensaje de carga */}
       {loading && <div className="mensaje-info">⏳ Cargando...</div>}
 
       {/* Formulario Principal */}
@@ -415,6 +516,17 @@ const OrdenPedido = () => {
           </button>
         </div>
       </div>
+      
+      {/* Componente de Notificación */}
+      {notificacion && (
+        <Notificacion
+          tipo={notificacion.tipo}
+          titulo={notificacion.titulo}
+          mensaje={notificacion.mensaje}
+          detalles={notificacion.detalles}
+          onClose={cerrarNotificacion}
+        />
+      )}
     </div>
   );
 };

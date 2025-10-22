@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './OrdenesCompraServicio.css';
 import * as API from '../../services/ordenesAPI';
+import Notificacion from './Notificacion';
+import Confirmacion from './Confirmacion';
 
 const OrdenesCompraServicio = () => {
   // Estados para datos de catálogos (se llenan desde la API)
@@ -14,6 +16,12 @@ const OrdenesCompraServicio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  
+  // Estado para notificaciones personalizadas
+  const [notificacion, setNotificacion] = useState(null);
+  
+  // Estado para confirmaciones personalizadas
+  const [confirmacion, setConfirmacion] = useState(null);
   
   // Estados principales del formulario (DECLARADOS ANTES DE useEffect)
   const [tipoOrden, setTipoOrden] = useState('compra');
@@ -124,11 +132,12 @@ const OrdenesCompraServicio = () => {
     return { subtotalGeneral, igv, total };
   }, [productosAgregados]);
   
-  // Detectar si es compra directa basado en el total
+  // Detectar si es compra directa basado en el total Y si tiene orden de pedido
   useEffect(() => {
     const { total } = calcularTotales();
-    setEsCompraDirecta(total > 0 && total <= 500);
-  }, [calcularTotales]); // Ahora incluye calcularTotales como dependencia
+    // Solo es compra directa si tiene orden de pedido vinculada Y el total <= 500
+    setEsCompraDirecta(total > 0 && total <= 500 && idOrdenPedido !== '');
+  }, [calcularTotales, idOrdenPedido]); // Incluye idOrdenPedido como dependencia
   
   // Calcular subtotal cuando cambian precio o cantidad (para AÑADIR PRODUCTOS)
   useEffect(() => {
@@ -160,6 +169,45 @@ const OrdenesCompraServicio = () => {
   }, [descripcion, busquedaProducto]);
   
   // ============ FUNCIONES HELPER ============
+  
+  /**
+   * Mostrar notificación personalizada
+   */
+  const mostrarNotificacion = (tipo, titulo, mensaje, detalles = []) => {
+    setNotificacion({
+      tipo,
+      titulo,
+      mensaje,
+      detalles
+    });
+  };
+
+  /**
+   * Cerrar notificación
+   */
+  const cerrarNotificacion = () => {
+    setNotificacion(null);
+  };
+  
+  /**
+   * Mostrar confirmación personalizada
+   */
+  const mostrarConfirmacion = (tipo, titulo, mensaje, detalles, onConfirm) => {
+    setConfirmacion({
+      tipo,
+      titulo,
+      mensaje,
+      detalles,
+      onConfirm
+    });
+  };
+  
+  /**
+   * Cerrar confirmación
+   */
+  const cerrarConfirmacion = () => {
+    setConfirmacion(null);
+  };
   
   /**
    * Obtener el símbolo de moneda según el ID de moneda seleccionado
@@ -225,7 +273,14 @@ const OrdenesCompraServicio = () => {
       
     } catch (err) {
       console.error('Error al cargar orden de pedido:', err);
-      alert('Error al cargar los detalles de la orden de pedido');
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Orden de Pedido',
+        'No se pudieron obtener los detalles de la orden de pedido seleccionada.',
+        [
+          { label: 'Error', valor: err.message || 'Error desconocido' }
+        ]
+      );
       setIdOrdenPedido('');
     }
   };
@@ -321,7 +376,16 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
   // Insertar producto manualmente (AÑADIR PRODUCTOS)
   const handleInsertarProducto = () => {
     if (!descripcion || !cantidad || !precioUnitario) {
-      alert('Por favor complete los campos requeridos: Descripción, Cantidad y Precio Unitario');
+      mostrarNotificacion(
+        'warning',
+        'Campos Incompletos',
+        'Por favor complete todos los campos requeridos para agregar el producto.',
+        [
+          { label: 'Descripción', valor: descripcion || '❌ Falta completar' },
+          { label: 'Cantidad', valor: cantidad || '❌ Falta completar' },
+          { label: 'Precio Unitario', valor: precioUnitario || '❌ Falta completar' }
+        ]
+      );
       return;
     }
     
@@ -353,25 +417,55 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
   const handleGuardar = async () => {
     // Validación básica
     if (!proveedor || !moneda) {
-      alert('❌ Por favor complete los campos de proveedor y moneda');
+      mostrarNotificacion(
+        'warning',
+        'Campos Requeridos',
+        'Debe completar los campos de proveedor y moneda antes de guardar.',
+        [
+          { label: 'Proveedor', valor: proveedor ? '✓ Seleccionado' : '❌ No seleccionado' },
+          { label: 'Moneda', valor: moneda ? '✓ Seleccionada' : '❌ No seleccionada' }
+        ]
+      );
       return;
     }
     
     // Validar que haya empresa seleccionada (ya sea por orden de pedido o manualmente)
     if (!idOrdenPedido && !idEmpresa) {
-      alert('❌ Por favor seleccione una empresa');
+      mostrarNotificacion(
+        'warning',
+        'Empresa No Seleccionada',
+        'Debe seleccionar una empresa antes de guardar la orden.',
+        [
+          { label: 'Orden de Pedido', valor: idOrdenPedido || '❌ No vinculada' },
+          { label: 'Empresa Manual', valor: idEmpresa || '❌ No seleccionada' }
+        ]
+      );
       return;
     }
     
     if (productosAgregados.length === 0) {
-      alert('❌ No hay productos agregados');
+      mostrarNotificacion(
+        'warning',
+        'Sin Productos',
+        'No hay productos agregados a la orden. Debe agregar al menos un producto.',
+        []
+      );
       return;
     }
     
     // Validación: Todos los productos deben tener precio
     const productosSinPrecio = productosAgregados.filter(prod => !prod.precioUnitario || prod.precioUnitario <= 0);
     if (productosSinPrecio.length > 0) {
-      alert(`❌ Por favor ingrese precios para todos los productos.\n\nProductos sin precio: ${productosSinPrecio.length}`);
+      mostrarNotificacion(
+        'error',
+        'Productos Sin Precio',
+        'Todos los productos deben tener un precio unitario válido antes de guardar.',
+        [
+          { label: 'Total de productos', valor: productosAgregados.length },
+          { label: 'Productos sin precio', valor: productosSinPrecio.length },
+          { label: 'Acción requerida', valor: 'Ingrese precios para todos los productos' }
+        ]
+      );
       return;
     }
     
@@ -381,35 +475,53 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
     // Detectar si es compra directa (≤ 500) - SOLO SI HAY ORDEN DE PEDIDO
     if (idOrdenPedido && totalCalculado <= 500) {
       // Mostrar confirmación para compra directa
-      const confirmar = window.confirm(
-        `💰 COMPRA DIRECTA DETECTADA\n\n` +
-        `Total: ${simboloMoneda} ${totalCalculado.toFixed(2)}\n\n` +
-        `⚠️ Como el total es menor o igual a ${simboloMoneda} 500.00, esta orden se procesará como COMPRA DIRECTA.\n\n` +
-        `Los productos se agregarán directamente al Kardex sin generar Orden de Compra/Servicio.\n\n` +
-        `¿Desea continuar?`
+      mostrarConfirmacion(
+        'warning',
+        'COMPRA DIRECTA DETECTADA',
+        `Como el total es menor o igual a ${simboloMoneda} 500.00, esta orden se procesará como COMPRA DIRECTA.`,
+        [
+          { label: '💵 Total', valor: `${simboloMoneda} ${totalCalculado.toFixed(2)}` },
+          { label: '📋 Orden de Pedido', valor: ordenPedidoSeleccionada?.correlativo || '' },
+          { label: '⚙️ Procesamiento', valor: 'Directo al Kardex' },
+          { label: '📦 Tipo de movimiento', valor: 'INGRESO' },
+          { label: 'ℹ️ Nota', valor: 'No se generará OC/OS' }
+        ],
+        () => {
+          cerrarConfirmacion();
+          procesarGuardadoOrden();
+        }
       );
-      
-      if (!confirmar) {
-        return;
-      }
+      return;
     } else {
       // Confirmación normal para OC/OS
       const tipoMensaje = idOrdenPedido 
         ? `vinculada a la Orden de Pedido ${ordenPedidoSeleccionada?.correlativo}` 
         : 'sin vincular a Orden de Pedido';
         
-      const confirmar = window.confirm(
-        `📋 ${tipoOrden === 'compra' ? 'ORDEN DE COMPRA' : 'ORDEN DE SERVICIO'}\n\n` +
-        `Total: ${simboloMoneda} ${totalCalculado.toFixed(2)}\n\n` +
-        `Se generará una ${tipoOrden === 'compra' ? 'Orden de Compra' : 'Orden de Servicio'} ${tipoMensaje}.\n\n` +
-        `¿Desea continuar?`
+      mostrarConfirmacion(
+        'info',
+        `📋 ${tipoOrden === 'compra' ? 'ORDEN DE COMPRA' : 'ORDEN DE SERVICIO'}`,
+        `Se generará una ${tipoOrden === 'compra' ? 'Orden de Compra' : 'Orden de Servicio'} ${tipoMensaje}.`,
+        [
+          { label: '💵 Total', valor: `${simboloMoneda} ${totalCalculado.toFixed(2)}` },
+          { label: '📋 Correlativo', valor: correlativo },
+          { label: '🏢 Empresa', valor: razonSocial || 'No especificada' },
+          { label: '👤 Proveedor', valor: proveedores.find(p => p.id === parseInt(proveedor))?.nombre || '' },
+          { label: '📦 Productos/Servicios', valor: productosAgregados.length }
+        ],
+        () => {
+          cerrarConfirmacion();
+          procesarGuardadoOrden();
+        }
       );
-      
-      if (!confirmar) {
-        return;
-      }
+      return;
     }
-    
+  };
+  
+  /**
+   * Procesar el guardado de la orden (se ejecuta después de confirmar)
+   */
+  const procesarGuardadoOrden = async () => {
     setGuardando(true);
     
     try {
@@ -485,19 +597,30 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
       
       // Mostrar mensaje según el tipo de respuesta
       if (response.tipo === 'COMPRA_DIRECTA') {
-        alert(
-          `✅ ${response.mensaje}\n\n` +
-          `💰 COMPRA DIRECTA PROCESADA\n\n` +
-          `Total: ${simboloMoneda} ${response.total}\n\n` +
-          `Los productos han sido agregados directamente al Kardex sin generar OC/OS.\n\n` +
-          `Estado de la Orden de Pedido: ${response.estado_compra}`
+        mostrarNotificacion(
+          'success',
+          '✓ Compra Directa Procesada',
+          'Los productos han sido registrados exitosamente en el Kardex.',
+          [
+            { label: '📦 Productos registrados', valor: response.productos_registrados || productosAgregados.length },
+            { label: '🏢 Proyecto', valor: response.proyecto || 'Sin proyecto' },
+            { label: '📄 Documento', valor: response.documento || correlativo },
+            { label: '💵 Total', valor: `${simboloMoneda} ${response.total}` },
+            { label: '📋 Estado OP', valor: 'COMPLETADO' },
+            { label: 'ℹ️ Nota', valor: 'Montos ≤ S/ 500 van directo al Kardex' }
+          ]
         );
       } else {
-        alert(
-          `✅ ${response.mensaje}\n\n` +
-          `Correlativo: ${response.correlativo}\n` +
-          `Total: ${simboloMoneda} ${response.total}\n\n` +
-          (response.estado_compra ? `Estado de la Orden de Pedido: ${response.estado_compra}` : 'Sin vincular a Orden de Pedido')
+        mostrarNotificacion(
+          'success',
+          '✓ Orden Guardada Exitosamente',
+          response.mensaje || 'La orden se ha creado correctamente.',
+          [
+            { label: '📋 Correlativo', valor: response.correlativo },
+            { label: '💵 Total', valor: `${simboloMoneda} ${response.total}` },
+            { label: '📦 Tipo', valor: tipoOrden === 'compra' ? 'Orden de Compra' : 'Orden de Servicio' },
+            ...(response.estado_compra ? [{ label: '🔄 Estado OP', valor: response.estado_compra }] : [])
+          ]
         );
       }
       
@@ -530,7 +653,15 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
       
     } catch (err) {
       console.error('Error al guardar orden:', err);
-      alert(`❌ Error al guardar: ${err.message}`);
+      mostrarNotificacion(
+        'error',
+        'Error al Guardar Orden',
+        'Ocurrió un error al intentar guardar la orden. Por favor intente nuevamente.',
+        [
+          { label: '❌ Error', valor: err.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Verifique los datos e intente de nuevo' }
+        ]
+      );
     } finally {
       setGuardando(false);
     }
@@ -1225,14 +1356,18 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                       <>
                         <div style={{ marginBottom: '5px' }}>💰 COMPRA DIRECTA</div>
                         <div style={{ fontWeight: 'normal', fontSize: '12px' }}>
-                          Total ≤ {obtenerSimboloMoneda()} 500.00 - Los productos irán directo al Kardex
+                          Total ≤ {obtenerSimboloMoneda()} 500.00 + Orden de Pedido vinculada<br/>
+                          → Los productos irán directo al KARDEX sin generar OC/OS
                         </div>
                       </>
                     ) : (
                       <>
                         <div style={{ marginBottom: '5px' }}>📋 ORDEN DE COMPRA/SERVICIO</div>
                         <div style={{ fontWeight: 'normal', fontSize: '12px' }}>
-                          Total &gt; {obtenerSimboloMoneda()} 500.00 - Se generará OC/OS normal
+                          {total > 500 ? 
+                            `Total > ${obtenerSimboloMoneda()} 500.00 - Se generará OC/OS normal` :
+                            `Seleccione una Orden de Pedido o el total debe ser > ${obtenerSimboloMoneda()} 500.00`
+                          }
                         </div>
                       </>
                     )}
@@ -1295,6 +1430,29 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             </div>
           </div>
         </div>
+      )}
+
+      {/* Componente de Notificación */}
+      {notificacion && (
+        <Notificacion
+          tipo={notificacion.tipo}
+          titulo={notificacion.titulo}
+          mensaje={notificacion.mensaje}
+          detalles={notificacion.detalles}
+          onClose={cerrarNotificacion}
+        />
+      )}
+      
+      {/* Componente de Confirmación */}
+      {confirmacion && (
+        <Confirmacion
+          tipo={confirmacion.tipo}
+          titulo={confirmacion.titulo}
+          mensaje={confirmacion.mensaje}
+          detalles={confirmacion.detalles}
+          onConfirm={confirmacion.onConfirm}
+          onCancel={cerrarConfirmacion}
+        />
       )}
     </div>
   );
