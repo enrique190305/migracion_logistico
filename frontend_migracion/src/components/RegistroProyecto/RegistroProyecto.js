@@ -1,15 +1,41 @@
 
 import React, { useState, useEffect } from 'react';
 import './RegistroProyecto.css';
+import * as proyectosAPI from '../../services/proyectosAPI';
+import Notificacion from './Notificacion';
 
 const RegistroProyecto = () => {
   // Estados principales
   const [paso, setPaso] = useState(1); // Control de pasos del wizard
   const [empresas, setEmpresas] = useState([]);
   const [bodegas, setBodegas] = useState([]);
+  const [reservas, setReservas] = useState([]); // ✨ NUEVO
   const [proyectos, setProyectos] = useState([]);
   const [subproyectos, setSubproyectos] = useState([]);
   const [personas, setPersonas] = useState([]);
+  const [loading, setLoading] = useState(false); // ✨ NUEVO
+  
+  // Estado para notificaciones personalizadas
+  const [notificacion, setNotificacion] = useState(null);
+
+  /**
+   * Mostrar notificación personalizada
+   */
+  const mostrarNotificacion = (tipo, titulo, mensaje, detalles = []) => {
+    setNotificacion({
+      tipo,
+      titulo,
+      mensaje,
+      detalles
+    });
+  };
+
+  /**
+   * Cerrar notificación
+   */
+  const cerrarNotificacion = () => {
+    setNotificacion(null);
+  };
   
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -20,7 +46,7 @@ const RegistroProyecto = () => {
     departamento: '',
     
     // Paso 2: Tipo de Reserva
-    tipo_reserva: '',
+    tipo_reserva: '', // ✨ AHORA ES ID (número)
     area_ejecucion: '',
     
     // Paso 3: Definir Móvil
@@ -43,106 +69,136 @@ const RegistroProyecto = () => {
   useEffect(() => {
     cargarEmpresas();
     cargarBodegas();
+    cargarReservas(); // ✨ NUEVO
     cargarProyectos();
     cargarPersonas();
   }, []);
 
   const cargarEmpresas = async () => {
     try {
-      // En producción, esto sería una llamada al backend
-      // const response = await fetch('API_URL/empresas');
-      // const data = await response.json();
-      
-      // Simulación temporal
-      setEmpresas([
-        { id: 1, razon_social: 'EMPRESA ABC S.A.C.', ruc: '20123456789' },
-        { id: 2, razon_social: 'CONSTRUCTORA XYZ S.R.L.', ruc: '20987654321' },
-        { id: 3, razon_social: 'SERVICIOS GENERALES SAC', ruc: '20456789123' }
-      ]);
+      const data = await proyectosAPI.obtenerEmpresas();
+      setEmpresas(data);
     } catch (error) {
       console.error('Error al cargar empresas:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Empresas',
+        'No se pudieron cargar las empresas disponibles.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Por favor recargue la página' }
+        ]
+      );
     }
   };
 
   const cargarBodegas = async () => {
-    // Simulación de carga de bodegas con empresa
-    // En producción, esto sería una llamada al backend
-    setBodegas([
-      { id: 1, nombre: 'Bodega Lima Centro', ubicacion: 'Lima', departamento: 'Lima', id_empresa: 1 },
-      { id: 2, nombre: 'Bodega Lima Sur', ubicacion: 'Lima', departamento: 'Lima', id_empresa: 1 },
-      { id: 3, nombre: 'Bodega Callao', ubicacion: 'Callao', departamento: 'Callao', id_empresa: 2 },
-      { id: 4, nombre: 'Bodega Arequipa', ubicacion: 'Arequipa', departamento: 'Arequipa', id_empresa: 2 },
-      { id: 5, nombre: 'Bodega Cusco', ubicacion: 'Cusco', departamento: 'Cusco', id_empresa: 3 }
-    ]);
+    try {
+      const data = await proyectosAPI.obtenerBodegas();
+      setBodegas(data);
+    } catch (error) {
+      console.error('Error al cargar bodegas:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Bodegas',
+        'No se pudieron cargar las bodegas disponibles.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Por favor recargue la página' }
+        ]
+      );
+    }
+  };
+
+  const cargarReservas = async () => {
+    try {
+      const data = await proyectosAPI.obtenerReservas();
+      setReservas(data);
+    } catch (error) {
+      console.error('Error al cargar reservas:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Tipos de Reserva',
+        'No se pudieron cargar los tipos de reserva disponibles.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Por favor recargue la página' }
+        ]
+      );
+    }
   };
 
   const cargarProyectos = async () => {
-    // Simulación de carga de proyectos existentes
-    setProyectos([
-      { 
-        id: 1, 
-        nombre: 'Proyecto Construcción A', 
-        tipo: 'con_proyecto',
-        subproyectos: [
-          { id: 101, nombre: 'Subproyecto A1 - Cimentación' },
-          { id: 102, nombre: 'Subproyecto A2 - Estructura' }
-        ]
-      },
-      { 
-        id: 2, 
-        nombre: 'Juan Pérez - Mantenimiento', 
-        tipo: 'sin_proyecto',
-        subproyectos: []
-      }
-    ]);
+    try {
+      const data = await proyectosAPI.obtenerProyectos();
+      setProyectos(data);
+    } catch (error) {
+      console.error('Error al cargar proyectos:', error);
+    }
   };
 
   const cargarPersonas = async () => {
     try {
-      // Mock data - Reemplazar con llamada API real cuando esté disponible
-      const mockPersonas = [
-        { id: 1, nombre: 'Juan Carlos', apellido: 'García Pérez', cargo: 'Jefe de Proyecto' },
-        { id: 2, nombre: 'María Elena', apellido: 'Rodríguez López', cargo: 'Supervisor' },
-        { id: 3, nombre: 'Pedro Antonio', apellido: 'Martínez Silva', cargo: 'Coordinador' },
-        { id: 4, nombre: 'Ana Lucía', apellido: 'Fernández Torres', cargo: 'Jefe de Operaciones' },
-        { id: 5, nombre: 'Carlos Alberto', apellido: 'Sánchez Vargas', cargo: 'Gerente' },
-        { id: 6, nombre: 'Rosa María', apellido: 'Díaz Contreras', cargo: 'Asistente' },
-        { id: 7, nombre: 'Luis Miguel', apellido: 'Ramírez Castro', cargo: 'Supervisor' },
-        { id: 8, nombre: 'Carmen Julia', apellido: 'Torres Mendoza', cargo: 'Coordinadora' }
-      ];
-      setPersonas(mockPersonas);
-      
-      // Llamada API real (cuando esté disponible):
-      /*
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://127.0.0.1:8000/api/personas', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
+      const data = await proyectosAPI.obtenerPersonas();
       setPersonas(data);
-      */
     } catch (error) {
       console.error('Error al cargar personas:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Personas',
+        'No se pudieron cargar las personas responsables.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Por favor recargue la página' }
+        ]
+      );
     }
   };
 
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { name, value } = e.target;
+    
+    // Si se selecciona una empresa, cargar sus bodegas
+    if (name === 'razon_social_id') {
+      try {
+        const bodegasEmpresa = await proyectosAPI.obtenerBodegasPorEmpresa(value);
+        setBodegas(bodegasEmpresa);
+        setFormData(prev => ({
+          ...prev,
+          [name]: value,
+          bodega_id: '', // Resetear bodega al cambiar empresa
+          ubicacion: ''
+        }));
+      } catch (error) {
+        console.error('Error al cargar bodegas:', error);
+      }
+      return;
+    }
     
     // Si se selecciona una bodega, autocompletar ubicación
     if (name === 'bodega_id') {
-      const bodegaSeleccionada = bodegas.find(b => b.id === parseInt(value));
+      const bodegaSeleccionada = bodegas.find(b => b.id_bodega === parseInt(value));
       if (bodegaSeleccionada) {
         setFormData(prev => ({
           ...prev,
           [name]: value,
-          ubicacion: bodegaSeleccionada.ubicacion,
-          razon_social_id: bodegaSeleccionada.id_empresa
+          ubicacion: bodegaSeleccionada.ubicacion
         }));
         return;
       }
+    }
+    
+    // Si se cambia area_ejecucion, buscar el ID de la reserva correspondiente
+    if (name === 'area_ejecucion') {
+      const reservaSeleccionada = reservas.find(r => 
+        r.tipo_reserva.toLowerCase() === value.toLowerCase()
+      );
+      setFormData(prev => ({
+        ...prev,
+        area_ejecucion: value,
+        tipo_reserva: reservaSeleccionada ? reservaSeleccionada.id_reserva : ''
+      }));
+      return;
     }
     
     // Si se resetea movil_tipo, limpiar movil_nombre
@@ -175,27 +231,71 @@ const RegistroProyecto = () => {
     switch(pasoActual) {
       case 1:
         if (!formData.razon_social_id || !formData.bodega_id || !formData.ubicacion) {
-          alert('Por favor, seleccione una empresa, bodega y ubicación');
+          mostrarNotificacion(
+            'warning',
+            'Datos Incompletos - Paso 1',
+            'Debe completar todos los campos obligatorios antes de continuar.',
+            [
+              { label: '⚠️ Paso', valor: 'Bodega y Almacén' },
+              { label: '📋 Campos requeridos', valor: 'Empresa, Bodega y Ubicación' },
+              { label: '🔧 Acción', valor: 'Complete los campos y vuelva a intentar' }
+            ]
+          );
           return false;
         }
         return true;
       case 2:
         if (!formData.tipo_reserva || !formData.area_ejecucion) {
-          alert('Por favor, seleccione el tipo de reserva y área de ejecución');
+          mostrarNotificacion(
+            'warning',
+            'Datos Incompletos - Paso 2',
+            'Debe completar todos los campos obligatorios antes de continuar.',
+            [
+              { label: '⚠️ Paso', valor: 'Tipo de Reserva' },
+              { label: '📋 Campos requeridos', valor: 'Tipo de Reserva y Área de Ejecución' },
+              { label: '🔧 Acción', valor: 'Complete los campos y vuelva a intentar' }
+            ]
+          );
           return false;
         }
         return true;
       case 3:
         if (!formData.movil_tipo) {
-          alert('Por favor, seleccione el tipo de móvil');
+          mostrarNotificacion(
+            'warning',
+            'Tipo de Móvil Requerido',
+            'Debe seleccionar el tipo de móvil antes de continuar.',
+            [
+              { label: '⚠️ Campo faltante', valor: 'Tipo de Móvil' },
+              { label: '📋 Opciones', valor: 'Sin Proyecto o Con Proyecto' },
+              { label: '🔧 Acción', valor: 'Seleccione una opción' }
+            ]
+          );
           return false;
         }
         if (!formData.responsable) {
-          alert('Por favor, ingrese el responsable del proyecto');
+          mostrarNotificacion(
+            'warning',
+            'Responsable Requerido',
+            'Debe seleccionar un responsable para el proyecto.',
+            [
+              { label: '⚠️ Campo faltante', valor: 'Responsable' },
+              { label: '🔧 Acción', valor: 'Seleccione un responsable de la lista' }
+            ]
+          );
           return false;
         }
         if (formData.movil_tipo === 'con_proyecto' && !formData.movil_nombre) {
-          alert('Por favor, ingrese el nombre del proyecto');
+          mostrarNotificacion(
+            'warning',
+            'Nombre de Proyecto Requerido',
+            'Debe ingresar el nombre del proyecto.',
+            [
+              { label: '⚠️ Campo faltante', valor: 'Nombre del Proyecto' },
+              { label: '📋 Tipo seleccionado', valor: 'Con Proyecto' },
+              { label: '🔧 Acción', valor: 'Ingrese un nombre para el proyecto' }
+            ]
+          );
           return false;
         }
         return true;
@@ -207,25 +307,73 @@ const RegistroProyecto = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    setLoading(true);
     try {
-      console.log('Datos a enviar:', formData);
+      // Preparar datos para el backend
+      const proyectoData = {
+        razon_social_id: parseInt(formData.razon_social_id),
+        bodega_id: parseInt(formData.bodega_id),
+        tipo_reserva: parseInt(formData.tipo_reserva), // ID de la reserva
+        movil_tipo: formData.movil_tipo,
+        responsable: parseInt(formData.responsable),
+        fecha_registro: formData.fecha_registro
+      };
+
+      // Solo agregar campos opcionales si tienen valor
+      if (formData.movil_tipo === 'con_proyecto' && formData.movil_nombre) {
+        proyectoData.movil_nombre = formData.movil_nombre;
+      }
       
-      // Aquí iría la llamada al backend
-      // const response = await fetch('http://localhost/migracion_logistico/backend_migracion/controllers/RegistroProyecto.php', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData)
-      // });
+      if (formData.descripcion) {
+        proyectoData.descripcion = formData.descripcion;
+      }
+
+      console.log('Enviando datos:', proyectoData);
       
-      alert('Proyecto registrado exitosamente (Simulación)');
-      limpiarFormulario();
-      setPaso(1);
+      // Llamar al API
+      const response = await proyectosAPI.crearProyecto(proyectoData);
+      
+      // Obtener datos para la notificación
+      const empresaSeleccionada = empresas.find(e => e.id_empresa === parseInt(formData.razon_social_id));
+      const bodegaSeleccionada = bodegas.find(b => b.id_bodega === parseInt(formData.bodega_id));
+      const reservaSeleccionada = reservas.find(r => r.id_reserva === parseInt(formData.tipo_reserva));
+      
+      mostrarNotificacion(
+        'success',
+        'Proyecto Registrado Exitosamente',
+        'El proyecto se ha creado correctamente en el sistema.',
+        [
+          { label: '📋 Código', valor: response.data.codigo_proyecto },
+          { label: '🏢 Empresa', valor: empresaSeleccionada?.razon_social || '-' },
+          { label: '🏪 Bodega', valor: bodegaSeleccionada?.nombre_bodega || '-' },
+          { label: '📦 Tipo Reserva', valor: reservaSeleccionada?.tipo_reserva || '-' },
+          { label: '👤 Tipo Móvil', valor: formData.movil_tipo === 'con_proyecto' ? 'Con Proyecto' : 'Sin Proyecto' },
+          { label: '✅ Estado', valor: 'ACTIVO' }
+        ]
+      );
+      
+      // Limpiar formulario después de 3 segundos
+      setTimeout(() => {
+        limpiarFormulario();
+        setPaso(1);
+        cargarProyectos();
+        cerrarNotificacion();
+      }, 3000);
       
     } catch (error) {
       console.error('Error al registrar proyecto:', error);
-      alert('Error al registrar el proyecto');
+      mostrarNotificacion(
+        'error',
+        'Error al Registrar Proyecto',
+        'Ocurrió un error al intentar crear el proyecto.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '🏢 Empresa', valor: empresas.find(e => e.id_empresa === parseInt(formData.razon_social_id))?.razon_social || '-' },
+          { label: '🔧 Acción', valor: 'Verifique los datos e intente nuevamente' }
+        ]
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -247,16 +395,36 @@ const RegistroProyecto = () => {
     });
   };
 
-  const verSubproyectos = (proyecto) => {
-    setProyectoSeleccionado(proyecto);
-    setSubproyectos(proyecto.subproyectos || []);
-    setMostrarSubproyectos(true);
+  const verSubproyectos = async (proyecto) => {
+    try {
+      setProyectoSeleccionado(proyecto);
+      setLoading(true);
+      
+      // Cargar subproyectos desde el backend
+      const subs = await proyectosAPI.obtenerSubproyectos(proyecto.id_proyecto_almacen);
+      setSubproyectos(subs);
+      setMostrarSubproyectos(true);
+    } catch (error) {
+      console.error('Error al cargar subproyectos:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Cargar Subproyectos',
+        'No se pudieron cargar los subproyectos del proyecto seleccionado.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '📁 Proyecto', valor: proyecto?.codigo_proyecto || '-' },
+          { label: '🔧 Acción', valor: 'Intente nuevamente' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const crearSubproyecto = () => {
     setFormData(prev => ({
       ...prev,
-      proyecto_padre_id: proyectoSeleccionado.id,
+      proyecto_padre_id: proyectoSeleccionado.id_proyecto_almacen,
       movil_tipo: 'con_proyecto'
     }));
     setMostrarSubproyectos(false);
@@ -283,7 +451,11 @@ const RegistroProyecto = () => {
           </div>
 
           <div className="subproyectos-grid">
-            {subproyectos.length === 0 ? (
+            {loading ? (
+              <div className="empty-state">
+                <p>Cargando subproyectos...</p>
+              </div>
+            ) : subproyectos.length === 0 ? (
               <div className="empty-state">
                 <p>No hay subproyectos registrados</p>
                 <button className="btn-primary" onClick={crearSubproyecto}>
@@ -292,9 +464,12 @@ const RegistroProyecto = () => {
               </div>
             ) : (
               subproyectos.map(sub => (
-                <div key={sub.id} className="subproyecto-card">
+                <div key={sub.id || sub.id_proyecto_almacen} className="subproyecto-card">
                   <div className="subproyecto-icon">📋</div>
-                  <h4>{sub.nombre}</h4>
+                  <h4>{sub.nombre || sub.nombre_proyecto}</h4>
+                  {sub.codigo_proyecto && (
+                    <p className="subproyecto-codigo">Código: {sub.codigo_proyecto}</p>
+                  )}
                   <div className="subproyecto-actions">
                     <button className="btn-secondary">Ver Detalles</button>
                     <button className="btn-secondary">Editar</button>
@@ -355,7 +530,7 @@ const RegistroProyecto = () => {
                 >
                   <option value="">Seleccione una empresa</option>
                   {empresas.map(empresa => (
-                    <option key={empresa.id} value={empresa.id}>
+                    <option key={empresa.id_empresa} value={empresa.id_empresa}>
                       {empresa.razon_social} {empresa.ruc ? `- RUC: ${empresa.ruc}` : ''}
                     </option>
                   ))}
@@ -374,13 +549,11 @@ const RegistroProyecto = () => {
                   <option value="">
                     {formData.razon_social_id ? 'Seleccione una bodega' : 'Primero seleccione una empresa'}
                   </option>
-                  {bodegas
-                    .filter(bodega => bodega.id_empresa === parseInt(formData.razon_social_id))
-                    .map(bodega => (
-                      <option key={bodega.id} value={bodega.id}>
-                        {bodega.nombre} - {bodega.departamento}
-                      </option>
-                    ))}
+                  {bodegas.map(bodega => (
+                    <option key={bodega.id_bodega} value={bodega.id_bodega}>
+                      {bodega.nombre} - {bodega.ubicacion}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -421,16 +594,15 @@ const RegistroProyecto = () => {
                 <select
                   name="area_ejecucion"
                   value={formData.area_ejecucion}
-                  onChange={(e) => {
-                    handleInputChange(e);
-                    setFormData(prev => ({ ...prev, tipo_reserva: e.target.value }));
-                  }}
+                  onChange={handleInputChange}
                   required
                 >
                   <option value="">Seleccione el área</option>
-                  <option value="externa">Externa</option>
-                  <option value="interna">Interna</option>
-                  <option value="comercial">Comercial</option>
+                  {reservas.map(reserva => (
+                    <option key={reserva.id_reserva} value={reserva.tipo_reserva.toLowerCase()}>
+                      {reserva.tipo_reserva}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -440,9 +612,7 @@ const RegistroProyecto = () => {
                   <div className="info-content">
                     <strong>Área seleccionada: {formData.area_ejecucion.toUpperCase()}</strong>
                     <p>
-                      {formData.area_ejecucion === 'externa' && 'Proyectos ejecutados fuera de las instalaciones'}
-                      {formData.area_ejecucion === 'interna' && 'Proyectos ejecutados dentro de las instalaciones'}
-                      {formData.area_ejecucion === 'comercial' && 'Proyectos de carácter comercial'}
+                      Tipo de reserva para gestión de recursos y materiales
                     </p>
                   </div>
                 </div>
@@ -544,7 +714,7 @@ const RegistroProyecto = () => {
                     <option value="">Seleccione una persona</option>
                     {personas.map(persona => (
                       <option key={persona.id} value={persona.id}>
-                        {persona.nombre} {persona.apellido} - {persona.cargo}
+                        {persona.nombre_completo || `${persona.nombre} ${persona.apellido || persona.usuario}`}
                       </option>
                     ))}
                   </select>
@@ -670,26 +840,38 @@ const RegistroProyecto = () => {
         <h3>Proyectos Registrados</h3>
         <div className="proyectos-grid">
           {proyectos.map(proyecto => (
-            <div key={proyecto.id} className="proyecto-card">
+            <div key={proyecto.id_proyecto_almacen} className="proyecto-card">
               <div className="proyecto-icon">
-                {proyecto.tipo === 'con_proyecto' ? '📊' : '👤'}
+                {proyecto.tipo_movil === 'CON_PROYECTO' ? '📊' : '👤'}
               </div>
-              <h4>{proyecto.nombre}</h4>
+              <h4>{proyecto.nombre_proyecto || proyecto.codigo_proyecto}</h4>
               <p className="proyecto-tipo">
-                {proyecto.tipo === 'con_proyecto' ? 'Proyecto con Subproyectos' : 'Persona'}
+                {proyecto.tipo_movil === 'CON_PROYECTO' ? 'Proyecto con Subproyectos' : 'Persona'}
               </p>
-              {proyecto.tipo === 'con_proyecto' && (
+              {proyecto.tipo_movil === 'CON_PROYECTO' && (
                 <button 
                   className="btn-secondary"
                   onClick={() => verSubproyectos(proyecto)}
+                  disabled={loading}
                 >
-                  Ver Subproyectos ({proyecto.subproyectos?.length || 0})
+                  Ver Subproyectos ({proyecto.cantidad_subproyectos || 0})
                 </button>
               )}
             </div>
           ))}
         </div>
       </div>
+
+      {/* Componente de Notificación */}
+      {notificacion && (
+        <Notificacion
+          tipo={notificacion.tipo}
+          titulo={notificacion.titulo}
+          mensaje={notificacion.mensaje}
+          detalles={notificacion.detalles}
+          onClose={cerrarNotificacion}
+        />
+      )}
     </div>
   );
 };

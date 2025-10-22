@@ -1,141 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RegistroBodega.css';
+import * as bodegasAPI from '../../services/bodegasAPI';
 
 const RegistroBodega = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
-  const [filtroCiudad, setFiltroCiudad] = useState('todos');
+  const [filtroEmpresa, setFiltroEmpresa] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Datos estáticos de bodegas
-  const bodegasData = [
-    {
-      bodega_no: 1,
-      bodega: 'LIMA',
-      ciudad: 'LIMA',
-      nombre_regional: 'LIMA',
-      estado: 'Activo',
-      nombre_control: 'Ortiz Pérez Wilson Alejandro',
-      fecha_control: '2021-06-22'
-    },
-    {
-      bodega_no: 2,
-      bodega: 'PIURA',
-      ciudad: 'PIURA',
-      nombre_regional: 'PIURA',
-      estado: 'Activo',
-      nombre_control: 'CAHUANA PRADO ANGEL CESAR',
-      fecha_control: '2024-01-26'
-    },
-    {
-      bodega_no: 3,
-      bodega: 'AREQUIPA',
-      ciudad: 'AREQUIPA',
-      nombre_regional: 'AREQUIPA',
-      estado: 'Activo',
-      nombre_control: 'RODRIGUEZ TORRES MARIA',
-      fecha_control: '2023-05-15'
-    },
-    {
-      bodega_no: 4,
-      bodega: 'CUSCO',
-      ciudad: 'CUSCO',
-      nombre_regional: 'CUSCO',
-      estado: 'Activo',
-      nombre_control: 'QUISPE FLORES JUAN CARLOS',
-      fecha_control: '2023-08-10'
-    },
-    {
-      bodega_no: 5,
-      bodega: 'TRUJILLO',
-      ciudad: 'TRUJILLO',
-      nombre_regional: 'LA LIBERTAD',
-      estado: 'Activo',
-      nombre_control: 'MENDEZ CASTRO ROSA ELENA',
-      fecha_control: '2023-11-22'
-    },
-    {
-      bodega_no: 6,
-      bodega: 'CHICLAYO',
-      ciudad: 'CHICLAYO',
-      nombre_regional: 'LAMBAYEQUE',
-      estado: 'Inactivo',
-      nombre_control: 'SOTO REYES PATRICIA',
-      fecha_control: '2022-09-18'
-    },
-    {
-      bodega_no: 7,
-      bodega: 'HUANCAYO',
-      ciudad: 'HUANCAYO',
-      nombre_regional: 'JUNIN',
-      estado: 'Activo',
-      nombre_control: 'VEGA TORRES MIGUEL ANGEL',
-      fecha_control: '2023-12-05'
-    },
-    {
-      bodega_no: 8,
-      bodega: 'ICA',
-      ciudad: 'ICA',
-      nombre_regional: 'ICA',
-      estado: 'Activo',
-      nombre_control: 'GOMEZ SILVA CARMEN LUCIA',
-      fecha_control: '2024-02-14'
-    },
-    {
-      bodega_no: 9,
-      bodega: 'TACNA',
-      ciudad: 'TACNA',
-      nombre_regional: 'TACNA',
-      estado: 'Activo',
-      nombre_control: 'PAREDES RAMOS JORGE LUIS',
-      fecha_control: '2023-07-30'
-    },
-    {
-      bodega_no: 10,
-      bodega: 'PUNO',
-      ciudad: 'PUNO',
-      nombre_regional: 'PUNO',
-      estado: 'Inactivo',
-      nombre_control: 'MAMANI CONDORI ALBERTO',
-      fecha_control: '2022-12-20'
-    },
-    {
-      bodega_no: 11,
-      bodega: 'AYACUCHO',
-      ciudad: 'AYACUCHO',
-      nombre_regional: 'AYACUCHO',
-      estado: 'Activo',
-      nombre_control: 'HUAMAN QUISPE SOFIA',
-      fecha_control: '2024-01-08'
-    },
-    {
-      bodega_no: 12,
-      bodega: 'CAJAMARCA',
-      ciudad: 'CAJAMARCA',
-      nombre_regional: 'CAJAMARCA',
-      estado: 'Activo',
-      nombre_control: 'VASQUEZ DIAZ PEDRO JOSE',
-      fecha_control: '2023-10-12'
-    }
-  ];
-
-  // Filtrar datos
-  const filteredData = bodegasData.filter(bodega => {
-    const matchSearch = bodega.bodega.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       bodega.bodega_no.toString().includes(searchTerm) ||
-                       bodega.nombre_control.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchEstado = filtroEstado === 'todos' || bodega.estado === filtroEstado;
-    const matchCiudad = filtroCiudad === 'todos' || bodega.ciudad === filtroCiudad;
-    
-    return matchSearch && matchEstado && matchCiudad;
+  // Estados para datos del backend
+  const [bodegas, setBodegas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [estadisticas, setEstadisticas] = useState({
+    total: 0,
+    activas: 0,
+    inactivas: 0
   });
 
-  // Calcular estadísticas
-  const totalBodegas = bodegasData.length;
-  const bodegasActivas = bodegasData.filter(b => b.estado === 'Activo').length;
-  const bodegasInactivas = bodegasData.filter(b => b.estado === 'Inactivo').length;
-  const regionalesUnicas = [...new Set(bodegasData.map(b => b.nombre_regional))].length;
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      const [bodegasData, stats] = await Promise.all([
+        bodegasAPI.obtenerBodegas(),
+        bodegasAPI.obtenerEstadisticas()
+      ]);
+      
+      setBodegas(bodegasData);
+      setEstadisticas(stats);
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+      alert('Error al cargar las bodegas: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filtrar datos
+  const filteredData = bodegas.filter(bodega => {
+    const matchSearch = bodega.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       bodega.id_bodega.toString().includes(searchTerm) ||
+                       bodega.ubicacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       bodega.empresa.razon_social.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchEstado = filtroEstado === 'todos' || bodega.estado === filtroEstado.toUpperCase();
+    const matchEmpresa = filtroEmpresa === 'todos' || bodega.empresa.razon_social === filtroEmpresa;
+    
+    return matchSearch && matchEstado && matchEmpresa;
+  });
+
+  // Obtener lista única de empresas para el filtro
+  const empresasUnicas = [...new Set(bodegas.map(b => b.empresa.razon_social))];
 
   // Paginación
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -152,28 +71,31 @@ const RegistroBodega = () => {
   };
 
   const handleEdit = (bodega) => {
-    alert(`✏️ Editar Bodega\n\nEditando: ${bodega.bodega}\nBodega No.: ${bodega.bodega_no}\nCiudad: ${bodega.ciudad}`);
+    alert(`✏️ Editar Bodega\n\nEditando: ${bodega.nombre}\nBodega No.: ${bodega.id_bodega}\nUbicación: ${bodega.ubicacion}\nEmpresa: ${bodega.empresa.razon_social}`);
   };
 
   const handleDelete = (bodega) => {
-    if (window.confirm(`¿Está seguro de eliminar la bodega "${bodega.bodega}"?`)) {
-      alert(`🗑️ Bodega eliminada: ${bodega.bodega}`);
+    if (window.confirm(`¿Está seguro de eliminar la bodega "${bodega.nombre}"?`)) {
+      alert(`🗑️ Bodega eliminada: ${bodega.nombre}`);
     }
   };
 
   const handleView = (bodega) => {
-    alert(`👁️ Detalles de la Bodega\n\nBodega No.: ${bodega.bodega_no}\nBodega: ${bodega.bodega}\nCiudad: ${bodega.ciudad}\nNombre de Regional: ${bodega.nombre_regional}\nEstado: ${bodega.estado}\nNombre Control: ${bodega.nombre_control}\nFecha Control: ${bodega.fecha_control}`);
+    alert(`👁️ Detalles de la Bodega\n\nBodega No.: ${bodega.id_bodega}\nNombre: ${bodega.nombre}\nUbicación: ${bodega.ubicacion}\nEmpresa: ${bodega.empresa.razon_social}\nEstado: ${bodega.estado}\nFecha Creación: ${bodega.fecha_creacion}`);
   };
 
   return (
     <div className="registro-bodega-container">
+      {/* Mensaje de carga */}
+      {loading && <div className="mensaje-info">⏳ Cargando datos...</div>}
+
       {/* Header */}
       <div className="registro-bodega-header">
         <div className="header-title">
           <span className="header-icon">🏢</span>
           <div>
             <h1>Registro de Bodega</h1>
-            <p>Gestión y control de bodegas por regional</p>
+            <p>Gestión y control de bodegas por empresa</p>
           </div>
         </div>
         <div className="header-actions">
@@ -193,7 +115,7 @@ const RegistroBodega = () => {
             <span>🏢</span>
           </div>
           <div className="stat-info">
-            <h3>{totalBodegas}</h3>
+            <h3>{estadisticas.total}</h3>
             <p>Total Bodegas</p>
           </div>
         </div>
@@ -202,7 +124,7 @@ const RegistroBodega = () => {
             <span>✅</span>
           </div>
           <div className="stat-info">
-            <h3>{bodegasActivas}</h3>
+            <h3>{estadisticas.activas}</h3>
             <p>Activas</p>
           </div>
         </div>
@@ -211,17 +133,17 @@ const RegistroBodega = () => {
             <span>❌</span>
           </div>
           <div className="stat-info">
-            <h3>{bodegasInactivas}</h3>
+            <h3>{estadisticas.inactivas}</h3>
             <p>Inactivas</p>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon purple">
-            <span>📍</span>
+            <span>🏢</span>
           </div>
           <div className="stat-info">
-            <h3>{regionalesUnicas}</h3>
-            <p>Regionales</p>
+            <h3>{empresasUnicas.length}</h3>
+            <p>Empresas</p>
           </div>
         </div>
       </div>
@@ -234,7 +156,7 @@ const RegistroBodega = () => {
             <label>Buscar</label>
             <input
               type="text"
-              placeholder="Bodega, número o control..."
+              placeholder="Bodega, ubicación o empresa..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -243,26 +165,17 @@ const RegistroBodega = () => {
             <label>Estado</label>
             <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
               <option value="todos">Todos los estados</option>
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
+              <option value="activo">Activo</option>
+              <option value="inactivo">Inactivo</option>
             </select>
           </div>
           <div className="filtro-group">
-            <label>Ciudad</label>
-            <select value={filtroCiudad} onChange={(e) => setFiltroCiudad(e.target.value)}>
-              <option value="todos">Todas las ciudades</option>
-              <option value="LIMA">Lima</option>
-              <option value="PIURA">Piura</option>
-              <option value="AREQUIPA">Arequipa</option>
-              <option value="CUSCO">Cusco</option>
-              <option value="TRUJILLO">Trujillo</option>
-              <option value="CHICLAYO">Chiclayo</option>
-              <option value="HUANCAYO">Huancayo</option>
-              <option value="ICA">Ica</option>
-              <option value="TACNA">Tacna</option>
-              <option value="PUNO">Puno</option>
-              <option value="AYACUCHO">Ayacucho</option>
-              <option value="CAJAMARCA">Cajamarca</option>
+            <label>Empresa</label>
+            <select value={filtroEmpresa} onChange={(e) => setFiltroEmpresa(e.target.value)}>
+              <option value="todos">Todas las empresas</option>
+              {empresasUnicas.map((empresa, index) => (
+                <option key={index} value={empresa}>{empresa}</option>
+              ))}
             </select>
           </div>
         </div>
@@ -287,31 +200,29 @@ const RegistroBodega = () => {
           <table className="bodega-table">
             <thead>
               <tr>
-                <th>Bodega No.</th>
-                <th>Bodega</th>
-                <th>Ciudad</th>
-                <th>Nombre de Regional</th>
+                <th>ID</th>
+                <th>Nombre Bodega</th>
+                <th>Ubicación</th>
+                <th>Empresa</th>
                 <th>Estado</th>
-                <th>Nombre Control</th>
-                <th>Fecha Control</th>
+                <th>Fecha Creación</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.length > 0 ? (
                 currentItems.map((bodega) => (
-                  <tr key={bodega.bodega_no}>
-                    <td><strong>{bodega.bodega_no}</strong></td>
-                    <td><strong>{bodega.bodega}</strong></td>
-                    <td>{bodega.ciudad}</td>
-                    <td>{bodega.nombre_regional}</td>
+                  <tr key={bodega.id_bodega}>
+                    <td><strong>{bodega.id_bodega}</strong></td>
+                    <td><strong>{bodega.nombre}</strong></td>
+                    <td>{bodega.ubicacion}</td>
+                    <td>{bodega.empresa.razon_social}</td>
                     <td>
                       <span className={`estado-badge ${bodega.estado.toLowerCase()}`}>
-                        {bodega.estado === 'Activo' ? '✅ Activo' : '❌ Inactivo'}
+                        {bodega.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'}
                       </span>
                     </td>
-                    <td>{bodega.nombre_control}</td>
-                    <td>{bodega.fecha_control}</td>
+                    <td>{bodega.fecha_creacion}</td>
                     <td>
                       <div className="actions-cell">
                         <button className="btn-icon btn-view" onClick={() => handleView(bodega)} title="Ver detalles">
@@ -329,7 +240,7 @@ const RegistroBodega = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" style={{ textAlign: 'center', padding: '50px' }}>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '50px' }}>
                     <div className="empty-state">
                       <div className="empty-state-icon">🏢</div>
                       <h3>No se encontraron bodegas</h3>

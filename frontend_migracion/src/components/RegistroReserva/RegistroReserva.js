@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RegistroReserva.css';
+import * as reservasAPI from '../../services/reservasAPI';
 
 const RegistroReserva = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -8,123 +9,50 @@ const RegistroReserva = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Datos estáticos de reservas
-  const reservasData = [
-    {
-      tipo_reserva_id: 1,
-      nombre_tipo_reserva: 'ADMINISTRATIVO',
-      estado: 'Activo',
-      cedula_control: '1048847902',
-      nombre_control: 'Ortiz Pérez Wilson Alejandro',
-      fecha_control: '2021-06-25'
-    },
-    {
-      tipo_reserva_id: 2,
-      nombre_tipo_reserva: 'INTERNA',
-      estado: 'Activo',
-      cedula_control: '1048847902',
-      nombre_control: 'Ortiz Pérez Wilson Alejandro',
-      fecha_control: '2021-06-25'
-    },
-    {
-      tipo_reserva_id: 3,
-      nombre_tipo_reserva: 'EXTERNA',
-      estado: 'Activo',
-      cedula_control: '1048847902',
-      nombre_control: 'Ortiz Pérez Wilson Alejandro',
-      fecha_control: '2021-06-25'
-    },
-    {
-      tipo_reserva_id: 4,
-      nombre_tipo_reserva: 'COMERCIAL',
-      estado: 'Activo',
-      cedula_control: '1048847902',
-      nombre_control: 'Ortiz Pérez Wilson Alejandro',
-      fecha_control: '2021-06-25'
-    },
-    {
-      tipo_reserva_id: 5,
-      nombre_tipo_reserva: 'EQUIPOS USADOS Y EN DESUSO',
-      estado: 'Activo',
-      cedula_control: '43870910',
-      nombre_control: 'PAJARES MENDOZA QUIMIDEZ',
-      fecha_control: '2022-03-15'
-    },
-    {
-      tipo_reserva_id: 6,
-      nombre_tipo_reserva: 'PROYECTO SIGMA',
-      estado: 'Activo',
-      cedula_control: '48042206',
-      nombre_control: 'CAMPOS TUESTA SIXTO',
-      fecha_control: '2023-04-24'
-    },
-    {
-      tipo_reserva_id: 7,
-      nombre_tipo_reserva: 'OPERACIONES',
-      estado: 'Activo',
-      cedula_control: '1023456789',
-      nombre_control: 'RODRIGUEZ MARTINEZ CARLOS',
-      fecha_control: '2023-08-10'
-    },
-    {
-      tipo_reserva_id: 8,
-      nombre_tipo_reserva: 'MANTENIMIENTO',
-      estado: 'Activo',
-      cedula_control: '1034567890',
-      nombre_control: 'FERNANDEZ LOPEZ ANA MARIA',
-      fecha_control: '2023-09-15'
-    },
-    {
-      tipo_reserva_id: 9,
-      nombre_tipo_reserva: 'LOGISTICA',
-      estado: 'Inactivo',
-      cedula_control: '1045678901',
-      nombre_control: 'TORRES SILVA PEDRO JOSE',
-      fecha_control: '2022-12-20'
-    },
-    {
-      tipo_reserva_id: 10,
-      nombre_tipo_reserva: 'PRODUCCION',
-      estado: 'Activo',
-      cedula_control: '1056789012',
-      nombre_control: 'GUTIERREZ RAMIREZ LUIS',
-      fecha_control: '2024-01-05'
-    },
-    {
-      tipo_reserva_id: 11,
-      nombre_tipo_reserva: 'DESARROLLO',
-      estado: 'Activo',
-      cedula_control: '1067890123',
-      nombre_control: 'SANCHEZ VARGAS ROBERTO',
-      fecha_control: '2023-11-18'
-    },
-    {
-      tipo_reserva_id: 12,
-      nombre_tipo_reserva: 'CALIDAD',
-      estado: 'Activo',
-      cedula_control: '1078901234',
-      nombre_control: 'MEDINA CASTRO JORGE',
-      fecha_control: '2023-10-22'
+  // Estados para datos del backend
+  const [reservas, setReservas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [estadisticas, setEstadisticas] = useState({
+    total: 0,
+    activas: 0,
+    inactivas: 0
+  });
+
+  // Cargar datos al montar el componente
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      const [reservasData, stats] = await Promise.all([
+        reservasAPI.obtenerReservas(),
+        reservasAPI.obtenerEstadisticas()
+      ]);
+      
+      setReservas(reservasData);
+      setEstadisticas(stats);
+    } catch (error) {
+      console.error('Error al cargar datos:', error);
+      alert('Error al cargar las reservas: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   // Filtrar datos
-  const filteredData = reservasData.filter(reserva => {
-    const matchSearch = reserva.nombre_tipo_reserva.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       reserva.tipo_reserva_id.toString().includes(searchTerm) ||
-                       reserva.nombre_control.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       reserva.cedula_control.includes(searchTerm);
-    const matchEstado = filtroEstado === 'todos' || reserva.estado === filtroEstado;
-    const matchTipo = filtroTipo === 'todos' || reserva.nombre_tipo_reserva === filtroTipo;
+  const filteredData = reservas.filter(reserva => {
+    const matchSearch = reserva.tipo_reserva.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       reserva.id_reserva.toString().includes(searchTerm);
+    const matchEstado = filtroEstado === 'todos' || reserva.estado === filtroEstado.toUpperCase();
+    const matchTipo = filtroTipo === 'todos' || reserva.tipo_reserva === filtroTipo;
     
     return matchSearch && matchEstado && matchTipo;
   });
 
-  // Calcular estadísticas
-  const totalReservas = reservasData.length;
-  const reservasActivas = reservasData.filter(r => r.estado === 'Activo').length;
-  const reservasInactivas = reservasData.filter(r => r.estado === 'Inactivo').length;
-  const tiposUnicos = [...new Set(reservasData.map(r => r.nombre_tipo_reserva))].length;
+  // Obtener lista única de tipos para el filtro
+  const tiposUnicos = [...new Set(reservas.map(r => r.tipo_reserva))];
 
   // Paginación
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -141,21 +69,24 @@ const RegistroReserva = () => {
   };
 
   const handleEdit = (reserva) => {
-    alert(`✏️ Editar Reserva\n\nEditando: ${reserva.nombre_tipo_reserva}\nTipo Reserva #: ${reserva.tipo_reserva_id}`);
+    alert(`✏️ Editar Reserva\n\nEditando: ${reserva.tipo_reserva}\nTipo Reserva #: ${reserva.id_reserva}`);
   };
 
   const handleDelete = (reserva) => {
-    if (window.confirm(`¿Está seguro de eliminar la reserva "${reserva.nombre_tipo_reserva}"?`)) {
-      alert(`🗑️ Reserva eliminada: ${reserva.nombre_tipo_reserva}`);
+    if (window.confirm(`¿Está seguro de eliminar la reserva "${reserva.tipo_reserva}"?`)) {
+      alert(`🗑️ Reserva eliminada: ${reserva.tipo_reserva}`);
     }
   };
 
   const handleView = (reserva) => {
-    alert(`👁️ Detalles de la Reserva\n\nTipo Reserva #: ${reserva.tipo_reserva_id}\nNombre Tipo Reserva: ${reserva.nombre_tipo_reserva}\nEstado: ${reserva.estado}\nCédula Control: ${reserva.cedula_control}\nNombre Control: ${reserva.nombre_control}\nFecha Control: ${reserva.fecha_control}`);
+    alert(`👁️ Detalles de la Reserva\n\nTipo Reserva #: ${reserva.id_reserva}\nNombre Tipo Reserva: ${reserva.tipo_reserva}\nEstado: ${reserva.estado}\nFecha Creación: ${reserva.fecha_creacion}`);
   };
 
   return (
     <div className="registro-reserva-container">
+      {/* Mensaje de carga */}
+      {loading && <div className="mensaje-info">⏳ Cargando datos...</div>}
+
       {/* Header */}
       <div className="registro-reserva-header">
         <div className="header-title">
@@ -182,7 +113,7 @@ const RegistroReserva = () => {
             <span>📋</span>
           </div>
           <div className="stat-info">
-            <h3>{totalReservas}</h3>
+            <h3>{estadisticas.total}</h3>
             <p>Total Reservas</p>
           </div>
         </div>
@@ -191,7 +122,7 @@ const RegistroReserva = () => {
             <span>✅</span>
           </div>
           <div className="stat-info">
-            <h3>{reservasActivas}</h3>
+            <h3>{estadisticas.activas}</h3>
             <p>Activas</p>
           </div>
         </div>
@@ -200,7 +131,7 @@ const RegistroReserva = () => {
             <span>❌</span>
           </div>
           <div className="stat-info">
-            <h3>{reservasInactivas}</h3>
+            <h3>{estadisticas.inactivas}</h3>
             <p>Inactivas</p>
           </div>
         </div>
@@ -209,7 +140,7 @@ const RegistroReserva = () => {
             <span>📊</span>
           </div>
           <div className="stat-info">
-            <h3>{tiposUnicos}</h3>
+            <h3>{tiposUnicos.length}</h3>
             <p>Tipos Únicos</p>
           </div>
         </div>
@@ -223,7 +154,7 @@ const RegistroReserva = () => {
             <label>Buscar</label>
             <input
               type="text"
-              placeholder="Tipo, cédula o control..."
+              placeholder="ID o tipo de reserva..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -240,16 +171,11 @@ const RegistroReserva = () => {
             <label>Tipo de Reserva</label>
             <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
               <option value="todos">Todos los tipos</option>
-              <option value="ADMINISTRATIVO">Administrativo</option>
-              <option value="INTERNA">Interna</option>
-              <option value="EXTERNA">Externa</option>
-              <option value="COMERCIAL">Comercial</option>
-              <option value="EQUIPOS USADOS Y EN DESUSO">Equipos Usados y en Desuso</option>
-              <option value="PROYECTO SIGMA">Proyecto Sigma</option>
-              <option value="OPERACIONES">Operaciones</option>
-              <option value="MANTENIMIENTO">Mantenimiento</option>
-              <option value="LOGISTICA">Logística</option>
-              <option value="PRODUCCION">Producción</option>
+              {tiposUnicos.map((tipo) => (
+                <option key={tipo} value={tipo}>
+                  {tipo}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -274,29 +200,25 @@ const RegistroReserva = () => {
           <table className="reserva-table">
             <thead>
               <tr>
-                <th>Tipo Reserva #</th>
-                <th>Nombre Tipo Reserva</th>
+                <th>ID</th>
+                <th>Tipo Reserva</th>
                 <th>Estado</th>
-                <th>Cédula Control</th>
-                <th>Nombre Control</th>
-                <th>Fecha Control</th>
+                <th>Fecha Creación</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {currentItems.length > 0 ? (
                 currentItems.map((reserva) => (
-                  <tr key={reserva.tipo_reserva_id}>
-                    <td><strong>{reserva.tipo_reserva_id}</strong></td>
-                    <td><strong>{reserva.nombre_tipo_reserva}</strong></td>
+                  <tr key={reserva.id_reserva}>
+                    <td><strong>{reserva.id_reserva}</strong></td>
+                    <td><strong>{reserva.tipo_reserva}</strong></td>
                     <td>
                       <span className={`estado-badge ${reserva.estado.toLowerCase()}`}>
-                        {reserva.estado === 'Activo' ? '✅ Activo' : '❌ Inactivo'}
+                        {reserva.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'}
                       </span>
                     </td>
-                    <td>{reserva.cedula_control}</td>
-                    <td>{reserva.nombre_control}</td>
-                    <td>{reserva.fecha_control}</td>
+                    <td>{reserva.fecha_creacion}</td>
                     <td>
                       <div className="actions-cell">
                         <button className="btn-icon btn-view" onClick={() => handleView(reserva)} title="Ver detalles">
@@ -314,7 +236,7 @@ const RegistroReserva = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '50px' }}>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '50px' }}>
                     <div className="empty-state">
                       <div className="empty-state-icon">📋</div>
                       <h3>No se encontraron reservas</h3>

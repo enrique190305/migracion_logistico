@@ -5,10 +5,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\OrdenCompraServicioController;
 use App\Http\Controllers\Api\AprobacionController;
+use App\Http\Controllers\Api\ProyectoController;
 use App\Http\Controllers\KardexController;
 use App\Http\Controllers\OrdenPedidoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BodegaController;
+use App\Http\Controllers\ReservaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -89,6 +92,73 @@ Route::prefix('pedidos')->group(function () {
     Route::post('/', [OrdenPedidoController::class, 'store']);
     Route::get('/{id}', [OrdenPedidoController::class, 'show']);
     Route::delete('/{id}', [OrdenPedidoController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - PROYECTOS (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('proyectos')->group(function () {
+    
+    // CATÁLOGOS (para los selectores del formulario)
+    Route::get('/empresas', [ProyectoController::class, 'obtenerEmpresas']);
+    Route::get('/bodegas', [ProyectoController::class, 'obtenerBodegas']);
+    Route::get('/bodegas/{id_empresa}', [ProyectoController::class, 'obtenerBodegasPorEmpresa']);
+    Route::get('/reservas', [ProyectoController::class, 'obtenerReservas']);
+    Route::get('/personas', [ProyectoController::class, 'obtenerPersonas']);
+    
+    // CRUD PROYECTOS
+    Route::get('/', [ProyectoController::class, 'index']);
+    Route::post('/', [ProyectoController::class, 'store']);
+    Route::get('/{id}', [ProyectoController::class, 'show']);
+    Route::put('/{id}', [ProyectoController::class, 'update']);
+    Route::delete('/{id}', [ProyectoController::class, 'destroy']);
+    
+    // SUBPROYECTOS
+    Route::get('/{id}/subproyectos', [ProyectoController::class, 'obtenerSubproyectos']);
+    Route::post('/{id}/subproyectos', [ProyectoController::class, 'crearSubproyecto']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - BODEGAS (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('bodegas')->group(function () {
+    // Listar todas las bodegas
+    Route::get('/', [BodegaController::class, 'index']);
+    
+    // Obtener bodegas por empresa
+    Route::get('/empresa/{id_empresa}', [BodegaController::class, 'porEmpresa']);
+    
+    // Estadísticas
+    Route::get('/estadisticas', [BodegaController::class, 'estadisticas']);
+    
+    // Ver una bodega específica
+    Route::get('/{id}', [BodegaController::class, 'show']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - RESERVAS (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('reservas')->group(function () {
+    // Listar todas las reservas
+    Route::get('/', [ReservaController::class, 'index']);
+    
+    // Obtener solo activas
+    Route::get('/activas', [ReservaController::class, 'activas']);
+    
+    // Estadísticas
+    Route::get('/estadisticas', [ReservaController::class, 'estadisticas']);
+    
+    // Ver una reserva específica
+    Route::get('/{id}', [ReservaController::class, 'show']);
 });
 
 /*
