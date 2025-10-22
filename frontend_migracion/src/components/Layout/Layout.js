@@ -6,6 +6,12 @@ import Aprobacion from '../Aprobacion/Aprobacion';
 import Kardex from '../Kardex/Kardex';
 import './Layout.css';
 import RegistroProyecto from '../RegistroProyecto/RegistroProyecto';
+import RegistroBodega from '../RegistroBodega/RegistroBodega';
+import RegistroReserva from '../RegistroReserva/RegistroReserva';
+import RegistroProductos from '../RegistroProductos/RegistroProductos';
+import EliminarOCS from '../EliminarOCS/EliminarOCS';
+import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
+import EditarProveedor from '../EditarProveedor/EditarProveedor';
 
 const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -29,14 +35,18 @@ const Layout = ({ onLogout, user: propUser }) => {
     switch (activeModule) {
       case 'dashboard':
         return <DashboardContent />;
+      case 'registro-bodega':
+        return <RegistroBodega />;
+      case 'registro-reserva':
+        return <RegistroReserva />;
       case 'orden-pedido':
         return <OrdenPedido />;
       case 'ordenes-compra':
         return <OrdenesCompraServicio />;
       case 'registro-productos':
-        return <ModuleContent title="Registro de Productos" icon="📦" />;
+        return <RegistroProductos />;
       case 'eliminar-oc':
-        return <ModuleContent title="Eliminar OC/OS" icon="🗑️" />;
+        return <EliminarOCS />;
       case 'ingreso-materiales':
         return <ModuleContent title="Ingreso de Materiales" icon="📥" />;
       case 'traslado-materiales':
@@ -44,9 +54,9 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'salida-materiales':
         return <ModuleContent title="Salida de Materiales" icon="📤" />;
       case 'registro-proveedores':
-        return <ModuleContent title="Registro de Proveedores" icon="🏢" />;
+        return <RegistroProveedor />;
       case 'editar-proveedores':
-        return <ModuleContent title="Editar Proveedores" icon="✏️" />;
+        return <EditarProveedor />;
       case 'registro-proyecto':
         return <RegistroProyecto />;
       case 'registro-personal':
@@ -350,6 +360,8 @@ const ModuleContent = ({ title, icon }) => {
 // Función helper para obtener títulos de módulos
 const getModuleTitle = (moduleId) => {
   const titles = {
+    'registro-bodega': 'Registro de Bodega',
+    'registro-reserva': 'Registro de Reserva',
     'orden-pedido': 'Orden de Pedido',
     'ordenes-compra': 'Órdenes de Compra/Servicio',
     'registro-productos': 'Registro de Productos',

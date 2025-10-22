@@ -3,6 +3,7 @@ import './Sidebar.css';
 
 const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin, user }) => {
   const [expandedCategories, setExpandedCategories] = useState({
+    activos: false,
     compras: true,
     materiales: false,
     proveedores: false,
@@ -13,6 +14,16 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
   console.log('🔍 Sidebar: Usuario es admin?', isAdmin);
 
   const menuCategories = [
+    {
+      id: 'activos',
+      title: 'Administración de Activos',
+      icon: '📦',
+      color: '#e74c3c',
+      items: [
+        { id: 'registro-bodega', title: 'Registro de Bodega', icon: '📦' },
+        { id: 'registro-reserva', title: 'Registro de Reserva', icon: '📋' },
+      ]
+    },
     {
       id: 'compras',
       title: 'Compras y Productos',
@@ -28,7 +39,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     {
       id: 'materiales',
       title: 'Gestión de Materiales',
-      icon: '📦',
+      icon: '📊',
       color: '#9b59b6',
       items: [
         { id: 'ingreso-materiales', title: 'Ingreso de Materiales', icon: '📥' },
@@ -53,9 +64,9 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
       icon: '👥',
       color: '#f39c12',
       items: [
-        { id: 'registro-personal', title: 'Registro de Personal', icon: '👥' },
-        { id: 'kardex', title: 'Kardex', icon: '📈' },
-        { id: 'registro-familia', title: 'Registro de Familia', icon: '👥' }
+        { id: 'registro-personal', title: 'Registro de Personal', icon: '👤' },
+        { id: 'kardex', title: 'Kardex', icon: '📝' },
+        { id: 'registro-familia', title: 'Registro de Familia', icon: '👨‍👩‍👧' }
       ]
     },
     {
@@ -63,7 +74,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
       title: 'Aprobación (Solo Admin)',
       icon: '✅',
       color: '#8e44ad',
-      adminOnly: true, // Marcar como solo para administradores
+      adminOnly: true,
       items: [
         { id: 'aprobacion-ordenes', title: 'Aprobación de Órdenes', icon: '✅' }
       ]

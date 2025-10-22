@@ -5,6 +5,12 @@ import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import Aprobacion from '../Aprobacion/Aprobacion'; 
 import Kardex from '../Kardex/Kardex ';
 import RegistroProyecto from '../RegistroProyecto/RegistroProyecto';
+import RegistroBodega from './components/RegistroBodega/RegistroBodega';
+import RegistroReserva from '../RegistroReserva/RegistroReserva';
+import RegistroProductos from '../RegistroProductos/RegistroProductos';
+import EliminarOCS from '../EliminarOCS/EliminarOCS';
+import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
+import EditarProveedor from '../EditarProveedor/EditarProveedor';
 
 const Dashboard = ({ onLogout }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -12,6 +18,20 @@ const Dashboard = ({ onLogout }) => {
   const [moduloActivo, setModuloActivo] = useState(null);
 
   const menuItems = [
+
+{ 
+      title: 'Registro de Bodega', 
+      icon: '📝', 
+      color: '#fc8c4bff',
+      category: 'bodega'
+    },
+    { 
+      title: 'Registro de Reserva', 
+      icon: '📝', 
+      color: '#fc8c4bff',
+      category: 'reserva'
+    },
+    
     // Fila 1 - Azul (Órdenes y Productos)
     { 
       title: 'Orden de Pedido', 
@@ -152,15 +172,17 @@ const Dashboard = ({ onLogout }) => {
 
         {/* Renderizar el módulo correspondiente */}
         <main className="dashboard-main-modulo">
+	  {moduloActivo === 'bodega' && <RegistroBodega />}
+          {moduloActivo === 'reserva' && <RegistroReserva />}
           {moduloActivo === 'pedido' && <OrdenPedido />}
           {moduloActivo === 'compras' && <OrdenesCompraServicio />}
-          {moduloActivo === 'productos' && <div className="modulo-placeholder">Módulo de Registro de Productos (En desarrollo)</div>}
-          {moduloActivo === 'eliminar' && <div className="modulo-placeholder">Módulo de Eliminar OC/OS (En desarrollo)</div>}
+          {moduloActivo === 'productos' && <RegistroProductos />}
+          {moduloActivo === 'eliminar' && <EliminarOCS />}
           {moduloActivo === 'ingreso' && <div className="modulo-placeholder">Módulo de Ingreso de Materiales (En desarrollo)</div>}
           {moduloActivo === 'traslado' && <div className="modulo-placeholder">Módulo de Traslado de Materiales (En desarrollo)</div>}
           {moduloActivo === 'salida' && <div className="modulo-placeholder">Módulo de Salida de Materiales (En desarrollo)</div>}
-          {moduloActivo === 'proveedores' && <div className="modulo-placeholder">Módulo de Registro de Proveedores (En desarrollo)</div>}
-          {moduloActivo === 'editar' && <div className="modulo-placeholder">Módulo de Editar Proveedores (En desarrollo)</div>}
+          {moduloActivo === 'proveedores' && <RegistroProveedor />}
+          {moduloActivo === 'editar' && <EditarProveedor />}
           {moduloActivo === 'proyecto' && <RegistroProyecto />}
           {moduloActivo === 'personal' && <div className="modulo-placeholder">Módulo de Registro de Personal (En desarrollo)</div>}
           {moduloActivo === 'kardex' && <Kardex />}
