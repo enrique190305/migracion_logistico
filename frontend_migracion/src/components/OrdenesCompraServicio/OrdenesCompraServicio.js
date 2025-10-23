@@ -729,13 +729,41 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
   const { subtotalGeneral, igv, total } = calcularTotales();
 
   return (
-    <div className="ordenes-compra-servicio-container">
-      <div className="ordenes-header">
-        <div className="ordenes-header-icon">🛒</div>
-        <h1>ÓRDENES DE COMPRA Y SERVICIOS</h1>
+    <div className="ordenes-compra-servicio-container" style={{
+      width: '100%',
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      padding: '20px',
+      boxSizing: 'border-box'
+    }}>
+      <div className="ordenes-header" style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '25px 40px',
+        borderRadius: '15px',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '20px',
+        marginBottom: '30px'
+      }}>
+        <div className="ordenes-header-icon" style={{ fontSize: '48px' }}>🛒</div>
+        <h1 style={{
+          color: 'white',
+          margin: '0',
+          fontSize: '32px',
+          fontWeight: '700',
+          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
+          letterSpacing: '1px'
+        }}>ÓRDENES DE COMPRA Y SERVICIOS</h1>
       </div>
       
-      <div className="ordenes-content">
+      <div className="ordenes-content" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        maxWidth: '1400px',
+        margin: '0 auto'
+      }}>
         {/* NUEVA SECCIÓN: Selección de Orden de Pedido */}
         <div className="ordenes-card orden-pedido-card">
           <div className="card-header">
@@ -779,14 +807,36 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
         </div>
         
         {/* Sección Superior: Información de Empresa y Proveedor */}
-        <div className="ordenes-grid-top">
+        <div className="ordenes-grid-top" style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '20px',
+          marginBottom: '20px'
+        }}>
           {/* Información de Empresa (READONLY si hay orden pedido, EDITABLE si no) */}
-          <div className="ordenes-card">
-            <div className="card-header">
-              <span className="card-icon">🏢</span>
-              <h3>INFORMACIÓN DE EMPRESA {idOrdenPedido && '(Auto-completado)'}</h3>
+          <div className="ordenes-card" style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden'
+          }}>
+            <div className="card-header" style={{
+              background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+              padding: '15px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <span className="card-icon" style={{ fontSize: '24px' }}>🏢</span>
+              <h3 style={{
+                color: 'white',
+                margin: '0',
+                fontSize: '16px',
+                fontWeight: '600',
+                letterSpacing: '0.5px'
+              }}>INFORMACIÓN DE EMPRESA {idOrdenPedido && '(Auto-completado)'}</h3>
             </div>
-            <div className="card-body">
+            <div className="card-body" style={{ padding: '20px' }}>
               <div className="form-row">
                 <div className="form-group">
                   <label>Razón Social:</label>
@@ -855,12 +905,29 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
           </div>
           
           {/* Información de Proveedor */}
-          <div className="ordenes-card">
-            <div className="card-header">
-              <span className="card-icon">📦</span>
-              <h3>INFORMACIÓN DE PROVEEDOR</h3>
+          <div className="ordenes-card" style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden'
+          }}>
+            <div className="card-header" style={{
+              background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+              padding: '15px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <span className="card-icon" style={{ fontSize: '24px' }}>📦</span>
+              <h3 style={{
+                color: 'white',
+                margin: '0',
+                fontSize: '16px',
+                fontWeight: '600',
+                letterSpacing: '0.5px'
+              }}>INFORMACIÓN DE PROVEEDOR</h3>
             </div>
-            <div className="card-body">
+            <div className="card-body" style={{ padding: '20px' }}>
               <div className="form-row">
                 <div className="form-group" style={{ width: '100%' }}>
                   <label>Proveedor:</label>
@@ -922,34 +989,103 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
         </div>
         
         {/* Tipo de Orden */}
-        <div className="ordenes-card tipo-orden-card">
-          <div className="card-header">
-            <span className="card-icon">📋</span>
-            <h3>TIPO DE ORDEN</h3>
+        <div className="ordenes-card tipo-orden-card" style={{
+          background: 'white',
+          borderRadius: '12px',
+          boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+          overflow: 'hidden',
+          marginBottom: '20px'
+        }}>
+          <div className="card-header" style={{
+            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            padding: '15px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <span className="card-icon" style={{ fontSize: '24px' }}>📋</span>
+            <h3 style={{
+              color: 'white',
+              margin: '0',
+              fontSize: '16px',
+              fontWeight: '600',
+              letterSpacing: '0.5px'
+            }}>TIPO DE ORDEN</h3>
           </div>
-          <div className="card-body">
-            <div className="tipo-orden-options">
-              <label className={`tipo-orden-option ${tipoOrden === 'compra' ? 'active' : ''}`}>
+          <div className="card-body" style={{ padding: '20px' }}>
+            <div className="tipo-orden-options" style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '20px',
+              padding: '10px 0'
+            }}>
+              <label className={`tipo-orden-option ${tipoOrden === 'compra' ? 'active' : ''}`} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '15px',
+                padding: '30px 20px',
+                border: tipoOrden === 'compra' ? '3px solid #667eea' : '3px solid #e0e0e0',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                background: tipoOrden === 'compra' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
+                minHeight: '150px',
+                transition: 'all 0.3s ease'
+              }}>
                 <input 
                   type="radio" 
                   name="tipoOrden" 
                   value="compra"
                   checked={tipoOrden === 'compra'}
                   onChange={(e) => setTipoOrden(e.target.value)}
+                  style={{ display: 'none' }}
                 />
-                <span className="option-icon">🛒</span>
-                <span className="option-text">COMPRA</span>
+                <span className="option-icon" style={{ 
+                  fontSize: '64px',
+                  color: tipoOrden === 'compra' ? 'white' : '#333'
+                }}>🛒</span>
+                <span className="option-text" style={{
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  color: tipoOrden === 'compra' ? 'white' : '#333',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase'
+                }}>COMPRA</span>
               </label>
-              <label className={`tipo-orden-option ${tipoOrden === 'servicio' ? 'active' : ''}`}>
+              <label className={`tipo-orden-option ${tipoOrden === 'servicio' ? 'active' : ''}`} style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '15px',
+                padding: '30px 20px',
+                border: tipoOrden === 'servicio' ? '3px solid #667eea' : '3px solid #e0e0e0',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                background: tipoOrden === 'servicio' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
+                minHeight: '150px',
+                transition: 'all 0.3s ease'
+              }}>
                 <input 
                   type="radio" 
                   name="tipoOrden" 
                   value="servicio"
                   checked={tipoOrden === 'servicio'}
                   onChange={(e) => setTipoOrden(e.target.value)}
+                  style={{ display: 'none' }}
                 />
-                <span className="option-icon">🔧</span>
-                <span className="option-text">SERVICIO</span>
+                <span className="option-icon" style={{ 
+                  fontSize: '64px',
+                  color: tipoOrden === 'servicio' ? 'white' : '#333'
+                }}>🔧</span>
+                <span className="option-text" style={{
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  color: tipoOrden === 'servicio' ? 'white' : '#333',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase'
+                }}>SERVICIO</span>
               </label>
             </div>
           </div>

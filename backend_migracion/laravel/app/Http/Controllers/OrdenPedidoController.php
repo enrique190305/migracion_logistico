@@ -37,14 +37,15 @@ class OrdenPedidoController extends Controller
         try {
             // Obtener proyectos de la empresa a través de la tabla intermedia
             $proyectos = ProyectoAlmacen::select(
-                    'proyecto_almacen.id_proyecto',
+                    'proyecto_almacen.id_proyecto_almacen',
                     'proyecto_almacen.nombre_proyecto',
-                    'proyecto_almacen.bodega',
+                    'proyecto_almacen.codigo_proyecto',
+                    'proyecto_almacen.tipo_movil',
                     'proyecto_almacen.estado'
                 )
-                ->join('empresa_proyecto', 'proyecto_almacen.id_proyecto', '=', 'empresa_proyecto.id_proyecto')
+                ->join('empresa_proyecto', 'proyecto_almacen.id_proyecto_almacen', '=', 'empresa_proyecto.id_proyecto_almacen')
                 ->where('empresa_proyecto.id_empresa', $id_empresa)
-                ->where('proyecto_almacen.estado', 'Activo')
+                ->where('proyecto_almacen.estado', 'ACTIVO')
                 ->orderBy('proyecto_almacen.nombre_proyecto', 'ASC')
                 ->get();
 
@@ -103,7 +104,7 @@ class OrdenPedidoController extends Controller
     public function index()
     {
         try {
-            $ordenes = OrdenPedido::with(['empresa', 'proyecto', 'detalles.producto'])
+            $ordenes = OrdenPedido::with(['empresa', 'proyectoAlmacen', 'detalles.producto'])
                 ->orderBy('fecha_creacion', 'desc')
                 ->get();
 
@@ -122,7 +123,7 @@ class OrdenPedidoController extends Controller
             $validated = $request->validate([
                 'correlativo' => 'required|unique:orden_pedido,correlativo',
                 'id_empresa' => 'required|exists:empresa,id_empresa',
-                'id_proyecto' => 'required|exists:proyecto_almacen,id_proyecto',
+                'id_proyecto_almacen' => 'required|exists:proyecto_almacen,id_proyecto_almacen',
                 'fecha_pedido' => 'required|date',
                 'observacion' => 'nullable|string',
                 'detalles' => 'required|array|min:1',
@@ -137,7 +138,7 @@ class OrdenPedidoController extends Controller
             $orden = OrdenPedido::create([
                 'correlativo' => $validated['correlativo'],
                 'id_empresa' => $validated['id_empresa'],
-                'id_proyecto' => $validated['id_proyecto'],
+                'id_proyecto_almacen' => $validated['id_proyecto_almacen'],
                 'fecha_pedido' => $validated['fecha_pedido'],
                 'observacion' => $validated['observacion'] ?? null,
                 'estado' => 'PENDIENTE',

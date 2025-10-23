@@ -246,9 +246,10 @@ class OrdenCompraServicioController extends Controller
                         'correlativo' => $orden->correlativo,
                         'id_empresa' => $orden->id_empresa,
                         'razon_social' => $orden->empresa ? $orden->empresa->razon_social : null,
-                        'id_proyecto' => $orden->id_proyecto,
-                        'proyecto_nombre' => $orden->proyecto ? $orden->proyecto->nombre_proyecto : null,
-                        'proyecto_bodega' => $orden->proyecto ? $orden->proyecto->bodega : null,
+                        'id_proyecto_almacen' => $orden->id_proyecto_almacen,
+                        'proyecto_nombre' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->nombre_proyecto : null,
+                        'codigo_proyecto' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->codigo_proyecto : null,
+                        'tipo_movil' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->tipo_movil : null,
                         'fecha_pedido' => $orden->fecha_pedido,
                         'observacion' => $orden->observacion,
                         'detalles' => $orden->detalles->map(function ($detalle) {
@@ -279,7 +280,7 @@ class OrdenCompraServicioController extends Controller
     public function obtenerOrdenPedido($id)
     {
         try {
-            $orden = OrdenPedido::with(['empresa', 'proyecto', 'detalles.producto'])
+            $orden = OrdenPedido::with(['empresa', 'proyectoAlmacen', 'detalles.producto'])
                 ->where('id_orden_pedido', $id)
                 ->first();
 
@@ -294,9 +295,10 @@ class OrdenCompraServicioController extends Controller
                 'correlativo' => $orden->correlativo,
                 'id_empresa' => $orden->id_empresa,
                 'razon_social' => $orden->empresa ? $orden->empresa->razon_social : null,
-                'id_proyecto' => $orden->id_proyecto,
-                'proyecto_nombre' => $orden->proyecto ? $orden->proyecto->nombre_proyecto : null,
-                'proyecto_bodega' => $orden->proyecto ? $orden->proyecto->bodega : null,
+                'id_proyecto_almacen' => $orden->id_proyecto_almacen,
+                'proyecto_nombre' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->nombre_proyecto : null,
+                'codigo_proyecto' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->codigo_proyecto : null,
+                'tipo_movil' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->tipo_movil : null,
                 'fecha_pedido' => $orden->fecha_pedido,
                 'observacion' => $orden->observacion,
                 'estado' => $orden->estado,

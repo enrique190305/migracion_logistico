@@ -13,7 +13,7 @@ class OrdenPedido extends Model
     protected $fillable = [
         'correlativo',
         'id_empresa',
-        'id_proyecto',
+        'id_proyecto_almacen',
         'fecha_pedido',
         'observacion',
         'estado',
@@ -34,10 +34,16 @@ class OrdenPedido extends Model
         return $this->belongsTo(Empresa::class, 'id_empresa', 'id_empresa');
     }
 
-    // Relación con Proyecto
+    // Relación con Proyecto Almacen
+    public function proyectoAlmacen()
+    {
+        return $this->belongsTo(ProyectoAlmacen::class, 'id_proyecto_almacen', 'id_proyecto_almacen');
+    }
+    
+    // Alias para compatibilidad
     public function proyecto()
     {
-        return $this->belongsTo(ProyectoAlmacen::class, 'id_proyecto', 'id_proyecto');
+        return $this->proyectoAlmacen();
     }
 
     // Relación con Detalles

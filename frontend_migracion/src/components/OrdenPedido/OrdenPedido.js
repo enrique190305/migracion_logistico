@@ -257,7 +257,7 @@ const OrdenPedido = () => {
       const ordenData = {
         correlativo,
         id_empresa: parseInt(idEmpresa),
-        id_proyecto: parseInt(idProyecto),
+        id_proyecto_almacen: parseInt(idProyecto),
         fecha_pedido: fechaPedido,
         observacion: observacionGeneral || null,
         detalles: detallesValidos.map(d => ({
@@ -271,7 +271,7 @@ const OrdenPedido = () => {
       
       // Obtener datos para la notificación
       const empresaSeleccionada = empresas.find(e => e.id_empresa === parseInt(idEmpresa));
-      const proyectoSeleccionado = proyectos.find(p => p.id_proyecto === parseInt(idProyecto));
+      const proyectoSeleccionado = proyectos.find(p => p.id_proyecto_almacen === parseInt(idProyecto));
       
       mostrarNotificacion(
         'success',
@@ -376,9 +376,9 @@ const OrdenPedido = () => {
               >
                 <option value="">-- Seleccione un proyecto --</option>
                 {proyectos.map(proyecto => (
-                  <option key={proyecto.id_proyecto} value={proyecto.id_proyecto}>
+                  <option key={proyecto.id_proyecto_almacen} value={proyecto.id_proyecto_almacen}>
                     {proyecto.nombre_proyecto} 
-                    {proyecto.bodega ? ` - ${proyecto.bodega}` : ''}
+                    {proyecto.codigo_proyecto ? ` - ${proyecto.codigo_proyecto}` : ''}
                   </option>
                 ))}
               </select>
