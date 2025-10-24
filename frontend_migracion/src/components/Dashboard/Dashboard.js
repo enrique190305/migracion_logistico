@@ -16,6 +16,7 @@ import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
+import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 
 
 
@@ -185,7 +186,7 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'compras' && <OrdenesCompraServicio />}
           {moduloActivo === 'productos' && <RegistroProductos />}
           {moduloActivo === 'eliminar' && <EliminarOCS />}
-          {moduloActivo === 'ingreso' && <div className="modulo-placeholder">Módulo de Ingreso de Materiales (En desarrollo)</div>}
+          {moduloActivo === 'ingreso' && <IngresoMateriales />}
           {moduloActivo === 'traslado' && <div className="modulo-placeholder">Módulo de Traslado de Materiales (En desarrollo)</div>}
           {moduloActivo === 'salida' && <div className="modulo-placeholder">Módulo de Salida de Materiales (En desarrollo)</div>}
           {moduloActivo === 'proveedores' && <RegistroProveedor />}

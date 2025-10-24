@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\OrdenCompraServicioController;
 use App\Http\Controllers\Api\AprobacionController;
 use App\Http\Controllers\Api\ProyectoController;
+use App\Http\Controllers\Api\IngresoMaterialController;
 use App\Http\Controllers\KardexController;
 use App\Http\Controllers\OrdenPedidoController;
 use App\Http\Controllers\ProductoController;
@@ -60,6 +61,41 @@ Route::prefix('ordenes')->group(function () {
     Route::get('/servicio/{id}', [OrdenCompraServicioController::class, 'obtenerDetalleOrdenServicio']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);
     Route::delete('/servicio/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenServicio']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - INGRESO DE MATERIALES (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('ingreso-materiales')->group(function () {
+    
+    // Catálogos y listados
+    Route::get('/ordenes-pendientes', [IngresoMaterialController::class, 'listarOrdenesPendientes']);
+    Route::get('/proyectos-almacen', [IngresoMaterialController::class, 'listarProyectosAlmacen']);
+    Route::get('/productos', [IngresoMaterialController::class, 'listarProductos']);
+    Route::get('/generar-numero', [IngresoMaterialController::class, 'generarNumeroIngreso']);
+    
+    // Información de órdenes
+    Route::post('/info-orden', [IngresoMaterialController::class, 'obtenerInfoOrden']);
+    Route::post('/precargar-productos', [IngresoMaterialController::class, 'precargarProductos']);
+    
+    // Guardar ingreso
+    Route::post('/guardar', [IngresoMaterialController::class, 'guardarIngreso']);
+    
+    // Historial
+    Route::get('/historial-ingresos', [IngresoMaterialController::class, 'obtenerHistorialIngresos']);
+    Route::get('/historial-servicios', [IngresoMaterialController::class, 'obtenerHistorialServicios']);
+    Route::get('/historial-directos', [IngresoMaterialController::class, 'obtenerHistorialDirectos']);
+    
+    // Ingreso Directo - Catálogos
+    Route::get('/empresas', [IngresoMaterialController::class, 'listarEmpresas']);
+    Route::get('/proveedores', [IngresoMaterialController::class, 'listarProveedores']);
+    Route::get('/monedas', [IngresoMaterialController::class, 'listarMonedas']);
+    
+    // Ingreso Directo - Guardar
+    Route::post('/guardar-directo', [IngresoMaterialController::class, 'guardarIngresoDirecto']);
 });
 
 /*

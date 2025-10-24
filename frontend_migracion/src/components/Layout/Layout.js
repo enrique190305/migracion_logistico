@@ -14,6 +14,7 @@ import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
+import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 
 
 
@@ -53,7 +54,7 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'eliminar-oc':
         return <EliminarOCS />;
       case 'ingreso-materiales':
-        return <ModuleContent title="Ingreso de Materiales" icon="📥" />;
+        return <IngresoMateriales />;
       case 'traslado-materiales':
         return <ModuleContent title="Traslado de Materiales" icon="🔄" />;
       case 'salida-materiales':
