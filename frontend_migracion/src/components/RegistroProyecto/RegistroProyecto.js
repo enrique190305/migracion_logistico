@@ -68,6 +68,15 @@ const RegistroProyecto = () => {
   // Estados para las vistas de proyectos registrados
   const [vistaProyectos, setVistaProyectos] = useState('menu'); // 'menu', 'con_proyecto', 'sin_proyecto'
 
+  // Estados para crear subproyecto
+  const [mostrarFormSubproyecto, setMostrarFormSubproyecto] = useState(false);
+  const [formSubproyecto, setFormSubproyecto] = useState({
+    nombre_proyecto: '',
+    descripcion: '',
+    responsable: '',
+    fecha_registro: new Date().toISOString().split('T')[0]
+  });
+
   // Cargar datos iniciales
   useEffect(() => {
     cargarEmpresas();
@@ -430,13 +439,91 @@ const RegistroProyecto = () => {
   };
 
   const crearSubproyecto = () => {
-    setFormData(prev => ({
+    setMostrarFormSubproyecto(true);
+  };
+
+  const handleSubproyectoChange = (e) => {
+    const { name, value } = e.target;
+    setFormSubproyecto(prev => ({
       ...prev,
-      proyecto_padre_id: proyectoSeleccionado.id_proyecto_almacen,
-      movil_tipo: 'con_proyecto'
+      [name]: value
     }));
-    setMostrarSubproyectos(false);
-    setPaso(1);
+  };
+
+  const handleSubmitSubproyecto = async (e) => {
+    e.preventDefault();
+    
+    if (!formSubproyecto.nombre_proyecto || !formSubproyecto.responsable) {
+      mostrarNotificacion(
+        'warning',
+        'Datos Incompletos',
+        'Debe completar todos los campos obligatorios.',
+        [
+          { label: '⚠️ Campos requeridos', valor: 'Nombre del Subproyecto y Responsable' }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await proyectosAPI.crearSubproyecto(
+        proyectoSeleccionado.id_proyecto_almacen,
+        formSubproyecto
+      );
+
+      mostrarNotificacion(
+        'success',
+        'Subproyecto Creado Exitosamente',
+        'El subproyecto se ha registrado correctamente.',
+        [
+          { label: '📋 Proyecto Padre', valor: proyectoSeleccionado.codigo_proyecto },
+          { label: '🆕 Subproyecto', valor: formSubproyecto.nombre_proyecto },
+          { label: '✅ Estado', valor: 'ACTIVO' }
+        ]
+      );
+
+      // Limpiar formulario y recargar subproyectos
+      setFormSubproyecto({
+        nombre_proyecto: '',
+        descripcion: '',
+        responsable: '',
+        fecha_registro: new Date().toISOString().split('T')[0]
+      });
+      setMostrarFormSubproyecto(false);
+
+      // Recargar subproyectos
+      const subs = await proyectosAPI.obtenerSubproyectos(proyectoSeleccionado.id_proyecto_almacen);
+      setSubproyectos(subs);
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al crear subproyecto:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Crear Subproyecto',
+        'Ocurrió un error al intentar crear el subproyecto.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' },
+          { label: '🔧 Acción', valor: 'Verifique los datos e intente nuevamente' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelarSubproyecto = () => {
+    setFormSubproyecto({
+      nombre_proyecto: '',
+      descripcion: '',
+      responsable: '',
+      fecha_registro: new Date().toISOString().split('T')[0]
+    });
+    setMostrarFormSubproyecto(false);
   };
 
   // Renderizado condicional según la vista
@@ -446,6 +533,7 @@ const RegistroProyecto = () => {
         <div className="proyecto-header">
           <button className="btn-volver" onClick={() => {
             setMostrarSubproyectos(false);
+            setMostrarFormSubproyecto(false);
             setVistaProyectos('con_proyecto');
           }}>
             ← Volver
@@ -453,12 +541,86 @@ const RegistroProyecto = () => {
           <h2>Subproyectos de: {proyectoSeleccionado?.nombre_proyecto || proyectoSeleccionado?.codigo_proyecto}</h2>
         </div>
 
+        {/* Formulario para crear subproyecto */}
+        {mostrarFormSubproyecto && (
+          <div className="subproyecto-form-container">
+            <form onSubmit={handleSubmitSubproyecto} className="subproyecto-form">
+              <h3>Crear Nuevo Subproyecto</h3>
+              <p className="form-description">Complete los datos del subproyecto para {proyectoSeleccionado?.codigo_proyecto}</p>
+
+              <div className="form-grid">
+                <div className="form-group full-width">
+                  <label>Nombre del Subproyecto *</label>
+                  <input
+                    type="text"
+                    name="nombre_proyecto"
+                    value={formSubproyecto.nombre_proyecto}
+                    onChange={handleSubproyectoChange}
+                    placeholder="Ej: Subproyecto - Fase 1"
+                    required
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Responsable del Subproyecto *</label>
+                  <select
+                    name="responsable"
+                    value={formSubproyecto.responsable}
+                    onChange={handleSubproyectoChange}
+                    required
+                  >
+                    <option value="">Seleccione una persona</option>
+                    {personas.map(persona => (
+                      <option key={persona.id} value={persona.id}>
+                        {persona.nombre_completo || persona.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Descripción (Opcional)</label>
+                  <textarea
+                    name="descripcion"
+                    value={formSubproyecto.descripcion}
+                    onChange={handleSubproyectoChange}
+                    rows="3"
+                    placeholder="Descripción del subproyecto..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Fecha de Registro</label>
+                  <input
+                    type="date"
+                    name="fecha_registro"
+                    value={formSubproyecto.fecha_registro}
+                    readOnly
+                    className="input-readonly"
+                  />
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={cancelarSubproyecto}>
+                  Cancelar
+                </button>
+                <button type="submit" className="btn-success" disabled={loading}>
+                  {loading ? 'Creando...' : '✓ Crear Subproyecto'}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         <div className="subproyectos-container">
           <div className="subproyectos-header">
             <h3>Lista de Subproyectos</h3>
-            <button className="btn-primary" onClick={crearSubproyecto}>
-              + Crear Nuevo Subproyecto
-            </button>
+            {!mostrarFormSubproyecto && (
+              <button className="btn-primary" onClick={crearSubproyecto}>
+                + Crear Nuevo Subproyecto
+              </button>
+            )}
           </div>
 
           <div className="subproyectos-grid">
@@ -468,10 +630,13 @@ const RegistroProyecto = () => {
               </div>
             ) : subproyectos.length === 0 ? (
               <div className="empty-state">
+                <div className="empty-icon">📋</div>
                 <p>No hay subproyectos registrados</p>
-                <button className="btn-primary" onClick={crearSubproyecto}>
-                  Crear el Primer Subproyecto
-                </button>
+                {!mostrarFormSubproyecto && (
+                  <button className="btn-primary" onClick={crearSubproyecto}>
+                    Crear el Primer Subproyecto
+                  </button>
+                )}
               </div>
             ) : (
               subproyectos.map(sub => (
