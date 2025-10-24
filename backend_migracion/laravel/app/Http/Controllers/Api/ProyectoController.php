@@ -10,6 +10,7 @@ use App\Models\Empresa;
 use App\Models\Bodega;
 use App\Models\Reserva;
 use App\Models\User;
+use App\Models\Personal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -123,17 +124,17 @@ class ProyectoController extends Controller
     public function obtenerPersonas()
     {
         try {
-            // La tabla logeo solo tiene: id, nombre, usuario (username)
-            $personas = User::select('id', 'nombre', 'usuario')
-                ->where('id_rol', '!=', 0) // Excluir usuarios inactivos si aplica
-                ->orderBy('nombre', 'asc')
+            // Obtener personal de la tabla personal con sus datos completos
+            $personas = Personal::select('id_personal', 'nom_ape', 'dni', 'ciudad')
+                ->orderBy('nom_ape', 'asc')
                 ->get()
                 ->map(function ($persona) {
                     return [
-                        'id' => $persona->id,
-                        'nombre' => $persona->nombre,
-                        'usuario' => $persona->usuario, // Username para referencia
-                        'nombre_completo' => $persona->nombre . ' (' . $persona->usuario . ')'
+                        'id' => $persona->id_personal,
+                        'nombre' => $persona->nom_ape,
+                        'dni' => $persona->dni,
+                        'ciudad' => $persona->ciudad,
+                        'nombre_completo' => $persona->nom_ape . ' - DNI: ' . $persona->dni
                     ];
                 });
 

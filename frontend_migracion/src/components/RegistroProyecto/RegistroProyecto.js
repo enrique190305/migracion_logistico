@@ -65,6 +65,9 @@ const RegistroProyecto = () => {
   const [mostrarSubproyectos, setMostrarSubproyectos] = useState(false);
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
 
+  // Estados para las vistas de proyectos registrados
+  const [vistaProyectos, setVistaProyectos] = useState('menu'); // 'menu', 'con_proyecto', 'sin_proyecto'
+
   // Cargar datos iniciales
   useEffect(() => {
     cargarEmpresas();
@@ -436,10 +439,13 @@ const RegistroProyecto = () => {
     return (
       <div className="registro-proyecto-container">
         <div className="proyecto-header">
-          <button className="btn-volver" onClick={() => setMostrarSubproyectos(false)}>
+          <button className="btn-volver" onClick={() => {
+            setMostrarSubproyectos(false);
+            setVistaProyectos('con_proyecto');
+          }}>
             ← Volver
           </button>
-          <h2>Subproyectos de: {proyectoSeleccionado?.nombre}</h2>
+          <h2>Subproyectos de: {proyectoSeleccionado?.nombre_proyecto || proyectoSeleccionado?.codigo_proyecto}</h2>
         </div>
 
         <div className="subproyectos-container">
@@ -714,7 +720,7 @@ const RegistroProyecto = () => {
                     <option value="">Seleccione una persona</option>
                     {personas.map(persona => (
                       <option key={persona.id} value={persona.id}>
-                        {persona.nombre_completo || `${persona.nombre} ${persona.apellido || persona.usuario}`}
+                        {persona.nombre_completo || persona.nombre}
                       </option>
                     ))}
                   </select>
@@ -792,7 +798,7 @@ const RegistroProyecto = () => {
                     {formData.responsable 
                       ? (() => {
                           const persona = personas.find(p => p.id === parseInt(formData.responsable));
-                          return persona ? `${persona.nombre} ${persona.apellido}` : '-';
+                          return persona ? (persona.nombre_completo || persona.nombre) : '-';
                         })()
                       : '-'
                     }
@@ -837,29 +843,112 @@ const RegistroProyecto = () => {
 
       {/* Lista de proyectos existentes */}
       <div className="proyectos-existentes">
-        <h3>Proyectos Registrados</h3>
-        <div className="proyectos-grid">
-          {proyectos.map(proyecto => (
-            <div key={proyecto.id_proyecto_almacen} className="proyecto-card">
-              <div className="proyecto-icon">
-                {proyecto.tipo_movil === 'CON_PROYECTO' ? '📊' : '👤'}
+        {vistaProyectos === 'menu' && (
+          <>
+            <h3>Proyectos Registrados</h3>
+            <div className="menu-proyectos-grid">
+              <div className="menu-proyectos-card" onClick={() => setVistaProyectos('con_proyecto')}>
+                <div className="menu-proyectos-icon">📊</div>
+                <h4>Móviles con Proyectos</h4>
+                <p>Ver todos los proyectos que se han creado y sus subproyectos</p>
+                <div className="menu-proyectos-badge">
+                  {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO').length} proyectos
+                </div>
               </div>
-              <h4>{proyecto.nombre_proyecto || proyecto.codigo_proyecto}</h4>
-              <p className="proyecto-tipo">
-                {proyecto.tipo_movil === 'CON_PROYECTO' ? 'Proyecto con Subproyectos' : 'Persona'}
-              </p>
-              {proyecto.tipo_movil === 'CON_PROYECTO' && (
-                <button 
-                  className="btn-secondary"
-                  onClick={() => verSubproyectos(proyecto)}
-                  disabled={loading}
-                >
-                  Ver Subproyectos ({proyecto.cantidad_subproyectos || 0})
+
+              <div className="menu-proyectos-card" onClick={() => setVistaProyectos('sin_proyecto')}>
+                <div className="menu-proyectos-icon">👤</div>
+                <h4>Móviles sin Proyectos</h4>
+                <p>Ver todos los proyectos de personas sin proyecto</p>
+                <div className="menu-proyectos-badge">
+                  {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO').length} personas
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {vistaProyectos === 'con_proyecto' && (
+          <>
+            <div className="proyectos-header-section">
+              <div>
+                <button className="btn-volver-small" onClick={() => setVistaProyectos('menu')}>
+                  ← Volver
                 </button>
+                <h3 style={{marginTop: '10px'}}>Móviles con Proyectos</h3>
+              </div>
+              <p className="proyectos-count">
+                {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO').length} proyecto(s)
+              </p>
+            </div>
+            <div className="proyectos-grid">
+              {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO').length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">📊</div>
+                  <p>No hay proyectos con subproyectos registrados</p>
+                </div>
+              ) : (
+                proyectos
+                  .filter(p => p.tipo_movil === 'CON_PROYECTO')
+                  .map(proyecto => (
+                    <div key={proyecto.id_proyecto_almacen} className="proyecto-card">
+                      <div className="proyecto-icon">📊</div>
+                      <h4>{proyecto.nombre_proyecto || proyecto.codigo_proyecto}</h4>
+                      <p className="proyecto-codigo">Código: {proyecto.codigo_proyecto}</p>
+                      <p className="proyecto-tipo">Proyecto con Subproyectos</p>
+                      <button 
+                        className="btn-secondary"
+                        onClick={() => verSubproyectos(proyecto)}
+                        disabled={loading}
+                      >
+                        Ver Subproyectos ({proyecto.cantidad_subproyectos || 0})
+                      </button>
+                    </div>
+                  ))
               )}
             </div>
-          ))}
-        </div>
+          </>
+        )}
+
+        {vistaProyectos === 'sin_proyecto' && (
+          <>
+            <div className="proyectos-header-section">
+              <div>
+                <button className="btn-volver-small" onClick={() => setVistaProyectos('menu')}>
+                  ← Volver
+                </button>
+                <h3 style={{marginTop: '10px'}}>Móviles sin Proyectos</h3>
+              </div>
+              <p className="proyectos-count">
+                {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO').length} persona(s)
+              </p>
+            </div>
+            <div className="proyectos-grid">
+              {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO').length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-icon">👤</div>
+                  <p>No hay personas sin proyecto registradas</p>
+                </div>
+              ) : (
+                proyectos
+                  .filter(p => p.tipo_movil === 'SIN_PROYECTO')
+                  .map(proyecto => (
+                    <div key={proyecto.id_proyecto_almacen} className="proyecto-card persona-card">
+                      <div className="proyecto-icon">👤</div>
+                      <h4>{proyecto.nombre_proyecto || proyecto.codigo_proyecto}</h4>
+                      <p className="proyecto-codigo">Código: {proyecto.codigo_proyecto}</p>
+                      <p className="proyecto-tipo">Persona</p>
+                      {proyecto.empresa_nombre && (
+                        <div className="persona-info">
+                          <p className="info-item">🏢 {proyecto.empresa_nombre}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Componente de Notificación */}
