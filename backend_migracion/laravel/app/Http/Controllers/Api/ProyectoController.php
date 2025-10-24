@@ -121,35 +121,43 @@ class ProyectoController extends Controller
     /**
      * Obtener personas/usuarios para asignar como responsables
      */
-    public function obtenerPersonas()
-    {
-        try {
-            // Obtener personal de la tabla personal con sus datos completos
-            $personas = Personal::select('id_personal', 'nom_ape', 'dni', 'ciudad')
-                ->orderBy('nom_ape', 'asc')
-                ->get()
-                ->map(function ($persona) {
-                    return [
-                        'id' => $persona->id_personal,
-                        'nombre' => $persona->nom_ape,
-                        'dni' => $persona->dni,
-                        'ciudad' => $persona->ciudad,
-                        'nombre_completo' => $persona->nom_ape . ' - DNI: ' . $persona->dni
-                    ];
-                });
+   public function obtenerPersonas()
+{
+    try {
+        // ✅ SOLO obtener de tabla personal (sin admin/usuario de logeo)
+        $personas = DB::table('personal')
+            ->select(
+                'id_personal as id',
+                'nom_ape as nombre',
+                'dni',
+                'ciudad',
+                DB::raw('CONCAT(nom_ape, " - DNI: ", dni) as nombre_completo')
+            )
+            ->orderBy('nom_ape', 'asc')
+            ->get()
+            ->map(function ($persona) {
+                return [
+                    'id' => $persona->id,
+                    'nombre' => $persona->nombre,
+                    'dni' => $persona->dni,
+                    'ciudad' => $persona->ciudad,
+                    'nombre_completo' => $persona->nombre_completo
+                ];
+            });
 
-            return response()->json([
-                'success' => true,
-                'data' => $personas
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Error al obtener personas: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener personas: ' . $e->getMessage()
-            ], 500);
-        }
+        return response()->json([
+            'success' => true,
+            'data' => $personas
+        ]);
+
+    } catch (\Exception $e) {
+        Log::error('Error al obtener personas: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al obtener personas: ' . $e->getMessage()
+        ], 500);
     }
+}
 
     /**
      * ========================================
@@ -213,84 +221,123 @@ class ProyectoController extends Controller
      * Crear nuevo proyecto (usando stored procedure)
      */
     public function store(Request $request)
-    {
-        // Validación
-        $validator = Validator::make($request->all(), [
-            'razon_social_id' => 'required|exists:empresa,id_empresa',
-            'bodega_id' => 'required|exists:bodega,id_bodega',
-            'tipo_reserva' => 'required|exists:reserva,id_reserva',
-            'movil_tipo' => 'required|in:sin_proyecto,con_proyecto',
-            'responsable' => 'required|exists:logeo,id',
-            'fecha_registro' => 'required|date',
-            // Condicional: si es con_proyecto, requiere nombre
-            'movil_nombre' => 'required_if:movil_tipo,con_proyecto|max:100',
-            'descripcion' => 'nullable|string',
+{
+    // ✅ NUEVO: Hook para auto-crear usuario en logeo si no existe
+    if ($request->has('responsable')) {
+        $this->sincronizarResponsableEnLogeo($request->responsable);
+    }
+
+    // Validación (ahora pasará porque el usuario ya existe en logeo)
+    $validator = Validator::make($request->all(), [
+        'razon_social_id' => 'required|exists:empresa,id_empresa',
+        'bodega_id' => 'required|exists:bodega,id_bodega',
+        'tipo_reserva' => 'required|exists:reserva,id_reserva',
+        'movil_tipo' => 'required|in:sin_proyecto,con_proyecto',
+        'responsable' => 'required|exists:logeo,id',
+        'fecha_registro' => 'required|date',
+        'movil_nombre' => 'required_if:movil_tipo,con_proyecto|max:100',
+        'descripcion' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    // ...resto del código sin cambios...
+    try {
+        $tipoMovil = $request->movil_tipo;
+        $resultado = null;
+
+        if ($tipoMovil === 'sin_proyecto') {
+            $resultado = DB::select('CALL sp_crear_movil_persona(?, ?, ?, ?, ?, ?)', [
+                $request->responsable,
+                $request->razon_social_id,
+                $request->bodega_id,
+                $request->tipo_reserva,
+                $request->responsable,
+                $request->fecha_registro
+            ]);
+        } else {
+            $resultado = DB::select('CALL sp_crear_proyecto_con_subproyecto(?, ?, ?, ?, ?, ?, ?)', [
+                $request->movil_nombre,
+                $request->razon_social_id,
+                $request->bodega_id,
+                $request->tipo_reserva,
+                $request->responsable,
+                $request->descripcion ?? null,
+                $request->fecha_registro
+            ]);
+        }
+
+        if (empty($resultado)) {
+            throw new \Exception('El stored procedure no retornó datos');
+        }
+
+        $proyectoCreado = DB::table('vista_proyectos_almacen')
+            ->where('id_proyecto_almacen', $resultado[0]->id_proyecto_almacen)
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proyecto registrado exitosamente',
+            'data' => [
+                'proyecto' => $proyectoCreado,
+                'codigo_proyecto' => $resultado[0]->codigo_proyecto
+            ]
+        ], 201);
+
+    } catch (\Exception $e) {
+        Log::error('Error al crear proyecto: ' . $e->getMessage());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al registrar proyecto: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+/**
+ * ✅ MÉTODO AUXILIAR: Sincronizar responsable de personal a logeo
+ * Si el ID viene de personal y no existe en logeo, lo crea automáticamente
+ */
+private function sincronizarResponsableEnLogeo($responsableId)
+{
+    try {
+        // Verificar si ya existe en logeo
+        $existeEnLogeo = DB::table('logeo')->where('id', $responsableId)->exists();
+        
+        if ($existeEnLogeo) {
+            return; // Ya existe, no hacer nada
+        }
+
+        // Buscar en personal por id_personal
+        $personal = DB::table('personal')->where('id_personal', $responsableId)->first();
+        
+        if (!$personal) {
+            return; // No existe en personal tampoco, dejar que la validación falle
+        }
+
+        // Crear usuario en logeo automáticamente
+        DB::table('logeo')->insert([
+            'id' => $personal->id_personal, // Usar mismo ID
+            'id_rol' => 2, // Rol de usuario normal
+            'nombre' => $personal->nom_ape,
+            'usuario' => $personal->dni,
+            'contraseña' => password_hash($personal->dni, PASSWORD_BCRYPT), // Contraseña = DNI por defecto
+            'firma' => null
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        Log::info("Usuario auto-creado en logeo: ID={$personal->id_personal}, DNI={$personal->dni}");
 
-        // NO usar DB::beginTransaction() porque los SP ya tienen sus propias transacciones
-        try {
-            $tipoMovil = $request->movil_tipo;
-            $resultado = null;
-
-            if ($tipoMovil === 'sin_proyecto') {
-                // Usar SP para crear móvil persona
-                $resultado = DB::select('CALL sp_crear_movil_persona(?, ?, ?, ?, ?, ?)', [
-                    $request->responsable, // En este caso, la persona es el responsable mismo
-                    $request->razon_social_id,
-                    $request->bodega_id,
-                    $request->tipo_reserva,
-                    $request->responsable,
-                    $request->fecha_registro
-                ]);
-            } else {
-                // Usar SP para crear proyecto con capacidad de subproyectos
-                $resultado = DB::select('CALL sp_crear_proyecto_con_subproyecto(?, ?, ?, ?, ?, ?, ?)', [
-                    $request->movil_nombre,
-                    $request->razon_social_id,
-                    $request->bodega_id,
-                    $request->tipo_reserva,
-                    $request->responsable,
-                    $request->descripcion ?? null, // Asegurar que sea NULL si no viene
-                    $request->fecha_registro
-                ]);
-            }
-
-            // Verificar que el SP retornó datos
-            if (empty($resultado)) {
-                throw new \Exception('El stored procedure no retornó datos');
-            }
-
-            // Obtener el proyecto creado desde la vista
-            $proyectoCreado = DB::table('vista_proyectos_almacen')
-                ->where('id_proyecto_almacen', $resultado[0]->id_proyecto_almacen)
-                ->first();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Proyecto registrado exitosamente',
-                'data' => [
-                    'proyecto' => $proyectoCreado,
-                    'codigo_proyecto' => $resultado[0]->codigo_proyecto
-                ]
-            ], 201);
-
-        } catch (\Exception $e) {
-            Log::error('Error al crear proyecto: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al registrar proyecto: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        Log::warning("No se pudo sincronizar responsable en logeo: " . $e->getMessage());
+        // No lanzar excepción, dejar que continúe y falle en la validación si es necesario
     }
+}
 
     /**
      * Obtener detalle de un proyecto específico
@@ -547,6 +594,9 @@ class ProyectoController extends Controller
      */
     public function crearSubproyecto(Request $request, $idProyecto)
     {
+        if ($request->has('responsable')) {
+        $this->sincronizarResponsableEnLogeo($request->responsable);
+    }
         $validator = Validator::make($request->all(), [
             'nombre_proyecto' => 'required|max:100',
             'descripcion' => 'nullable|string',

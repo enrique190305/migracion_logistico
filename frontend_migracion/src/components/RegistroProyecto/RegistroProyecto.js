@@ -751,13 +751,13 @@ const RegistroProyecto = () => {
                 <div className="resumen-item">
                   <span className="resumen-label">Empresa:</span>
                   <span className="resumen-value">
-                    {empresas.find(e => e.id === parseInt(formData.razon_social_id))?.razon_social || '-'}
+                    {empresas.find(e => e.id_empresa === parseInt(formData.razon_social_id))?.razon_social || '-'}
                   </span>
                 </div>
                 <div className="resumen-item">
                   <span className="resumen-label">Bodega:</span>
                   <span className="resumen-value">
-                    {bodegas.find(b => b.id === parseInt(formData.bodega_id))?.nombre || '-'}
+                    {bodegas.find(b => b.id_bodega === parseInt(formData.bodega_id))?.nombre || '-'}
                   </span>
                 </div>
                 <div className="resumen-item">
