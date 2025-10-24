@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import './Dashboard.css';
+
+//importar otros componentes
+
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import Aprobacion from '../Aprobacion/Aprobacion'; 
@@ -12,6 +15,8 @@ import EliminarOCS from '../EliminarOCS/EliminarOCS';
 import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
+import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
+
 
 
 const Dashboard = ({ onLogout }) => {
@@ -186,7 +191,7 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'proveedores' && <RegistroProveedor />}
           {moduloActivo === 'editar' && <EditarProveedor />}
           {moduloActivo === 'proyecto' && <RegistroProyecto />}
-          {moduloActivo === 'personal' && <div className="modulo-placeholder">Módulo de Registro de Personal (En desarrollo)</div>}
+          {moduloActivo === 'personal' && <RegistroPersonal />}
           {moduloActivo === 'kardex' && <Kardex />}
           {moduloActivo === 'familia' && <RegistroFamilia />}
           {moduloActivo === 'aprobacion' && <Aprobacion />}

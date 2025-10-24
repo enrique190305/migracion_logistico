@@ -13,6 +13,9 @@ import EliminarOCS from '../EliminarOCS/EliminarOCS';
 import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
+import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
+
+
 
 
 const Layout = ({ onLogout, user: propUser }) => {
@@ -62,7 +65,7 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'registro-proyecto':
         return <RegistroProyecto />;
       case 'registro-personal':
-        return <ModuleContent title="Registro de Personal" icon="👥" />;
+        return <RegistroPersonal/>;
       case 'kardex':
         return <Kardex />;
       case 'registro-familia':

@@ -12,6 +12,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\PersonalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -286,4 +287,22 @@ Route::get('/test', function () {
         'message' => 'API funcionando correctamente',
         'timestamp' => now()
     ]);
+});
+
+
+
+
+// Rutas de Personal
+Route::prefix('personal')->group(function () {
+    Route::get('/', [PersonalController::class, 'index']);
+    Route::post('/', [PersonalController::class, 'store']);
+    Route::get('/{id}', [PersonalController::class, 'show']);
+    Route::put('/{id}', [PersonalController::class, 'update']);
+    Route::delete('/{id}', [PersonalController::class, 'destroy']);
+    Route::get('/proyecto/{idProyecto}', [PersonalController::class, 'porProyecto']);
+});
+
+// También necesitarás endpoints para áreas (si no los tienes)
+Route::get('/areas', function() {
+    return response()->json(DB::table('area')->get());
 });
