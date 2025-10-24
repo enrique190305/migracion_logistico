@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ProyectoController extends Controller
 {
@@ -222,18 +223,13 @@ class ProyectoController extends Controller
      */
     public function store(Request $request)
 {
-    // ✅ NUEVO: Hook para auto-crear usuario en logeo si no existe
-    if ($request->has('responsable')) {
-        $this->sincronizarResponsableEnLogeo($request->responsable);
-    }
-
-    // Validación (ahora pasará porque el usuario ya existe en logeo)
+    // ✅ Validación directa contra personal (ahora la FK apunta a personal)
     $validator = Validator::make($request->all(), [
         'razon_social_id' => 'required|exists:empresa,id_empresa',
         'bodega_id' => 'required|exists:bodega,id_bodega',
         'tipo_reserva' => 'required|exists:reserva,id_reserva',
         'movil_tipo' => 'required|in:sin_proyecto,con_proyecto',
-        'responsable' => 'required|exists:logeo,id',
+        'responsable' => 'required|exists:personal,id_personal',
         'fecha_registro' => 'required|date',
         'movil_nombre' => 'required_if:movil_tipo,con_proyecto|max:100',
         'descripcion' => 'nullable|string',
@@ -246,27 +242,32 @@ class ProyectoController extends Controller
         ], 422);
     }
 
-    // ...resto del código sin cambios...
     try {
+        // ✅ Obtener el ID del usuario desde el request (enviado desde el frontend)
+        $idUsuarioLogueado = $request->input('id_usuario_logueado', 1); // Por defecto ID 1 si no viene
+        
         $tipoMovil = $request->movil_tipo;
         $resultado = null;
 
         if ($tipoMovil === 'sin_proyecto') {
+            // Usar stored procedure
             $resultado = DB::select('CALL sp_crear_movil_persona(?, ?, ?, ?, ?, ?)', [
-                $request->responsable,
+                $idUsuarioLogueado,      // id_persona → FK a logeo (quien registra)
                 $request->razon_social_id,
                 $request->bodega_id,
                 $request->tipo_reserva,
-                $request->responsable,
+                $request->responsable,   // id_responsable → FK a personal (responsable físico)
                 $request->fecha_registro
             ]);
         } else {
-            $resultado = DB::select('CALL sp_crear_proyecto_con_subproyecto(?, ?, ?, ?, ?, ?, ?)', [
+            // Usar stored procedure para proyecto con nombre
+            $resultado = DB::select('CALL sp_crear_proyecto_con_subproyecto(?, ?, ?, ?, ?, ?, ?, ?)', [
+                $idUsuarioLogueado,      // id_persona → FK a logeo (quien registra)
                 $request->movil_nombre,
                 $request->razon_social_id,
                 $request->bodega_id,
                 $request->tipo_reserva,
-                $request->responsable,
+                $request->responsable,   // id_responsable → FK a personal (responsable físico)
                 $request->descripcion ?? null,
                 $request->fecha_registro
             ]);
@@ -297,45 +298,6 @@ class ProyectoController extends Controller
             'success' => false,
             'message' => 'Error al registrar proyecto: ' . $e->getMessage()
         ], 500);
-    }
-}
-
-/**
- * ✅ MÉTODO AUXILIAR: Sincronizar responsable de personal a logeo
- * Si el ID viene de personal y no existe en logeo, lo crea automáticamente
- */
-private function sincronizarResponsableEnLogeo($responsableId)
-{
-    try {
-        // Verificar si ya existe en logeo
-        $existeEnLogeo = DB::table('logeo')->where('id', $responsableId)->exists();
-        
-        if ($existeEnLogeo) {
-            return; // Ya existe, no hacer nada
-        }
-
-        // Buscar en personal por id_personal
-        $personal = DB::table('personal')->where('id_personal', $responsableId)->first();
-        
-        if (!$personal) {
-            return; // No existe en personal tampoco, dejar que la validación falle
-        }
-
-        // Crear usuario en logeo automáticamente
-        DB::table('logeo')->insert([
-            'id' => $personal->id_personal, // Usar mismo ID
-            'id_rol' => 2, // Rol de usuario normal
-            'nombre' => $personal->nom_ape,
-            'usuario' => $personal->dni,
-            'contraseña' => password_hash($personal->dni, PASSWORD_BCRYPT), // Contraseña = DNI por defecto
-            'firma' => null
-        ]);
-
-        Log::info("Usuario auto-creado en logeo: ID={$personal->id_personal}, DNI={$personal->dni}");
-
-    } catch (\Exception $e) {
-        Log::warning("No se pudo sincronizar responsable en logeo: " . $e->getMessage());
-        // No lanzar excepción, dejar que continúe y falle en la validación si es necesario
     }
 }
 
@@ -593,83 +555,67 @@ private function sincronizarResponsableEnLogeo($responsableId)
      * Crear subproyecto
      */
     public function crearSubproyecto(Request $request, $idProyecto)
-    {
-        if ($request->has('responsable')) {
-        $this->sincronizarResponsableEnLogeo($request->responsable);
+{
+    $validator = Validator::make($request->all(), [
+        'nombre_proyecto' => 'required|max:100',
+        'descripcion' => 'nullable|string',
+        'responsable' => 'required|exists:personal,id_personal', // ✅ Ahora valida contra personal
+        'fecha_registro' => 'required|date'
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
     }
-        $validator = Validator::make($request->all(), [
-            'nombre_proyecto' => 'required|max:100',
-            'descripcion' => 'nullable|string',
-            'responsable' => 'required|exists:logeo,id',
-            'fecha_registro' => 'required|date'
+
+    DB::beginTransaction();
+    try {
+        // Obtener proyecto padre
+        $proyectoAlmacen = ProyectoAlmacen::findOrFail($idProyecto);
+        
+        if ($proyectoAlmacen->tipo_movil !== 'CON_PROYECTO') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este proyecto no puede tener subproyectos'
+            ], 400);
+        }
+
+        $movilProyectoPadre = MovilProyecto::find($proyectoAlmacen->id_referencia);
+
+        // Crear subproyecto usando la nueva columna
+        $subproyecto = MovilProyecto::create([
+            'nombre_proyecto' => $request->nombre_proyecto,
+            'id_empresa' => $proyectoAlmacen->id_empresa,
+            'id_bodega' => $proyectoAlmacen->id_bodega,
+            'id_reserva' => $proyectoAlmacen->id_reserva,
+            'id_responsable_personal' => $request->responsable, // ✅ Nueva columna
+            'descripcion' => $request->descripcion,
+            'fecha_registro' => $request->fecha_registro,
+            'puede_subproyectos' => 0,
+            'proyecto_padre_id' => $movilProyectoPadre->id_movil_proyecto,
+            'estado' => 'ACTIVO'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        // ... resto del código igual
+        DB::commit();
 
-        DB::beginTransaction();
-        try {
-            // Obtener proyecto padre
-            $proyectoAlmacen = ProyectoAlmacen::findOrFail($idProyecto);
-            
-            if ($proyectoAlmacen->tipo_movil !== 'CON_PROYECTO') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Este proyecto no puede tener subproyectos'
-                ], 400);
-            }
+        return response()->json([
+            'success' => true,
+            'message' => 'Subproyecto creado exitosamente',
+            'data' => $subproyecto
+        ], 201);
 
-            $movilProyectoPadre = MovilProyecto::find($proyectoAlmacen->id_referencia);
-
-            // Crear subproyecto en movil_proyecto
-            $subproyecto = MovilProyecto::create([
-                'nombre_proyecto' => $request->nombre_proyecto,
-                'id_empresa' => $proyectoAlmacen->id_empresa,
-                'id_bodega' => $proyectoAlmacen->id_bodega,
-                'id_reserva' => $proyectoAlmacen->id_reserva,
-                'id_responsable' => $request->responsable,
-                'descripcion' => $request->descripcion,
-                'fecha_registro' => $request->fecha_registro,
-                'puede_subproyectos' => 0, // Los subproyectos no pueden tener más subproyectos
-                'proyecto_padre_id' => $movilProyectoPadre->id_movil_proyecto,
-                'estado' => 'ACTIVO'
-            ]);
-
-            // Crear entrada en proyecto_almacen
-            $proyectoAlmacenSub = ProyectoAlmacen::create([
-                'tipo_movil' => 'CON_PROYECTO',
-                'id_referencia' => $subproyecto->id_movil_proyecto,
-                'id_empresa' => $proyectoAlmacen->id_empresa,
-                'id_bodega' => $proyectoAlmacen->id_bodega,
-                'id_reserva' => $proyectoAlmacen->id_reserva,
-                'nombre_proyecto' => $request->nombre_proyecto,
-                'descripcion' => $request->descripcion,
-                'fecha_registro' => $request->fecha_registro,
-                'estado' => 'ACTIVO'
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Subproyecto creado exitosamente',
-                'data' => [
-                    'subproyecto' => $subproyecto,
-                    'codigo_proyecto' => $proyectoAlmacenSub->codigo_proyecto
-                ]
-            ], 201);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error al crear subproyecto: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al crear subproyecto: ' . $e->getMessage()
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error al crear subproyecto: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al crear subproyecto: ' . $e->getMessage()
+        ], 500);
     }
+}
+
+
 }

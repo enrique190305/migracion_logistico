@@ -312,8 +312,13 @@ const RegistroProyecto = () => {
     
     setLoading(true);
     try {
+      // ✅ Obtener usuario logueado del localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const idUsuarioLogueado = user.id || 1; // Por defecto ID 1 si no hay usuario
+      
       // Preparar datos para el backend
       const proyectoData = {
+        id_usuario_logueado: idUsuarioLogueado, // ✅ NUEVO: enviar ID del usuario que registra
         razon_social_id: parseInt(formData.razon_social_id),
         bodega_id: parseInt(formData.bodega_id),
         tipo_reserva: parseInt(formData.tipo_reserva), // ID de la reserva
@@ -348,7 +353,7 @@ const RegistroProyecto = () => {
         [
           { label: '📋 Código', valor: response.data.codigo_proyecto },
           { label: '🏢 Empresa', valor: empresaSeleccionada?.razon_social || '-' },
-          { label: '🏪 Bodega', valor: bodegaSeleccionada?.nombre_bodega || '-' },
+          { label: '🏪 Bodega', valor: bodegaSeleccionada?.nombre || '-' },
           { label: '📦 Tipo Reserva', valor: reservaSeleccionada?.tipo_reserva || '-' },
           { label: '👤 Tipo Móvil', valor: formData.movil_tipo === 'con_proyecto' ? 'Con Proyecto' : 'Sin Proyecto' },
           { label: '✅ Estado', valor: 'ACTIVO' }
