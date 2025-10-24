@@ -662,4 +662,364 @@ class OrdenCompraServicioController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Listar todas las Órdenes de Compra
+     * GET /api/ordenes/compra
+     */
+    public function listarOrdenesCompra()
+    {
+        try {
+            $ordenesCompra = OrdenCompra::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                ->select(
+                    'id_oc',
+                    'correlativo',
+                    'id_proveedor',
+                    'id_empresa',
+                    'fecha_oc',
+                    'total_general',
+                    'estado'
+                )
+                ->orderBy('fecha_oc', 'desc')
+                ->get()
+                ->map(function($oc) {
+                    return [
+                        'id' => $oc->id_oc,
+                        'correlativo' => $oc->correlativo,
+                        'proveedor' => [
+                            'id' => $oc->proveedor->id_proveedor ?? null,
+                            'nombre' => $oc->proveedor->nombre ?? 'N/A',
+                            'ruc' => $oc->proveedor->ruc ?? 'N/A'
+                        ],
+                        'empresa' => [
+                            'id' => $oc->empresa->id_empresa ?? null,
+                            'razon_social' => $oc->empresa->razon_social ?? 'N/A'
+                        ],
+                        'fecha_emision' => $oc->fecha_oc,
+                        'total_general' => $oc->total_general,
+                        'estado' => $oc->estado
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $ordenesCompra,
+                'total' => $ordenesCompra->count()
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al listar órdenes de compra',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar todas las Órdenes de Servicio
+     * GET /api/ordenes/servicio
+     */
+    public function listarOrdenesServicio()
+    {
+        try {
+            $ordenesServicio = OrdenServicio::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                ->select(
+                    'id_os',
+                    'correlativo',
+                    'id_proveedor',
+                    'id_empresa',
+                    'fecha_servicio',
+                    'total_general',
+                    'estado'
+                )
+                ->orderBy('fecha_servicio', 'desc')
+                ->get()
+                ->map(function($os) {
+                    return [
+                        'id' => $os->id_os,
+                        'correlativo' => $os->correlativo,
+                        'proveedor' => [
+                            'id' => $os->proveedor->id_proveedor ?? null,
+                            'nombre' => $os->proveedor->nombre ?? 'N/A',
+                            'ruc' => $os->proveedor->ruc ?? 'N/A'
+                        ],
+                        'empresa' => [
+                            'id' => $os->empresa->id_empresa ?? null,
+                            'razon_social' => $os->empresa->razon_social ?? 'N/A'
+                        ],
+                        'fecha_emision' => $os->fecha_servicio,
+                        'total_general' => $os->total_general,
+                        'estado' => $os->estado
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $ordenesServicio,
+                'total' => $ordenesServicio->count()
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al listar órdenes de servicio',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener detalle de una Orden de Compra específica
+     * GET /api/ordenes/compra/{id}
+     */
+    public function obtenerDetalleOrdenCompra($id)
+    {
+        try {
+            $ordenCompra = OrdenCompra::with([
+                'proveedor:id_proveedor,nombre,ruc,direccion,celular',
+                'empresa:id_empresa,razon_social',
+                'moneda:id_moneda,tipo_moneda',
+                'detalles.producto'
+            ])->findOrFail($id);
+
+            $detalles = $ordenCompra->detalles->map(function($detalle) {
+                return [
+                    'id' => $detalle->id_doc,
+                    'codigo' => $detalle->producto->codigo ?? 'N/A',
+                    'descripcion' => $detalle->producto->descripcion ?? 'N/A',
+                    'cantidad' => $detalle->cantidad,
+                    'unidad' => $detalle->producto->unidad ?? 'UND',
+                    'precio' => $detalle->precio_unitario,
+                    'subtotal' => $detalle->subtotal,
+                    'total' => $detalle->total
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $ordenCompra->id_oc,
+                    'correlativo' => $ordenCompra->correlativo,
+                    'proveedor' => [
+                        'id' => $ordenCompra->proveedor->id_proveedor ?? null,
+                        'nombre' => $ordenCompra->proveedor->nombre ?? 'N/A',
+                        'ruc' => $ordenCompra->proveedor->ruc ?? 'N/A',
+                        'direccion' => $ordenCompra->proveedor->direccion ?? 'N/A',
+                        'celular' => $ordenCompra->proveedor->celular ?? 'N/A'
+                    ],
+                    'empresa' => [
+                        'id' => $ordenCompra->empresa->id_empresa ?? null,
+                        'razon_social' => $ordenCompra->empresa->razon_social ?? 'N/A'
+                    ],
+                    'moneda' => [
+                        'id' => $ordenCompra->moneda->id_moneda ?? null,
+                        'tipo_moneda' => $ordenCompra->moneda->tipo_moneda ?? 'SOLES'
+                    ],
+                    'fecha_emision' => $ordenCompra->fecha_oc,
+                    'total_general' => $ordenCompra->total_general,
+                    'estado' => $ordenCompra->estado,
+                    'detalles' => $detalles,
+                    'total_items' => $detalles->count()
+                ]
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener detalle de orden de compra',
+                'mensaje' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Obtener detalle de una Orden de Servicio específica
+     * GET /api/ordenes/servicio/{id}
+     */
+    public function obtenerDetalleOrdenServicio($id)
+    {
+        try {
+            $ordenServicio = OrdenServicio::with([
+                'proveedor:id_proveedor,nombre,ruc,direccion,celular',
+                'empresa:id_empresa,razon_social',
+                'moneda:id_moneda,tipo_moneda',
+                'detalles.producto'
+            ])->findOrFail($id);
+
+            $detalles = $ordenServicio->detalles->map(function($detalle) {
+                return [
+                    'id' => $detalle->id_dos,
+                    'codigo' => $detalle->producto->codigo ?? 'N/A',
+                    'descripcion' => $detalle->producto->descripcion ?? 'N/A',
+                    'cantidad' => $detalle->cantidad,
+                    'unidad' => $detalle->producto->unidad ?? 'UND',
+                    'precio' => $detalle->precio_unitario,
+                    'subtotal' => $detalle->subtotal,
+                    'total' => $detalle->total
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $ordenServicio->id_os,
+                    'correlativo' => $ordenServicio->correlativo,
+                    'proveedor' => [
+                        'id' => $ordenServicio->proveedor->id_proveedor ?? null,
+                        'nombre' => $ordenServicio->proveedor->nombre ?? 'N/A',
+                        'ruc' => $ordenServicio->proveedor->ruc ?? 'N/A',
+                        'direccion' => $ordenServicio->proveedor->direccion ?? 'N/A',
+                        'celular' => $ordenServicio->proveedor->celular ?? 'N/A'
+                    ],
+                    'empresa' => [
+                        'id' => $ordenServicio->empresa->id_empresa ?? null,
+                        'razon_social' => $ordenServicio->empresa->razon_social ?? 'N/A'
+                    ],
+                    'moneda' => [
+                        'id' => $ordenServicio->moneda->id_moneda ?? null,
+                        'tipo_moneda' => $ordenServicio->moneda->tipo_moneda ?? 'SOLES'
+                    ],
+                    'fecha_emision' => $ordenServicio->fecha_servicio,
+                    'total_general' => $ordenServicio->total_general,
+                    'estado' => $ordenServicio->estado,
+                    'detalles' => $detalles,
+                    'total_items' => $detalles->count()
+                ]
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al obtener detalle de orden de servicio',
+                'mensaje' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Eliminar Orden de Compra
+     * DELETE /api/ordenes/compra/{id}
+     */
+    public function eliminarOrdenCompra($id)
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Buscar la orden de compra
+            $ordenCompra = OrdenCompra::findOrFail($id);
+            
+            // Validar que se pueda eliminar (solo si está en estado PENDIENTE)
+            if ($ordenCompra->estado !== 'PENDIENTE') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No se puede eliminar',
+                    'mensaje' => 'Solo se pueden eliminar órdenes en estado PENDIENTE. Estado actual: ' . $ordenCompra->estado
+                ], 400);
+            }
+
+            // Obtener información antes de eliminar (para el log)
+            $correlativo = $ordenCompra->correlativo;
+            $cantidadDetalles = $ordenCompra->detalles()->count();
+            $totalGeneral = $ordenCompra->total_general;
+
+            // Eliminar detalles primero (por la FK)
+            DetalleOrdenCompra::where('id_oc', $id)->delete();
+
+            // Eliminar la orden de compra
+            $ordenCompra->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'mensaje' => 'Orden de Compra eliminada correctamente',
+                'data' => [
+                    'id' => $id,
+                    'correlativo' => $correlativo,
+                    'detalles_eliminados' => $cantidadDetalles,
+                    'total_general' => $totalGeneral
+                ]
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'Orden de Compra no encontrada',
+                'mensaje' => 'No existe una orden de compra con el ID: ' . $id
+            ], 404);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al eliminar orden de compra',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar Orden de Servicio
+     * DELETE /api/ordenes/servicio/{id}
+     */
+    public function eliminarOrdenServicio($id)
+    {
+        DB::beginTransaction();
+        
+        try {
+            // Buscar la orden de servicio
+            $ordenServicio = OrdenServicio::findOrFail($id);
+            
+            // Validar que se pueda eliminar (solo si está en estado PENDIENTE)
+            if ($ordenServicio->estado !== 'PENDIENTE') {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No se puede eliminar',
+                    'mensaje' => 'Solo se pueden eliminar órdenes en estado PENDIENTE. Estado actual: ' . $ordenServicio->estado
+                ], 400);
+            }
+
+            // Obtener información antes de eliminar (para el log)
+            $correlativo = $ordenServicio->correlativo;
+            $cantidadDetalles = $ordenServicio->detalles()->count();
+            $totalGeneral = $ordenServicio->total_general;
+
+            // Eliminar detalles primero (por la FK)
+            DetalleOrdenServicio::where('id_os', $id)->delete();
+
+            // Eliminar la orden de servicio
+            $ordenServicio->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'mensaje' => 'Orden de Servicio eliminada correctamente',
+                'data' => [
+                    'id' => $id,
+                    'correlativo' => $correlativo,
+                    'detalles_eliminados' => $cantidadDetalles,
+                    'total_general' => $totalGeneral
+                ]
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'Orden de Servicio no encontrada',
+                'mensaje' => 'No existe una orden de servicio con el ID: ' . $id
+            ], 404);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al eliminar orden de servicio',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

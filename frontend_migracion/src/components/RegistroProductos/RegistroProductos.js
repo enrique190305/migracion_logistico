@@ -1,145 +1,170 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RegistroProductos.css';
+import {
+  listarProductos,
+  obtenerFamilias,
+  obtenerUnidades,
+  obtenerEstadisticas,
+  generarCodigo,
+  crearProducto,
+  actualizarProducto,
+  eliminarProducto
+} from '../../services/productosAPI';
 
 const RegistroProductos = () => {
+  // Estados de datos
+  const [productos, setProductos] = useState([]);
+  const [familias, setFamilias] = useState([]);
+  const [unidades, setUnidades] = useState([]);
+  const [estadisticas, setEstadisticas] = useState(null);
+  
+  // Estados de filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todos');
   const [filtroUnidad, setFiltroUnidad] = useState('todos');
+  
+  // Estados de paginación
   const [currentPage, setCurrentPage] = useState(1);
-  const [mostrarModal, setMostrarModal] = useState(false);
   const itemsPerPage = 10;
+  
+  // Estados de UI
+  const [mostrarModal, setMostrarModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingModal, setLoadingModal] = useState(false);
+  const [error, setError] = useState(null);
+  const [modoEdicion, setModoEdicion] = useState(false);
+  const [productoEditando, setProductoEditando] = useState(null);
+  
+  // Estados para modales de confirmación y éxito
+  const [modalExito, setModalExito] = useState({ mostrar: false, titulo: '', mensaje: '' });
+  const [modalConfirmacion, setModalConfirmacion] = useState({ mostrar: false, producto: null });
+  const [modalDetalle, setModalDetalle] = useState({ mostrar: false, producto: null });
 
   // Estado del formulario
   const [formulario, setFormulario] = useState({
     tipo_producto: '',
     descripcion: '',
-    codigo_generado: '',
-    unidad_medida: '',
-    observaciones: ''
+    codigo_producto: '',
+    unidad: '',
+    observacion: ''
   });
 
-  // Datos estáticos de productos
-  const productosData = [
-    {
-      id: 1,
-      tipo_producto: 'Herramientas',
-      descripcion: 'Taladro Percutor 800W',
-      codigo_generado: 'PROD-001-2024',
-      unidad_medida: 'Unidad',
-      observaciones: 'Incluye maletín y accesorios'
-    },
-    {
-      id: 2,
-      tipo_producto: 'Materiales',
-      descripcion: 'Cemento Portland Tipo I',
-      codigo_generado: 'PROD-002-2024',
-      unidad_medida: 'Bolsa',
-      observaciones: 'Bolsa de 42.5 kg'
-    },
-    {
-      id: 3,
-      tipo_producto: 'Equipos',
-      descripcion: 'Laptop HP Core i7 16GB RAM',
-      codigo_generado: 'PROD-003-2024',
-      unidad_medida: 'Unidad',
-      observaciones: 'Incluye licencia Windows 11'
-    },
-    {
-      id: 4,
-      tipo_producto: 'Herramientas',
-      descripcion: 'Sierra Circular 1400W',
-      codigo_generado: 'PROD-004-2024',
-      unidad_medida: 'Unidad',
-      observaciones: 'Disco de corte incluido'
-    },
-    {
-      id: 5,
-      tipo_producto: 'Materiales',
-      descripcion: 'Varilla de Construcción 1/2"',
-      codigo_generado: 'PROD-005-2024',
-      unidad_medida: 'Metro',
-      observaciones: 'Longitud estándar 9 metros'
-    },
-    {
-      id: 6,
-      tipo_producto: 'Suministros',
-      descripcion: 'Resma Papel Bond A4',
-      codigo_generado: 'PROD-006-2024',
-      unidad_medida: 'Resma',
-      observaciones: '500 hojas por resma'
-    },
-    {
-      id: 7,
-      tipo_producto: 'Equipos',
-      descripcion: 'Impresora Multifuncional Láser',
-      codigo_generado: 'PROD-007-2024',
-      unidad_medida: 'Unidad',
-      observaciones: 'Imprime, escanea y copia'
-    },
-    {
-      id: 8,
-      tipo_producto: 'Herramientas',
-      descripcion: 'Juego de Llaves Mixtas 12 Pzs',
-      codigo_generado: 'PROD-008-2024',
-      unidad_medida: 'Juego',
-      observaciones: 'Tamaños de 8mm a 19mm'
-    },
-    {
-      id: 9,
-      tipo_producto: 'Materiales',
-      descripcion: 'Pintura Látex Blanco 5 Galones',
-      codigo_generado: 'PROD-009-2024',
-      unidad_medida: 'Galón',
-      observaciones: 'Rendimiento 40 m²/galón'
-    },
-    {
-      id: 10,
-      tipo_producto: 'Suministros',
-      descripcion: 'Tóner HP LaserJet Negro',
-      codigo_generado: 'PROD-010-2024',
-      unidad_medida: 'Unidad',
-      observaciones: 'Compatible con serie P1102'
-    },
-    {
-      id: 11,
-      tipo_producto: 'Equipos',
-      descripcion: 'Proyector Multimedia 3000 Lúmenes',
-      codigo_generado: 'PROD-011-2024',
-      unidad_medida: 'Unidad',
-      observaciones: 'Resolución Full HD'
-    },
-    {
-      id: 12,
-      tipo_producto: 'Herramientas',
-      descripcion: 'Amoladora Angular 4 1/2"',
-      codigo_generado: 'PROD-012-2024',
-      unidad_medida: 'Unidad',
-      observaciones: '900W - Incluye disco de corte'
-    }
-  ];
+  // Cargar datos iniciales
+  useEffect(() => {
+    cargarDatosIniciales();
+  }, []);
 
-  // Filtrar datos
-  const filteredData = productosData.filter(producto => {
-    const matchSearch = producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       producto.codigo_generado.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       producto.tipo_producto.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchTipo = filtroTipo === 'todos' || producto.tipo_producto === filtroTipo;
-    const matchUnidad = filtroUnidad === 'todos' || producto.unidad_medida === filtroUnidad;
+  // Aplicar filtros cuando cambien (con debounce para search)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      cargarProductos();
+    }, 300);
     
-    return matchSearch && matchTipo && matchUnidad;
-  });
+    return () => clearTimeout(timer);
+  }, [searchTerm, filtroTipo, filtroUnidad]);
 
-  // Calcular estadísticas
-  const totalProductos = productosData.length;
-  const tiposUnicos = [...new Set(productosData.map(p => p.tipo_producto))].length;
-  const unidadesUnicas = [...new Set(productosData.map(p => p.unidad_medida))].length;
+  /**
+   * Cargar datos iniciales
+   */
+  const cargarDatosIniciales = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await Promise.all([
+        cargarProductos(),
+        cargarFamilias(),
+        cargarUnidades(),
+        cargarEstadisticas()
+      ]);
+    } catch (err) {
+      console.error('Error al cargar datos iniciales:', err);
+      setError('Error al cargar los datos. Verifique la conexión con el servidor.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Paginación
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  /**
+   * Cargar productos con filtros
+   */
+  const cargarProductos = async () => {
+    try {
+      const filtros = {
+        search: searchTerm,
+        tipo_producto: filtroTipo !== 'todos' ? filtroTipo : undefined,
+        unidad: filtroUnidad !== 'todos' ? filtroUnidad : undefined
+      };
+      
+      console.log('📋 Cargando productos con filtros:', filtros);
+      const data = await listarProductos(filtros);
+      console.log('✅ Productos cargados:', data);
+      setProductos(data);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error('Error al cargar productos:', err);
+      setProductos([]);
+    }
+  };
 
+  /**
+   * Cargar familias/tipos de producto
+   */
+  const cargarFamilias = async () => {
+    try {
+      const data = await obtenerFamilias();
+      console.log('📁 Familias cargadas:', data);
+      setFamilias(data);
+    } catch (err) {
+      console.error('Error al cargar familias:', err);
+      setFamilias([]);
+    }
+  };
+
+  /**
+   * Cargar unidades de medida
+   */
+  const cargarUnidades = async () => {
+    try {
+      const data = await obtenerUnidades();
+      console.log('📏 Unidades cargadas:', data);
+      setUnidades(data);
+    } catch (err) {
+      console.error('Error al cargar unidades:', err);
+      setUnidades([]);
+    }
+  };
+
+  /**
+   * Cargar estadísticas
+   */
+  const cargarEstadisticas = async () => {
+    try {
+      const data = await obtenerEstadisticas();
+      console.log('📊 Estadísticas cargadas:', data);
+      setEstadisticas(data);
+    } catch (err) {
+      console.error('Error al cargar estadísticas:', err);
+    }
+  };
+
+  /**
+   * Generar código automático
+   */
+  const handleGenerarCodigo = async () => {
+    try {
+      const codigo = await generarCodigo(formulario.tipo_producto);
+      console.log('🔢 Código generado:', codigo);
+      setFormulario({ ...formulario, codigo_producto: codigo });
+    } catch (err) {
+      console.error('Error al generar código:', err);
+      alert('❌ Error al generar código automático');
+    }
+  };
+
+  /**
+   * Manejar cambios en el formulario
+   */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormulario({
@@ -148,59 +173,203 @@ const RegistroProductos = () => {
     });
   };
 
-  const handleRegistrar = () => {
-    if (!formulario.tipo_producto || !formulario.descripcion) {
-      alert('⚠️ Por favor complete los campos obligatorios (Tipo de Producto y Descripción)');
+  /**
+   * Registrar o actualizar producto
+   */
+  const handleRegistrar = async () => {
+    // Validaciones
+    if (!formulario.tipo_producto || !formulario.descripcion || !formulario.codigo_producto || !formulario.unidad) {
+      setError('Por favor complete todos los campos obligatorios');
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
-    const codigo = formulario.codigo_generado || `PROD-${String(productosData.length + 1).padStart(3, '0')}-2024`;
-    
-    alert(`✅ Producto Registrado\n\nTipo: ${formulario.tipo_producto}\nDescripción: ${formulario.descripcion}\nCódigo: ${codigo}\nUnidad: ${formulario.unidad_medida || 'No especificada'}\nObservaciones: ${formulario.observaciones || 'Sin observaciones'}`);
-    
-    handleLimpiar();
-    setMostrarModal(false);
+    setLoadingModal(true);
+
+    try {
+      if (modoEdicion) {
+        // Actualizar producto existente
+        const result = await actualizarProducto(productoEditando, {
+          tipo_producto: formulario.tipo_producto,
+          descripcion: formulario.descripcion,
+          unidad: formulario.unidad,
+          observacion: formulario.observacion
+        });
+        
+        console.log('✅ Producto actualizado:', result);
+        
+        // Mostrar modal de éxito
+        setModalExito({
+          mostrar: true,
+          titulo: '✅ Producto Actualizado',
+          mensaje: `Código: ${formulario.codigo_producto}\nDescripción: ${formulario.descripcion}`
+        });
+      } else {
+        // Crear nuevo producto
+        const result = await crearProducto({
+          codigo_producto: formulario.codigo_producto,
+          tipo_producto: formulario.tipo_producto,
+          descripcion: formulario.descripcion,
+          unidad: formulario.unidad,
+          observacion: formulario.observacion
+        });
+        
+        console.log('✅ Producto creado:', result);
+        
+        // Mostrar modal de éxito
+        setModalExito({
+          mostrar: true,
+          titulo: '✅ Producto Registrado Exitosamente',
+          mensaje: `Código: ${formulario.codigo_producto}\nDescripción: ${formulario.descripcion}`
+        });
+      }
+      
+      // Recargar datos
+      await cargarProductos();
+      await cargarEstadisticas();
+      
+      handleLimpiar();
+      setMostrarModal(false);
+      
+    } catch (err) {
+      console.error('Error al guardar producto:', err);
+      setError(`Error al ${modoEdicion ? 'actualizar' : 'registrar'} producto: ${err.message}`);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setLoadingModal(false);
+    }
   };
 
+  /**
+   * Limpiar formulario
+   */
   const handleLimpiar = () => {
     setFormulario({
       tipo_producto: '',
       descripcion: '',
-      codigo_generado: '',
-      unidad_medida: '',
-      observaciones: ''
+      codigo_producto: '',
+      unidad: '',
+      observacion: ''
     });
+    setModoEdicion(false);
+    setProductoEditando(null);
   };
 
-  const handleNuevoProducto = () => {
+  /**
+   * Abrir modal para nuevo producto
+   */
+  const handleNuevoProducto = async () => {
     handleLimpiar();
     setMostrarModal(true);
-  };
-
-  const handleExportar = () => {
-    alert('📊 Exportando datos...\n\nSe generará un archivo Excel con el listado de productos.');
-  };
-
-  const handleEdit = (producto) => {
-    setFormulario({
-      tipo_producto: producto.tipo_producto,
-      descripcion: producto.descripcion,
-      codigo_generado: producto.codigo_generado,
-      unidad_medida: producto.unidad_medida,
-      observaciones: producto.observaciones
-    });
-    setMostrarModal(true);
-  };
-
-  const handleDelete = (producto) => {
-    if (window.confirm(`¿Está seguro de eliminar el producto "${producto.descripcion}"?`)) {
-      alert(`🗑️ Producto eliminado: ${producto.descripcion}`);
+    
+    // Generar código automáticamente
+    try {
+      const codigo = await generarCodigo();
+      setFormulario(prev => ({ ...prev, codigo_producto: codigo }));
+    } catch (err) {
+      console.error('Error al generar código:', err);
     }
   };
 
-  const handleView = (producto) => {
-    alert(`👁️ Detalles del Producto\n\nTipo: ${producto.tipo_producto}\nDescripción: ${producto.descripcion}\nCódigo: ${producto.codigo_generado}\nUnidad de Medida: ${producto.unidad_medida}\nObservaciones: ${producto.observaciones}`);
+  /**
+   * Editar producto
+   */
+  const handleEdit = (producto) => {
+    console.log('✏️ Editando producto:', producto);
+    setFormulario({
+      tipo_producto: producto.tipo_producto,
+      descripcion: producto.descripcion,
+      codigo_producto: producto.codigo_producto,
+      unidad: producto.unidad,
+      observacion: producto.observacion || ''
+    });
+    setModoEdicion(true);
+    setProductoEditando(producto.codigo_producto);
+    setMostrarModal(true);
   };
+
+  /**
+   * Eliminar producto
+   */
+  const handleDelete = (producto) => {
+    setModalConfirmacion({
+      mostrar: true,
+      producto: producto
+    });
+  };
+
+  /**
+   * Confirmar eliminación
+   */
+  const confirmarEliminacion = async () => {
+    const producto = modalConfirmacion.producto;
+    setModalConfirmacion({ mostrar: false, producto: null });
+    setLoading(true);
+
+    try {
+      const result = await eliminarProducto(producto.codigo_producto);
+      console.log('✅ Producto eliminado:', result);
+      
+      // Mostrar modal de éxito
+      setModalExito({
+        mostrar: true,
+        titulo: '✅ Producto Eliminado',
+        mensaje: `Código: ${producto.codigo_producto}\nDescripción: ${producto.descripcion}`
+      });
+      
+      // Recargar datos
+      await cargarProductos();
+      await cargarEstadisticas();
+      
+    } catch (err) {
+      console.error('Error al eliminar producto:', err);
+      setError(`Error al eliminar producto: ${err.message}`);
+      setTimeout(() => setError(null), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Exportar datos (placeholder)
+   */
+  const handleExportar = () => {
+    setModalExito({
+      mostrar: true,
+      titulo: '📊 Función de Exportación',
+      mensaje: 'Esta funcionalidad estará disponible próximamente.'
+    });
+  };
+
+  /**
+   * Limpiar todos los filtros
+   */
+  const handleLimpiarFiltros = () => {
+    setSearchTerm('');
+    setFiltroTipo('todos');
+    setFiltroUnidad('todos');
+  };
+
+  /**
+   * Ver detalles del producto
+   */
+  const handleView = (producto) => {
+    setModalDetalle({
+      mostrar: true,
+      producto: producto
+    });
+  };
+
+  // Paginación
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = productos.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(productos.length / itemsPerPage);
+
+  // Calcular estadísticas locales
+  const totalProductos = estadisticas?.total_productos || productos.length;
+  const tiposUnicos = estadisticas?.total_familias || familias.length;
+  const unidadesUnicas = unidades.length;
 
   return (
     <div className="registro-productos-container">
@@ -214,7 +383,7 @@ const RegistroProductos = () => {
           </div>
         </div>
         <div className="header-actions">
-          <button className="btn btn-primary" onClick={handleNuevoProducto}>
+          <button className="btn btn-primary" onClick={handleNuevoProducto} disabled={loading}>
             <span>➕</span> Nuevo Producto
           </button>
           <button className="btn btn-secondary" onClick={handleExportar}>
@@ -223,14 +392,189 @@ const RegistroProductos = () => {
         </div>
       </div>
 
+      {/* Mensaje de error */}
+      {error && (
+        <div className="alert-error">
+          <span>❌</span> {error}
+        </div>
+      )}
+
+      {/* Estadísticas */}
+      <div className="stats-container">
+        <div className="stat-card">
+          <div className="stat-icon">📦</div>
+          <div className="stat-content">
+            <div className="stat-value">{loading ? '...' : totalProductos}</div>
+            <div className="stat-label">Total Productos</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">📁</div>
+          <div className="stat-content">
+            <div className="stat-value">{loading ? '...' : tiposUnicos}</div>
+            <div className="stat-label">Tipos de Productos</div>
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-icon">📏</div>
+          <div className="stat-content">
+            <div className="stat-value">{loading ? '...' : unidadesUnicas}</div>
+            <div className="stat-label">Unidades de Medida</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filtros y búsqueda */}
+      <div className="filters-container">
+        <div className="search-box">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Buscar por código o descripción..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        
+        <div className="filter-group">
+          <label>📁 Tipo:</label>
+          <select 
+            value={filtroTipo} 
+            onChange={(e) => setFiltroTipo(e.target.value)}
+            disabled={loading}
+          >
+            <option value="todos">Todos los tipos</option>
+            {familias.map((familia) => (
+              <option key={familia.tipo_producto} value={familia.tipo_producto}>
+                {familia.descripcion}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label>📏 Unidad:</label>
+          <select 
+            value={filtroUnidad} 
+            onChange={(e) => setFiltroUnidad(e.target.value)}
+            disabled={loading}
+          >
+            <option value="todos">Todas las unidades</option>
+            {unidades.map((unidad, index) => (
+              <option key={index} value={unidad}>
+                {unidad}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
+          <label style={{opacity: 0}}>.</label>
+          <button 
+            className="btn-limpiar-filtros" 
+            onClick={handleLimpiarFiltros}
+            disabled={loading}
+            title="Limpiar filtros"
+          >
+            🗑️ Limpiar
+          </button>
+        </div>
+      </div>
+
+      {/* Tabla */}
+      <div className="table-container">
+        {loading && productos.length === 0 ? (
+          <div className="loading-state">
+            <p>⏳ Cargando productos...</p>
+          </div>
+        ) : productos.length === 0 ? (
+          <div className="empty-state">
+            <span className="empty-icon">📦</span>
+            <p>No hay productos registrados</p>
+            <span className="empty-hint">Haga clic en "Nuevo Producto" para comenzar</span>
+          </div>
+        ) : (
+          <table className="productos-table">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Unidad</th>
+                <th>Observaciones</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.map((producto) => (
+                <tr key={producto.codigo_producto}>
+                  <td><strong>{producto.codigo_producto}</strong></td>
+                  <td>
+                    <span className="badge">{producto.tipo_producto_nombre || producto.tipo_producto}</span>
+                  </td>
+                  <td>{producto.descripcion}</td>
+                  <td className="text-center">{producto.unidad}</td>
+                  <td>{producto.observacion || '-'}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="btn-action btn-view" onClick={() => handleView(producto)} title="Ver detalles">
+                        👁️
+                      </button>
+                      <button className="btn-action btn-edit" onClick={() => handleEdit(producto)} title="Editar">
+                        ✏️
+                      </button>
+                      <button className="btn-action btn-delete" onClick={() => handleDelete(producto)} title="Eliminar">
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Paginación */}
+      {productos.length > itemsPerPage && (
+        <div className="pagination">
+          <button 
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="pagination-btn"
+          >
+            ◀ Anterior
+          </button>
+          
+          <div className="pagination-info">
+            Página {currentPage} de {totalPages} ({productos.length} productos)
+          </div>
+          
+          <button 
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="pagination-btn"
+          >
+            Siguiente ▶
+          </button>
+        </div>
+      )}
+
       {/* Modal */}
       {mostrarModal && (
         <>
-          <div className="modal-overlay" onClick={() => setMostrarModal(false)}></div>
+          <div className="modal-overlay" onClick={() => !loadingModal && setMostrarModal(false)}></div>
           <div className="modal-container">
             <div className="modal-header">
-              <h2>📝 Nuevo Producto</h2>
-              <button className="btn-close" onClick={() => setMostrarModal(false)}>✖</button>
+              <h2>{modoEdicion ? '✏️ Editar Producto' : '📝 Nuevo Producto'}</h2>
+              <button 
+                className="btn-close" 
+                onClick={() => !loadingModal && setMostrarModal(false)}
+                disabled={loadingModal}
+              >
+                ✖
+              </button>
             </div>
             
             <div className="modal-body">
@@ -241,12 +585,14 @@ const RegistroProductos = () => {
                   value={formulario.tipo_producto}
                   onChange={handleInputChange}
                   required
+                  disabled={loadingModal}
                 >
                   <option value="">Seleccione un tipo...</option>
-                  <option value="Herramientas">Herramientas</option>
-                  <option value="Materiales">Materiales</option>
-                  <option value="Equipos">Equipos</option>
-                  <option value="Suministros">Suministros</option>
+                  {familias.map((familia) => (
+                    <option key={familia.tipo_producto} value={familia.tipo_producto}>
+                      {familia.descripcion}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -259,235 +605,194 @@ const RegistroProductos = () => {
                   onChange={handleInputChange}
                   placeholder="Ingrese la descripción del producto..."
                   required
+                  disabled={loadingModal}
                 />
               </div>
 
               <div className="form-group-row">
                 <div className="form-group">
-                  <label>🔢 Código Generado:</label>
-                  <input
-                    type="text"
-                    name="codigo_generado"
-                    value={formulario.codigo_generado}
-                    onChange={handleInputChange}
-                    placeholder="Se generará automáticamente"
-                    disabled
-                  />
+                  <label>🔢 Código: *</label>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <input
+                      type="text"
+                      name="codigo_producto"
+                      value={formulario.codigo_producto}
+                      onChange={handleInputChange}
+                      placeholder="Código del producto"
+                      required
+                      disabled={modoEdicion || loadingModal}
+                    />
+                    {!modoEdicion && (
+                      <button 
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={handleGenerarCodigo}
+                        disabled={loadingModal}
+                        title="Generar código automático"
+                      >
+                        🔄
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label>📏 Unidad de Medida:</label>
+                  <label>📏 Unidad de Medida: *</label>
                   <select
-                    name="unidad_medida"
-                    value={formulario.unidad_medida}
+                    name="unidad"
+                    value={formulario.unidad}
                     onChange={handleInputChange}
+                    required
+                    disabled={loadingModal}
                   >
                     <option value="">Seleccione una unidad...</option>
-                    <option value="Unidad">Unidad</option>
-                    <option value="Bolsa">Bolsa</option>
-                    <option value="Metro">Metro</option>
-                    <option value="Resma">Resma</option>
-                    <option value="Galón">Galón</option>
-                    <option value="Juego">Juego</option>
-                    <option value="Kilogramo">Kilogramo</option>
-                    <option value="Litro">Litro</option>
+                    {unidades.map((unidad, index) => (
+                      <option key={index} value={unidad}>
+                        {unidad}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
 
               <div className="form-group">
-                <label>💬 Observaciones:</label>
+                <label>📋 Observaciones:</label>
                 <textarea
-                  name="observaciones"
-                  value={formulario.observaciones}
+                  name="observacion"
+                  value={formulario.observacion}
                   onChange={handleInputChange}
-                  placeholder="Ingrese observaciones adicionales..."
-                  rows="4"
-                />
+                  placeholder="Observaciones adicionales (opcional)..."
+                  rows="3"
+                  disabled={loadingModal}
+                ></textarea>
               </div>
             </div>
 
             <div className="modal-footer">
-              <button className="btn btn-success" onClick={handleRegistrar}>
-                <span>✅</span> REGISTRAR
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => !loadingModal && setMostrarModal(false)}
+                disabled={loadingModal}
+              >
+                ✖ Cancelar
               </button>
-              <button className="btn btn-cancel" onClick={handleLimpiar}>
-                <span>🔄</span> LIMPIAR
+              <button 
+                className="btn btn-primary" 
+                onClick={handleRegistrar}
+                disabled={loadingModal}
+              >
+                {loadingModal ? '⏳ Guardando...' : (modoEdicion ? '💾 Actualizar' : '✅ Registrar')}
               </button>
             </div>
           </div>
         </>
       )}
 
-      {/* Estadísticas */}
-      <div className="estadisticas-grid">
-        <div className="stat-card">
-          <div className="stat-icon blue">
-            <span>📦</span>
+      {/* Modal de Éxito */}
+      {modalExito.mostrar && (
+        <>
+          <div className="modal-overlay" onClick={() => setModalExito({ mostrar: false, titulo: '', mensaje: '' })}></div>
+          <div className="modal-exito">
+            <div className="modal-exito-header">
+              <h2>{modalExito.titulo}</h2>
+            </div>
+            <div className="modal-exito-body">
+              <div className="modal-exito-icon">✅</div>
+              <p style={{ whiteSpace: 'pre-line' }}>{modalExito.mensaje}</p>
+            </div>
+            <div className="modal-exito-footer">
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setModalExito({ mostrar: false, titulo: '', mensaje: '' })}
+              >
+                Aceptar
+              </button>
+            </div>
           </div>
-          <div className="stat-info">
-            <h3>{totalProductos}</h3>
-            <p>Total Productos</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon green">
-            <span>📁</span>
-          </div>
-          <div className="stat-info">
-            <h3>{tiposUnicos}</h3>
-            <p>Tipos de Producto</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon purple">
-            <span>📏</span>
-          </div>
-          <div className="stat-info">
-            <h3>{unidadesUnicas}</h3>
-            <p>Unidades de Medida</p>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon orange">
-            <span>🔍</span>
-          </div>
-          <div className="stat-info">
-            <h3>{filteredData.length}</h3>
-            <p>Resultados Filtrados</p>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Filtros */}
-      <div className="filtros-section">
-        <h2>🔍 Filtros de Búsqueda</h2>
-        <div className="filtros-grid">
-          <div className="filtro-group">
-            <label>Buscar</label>
-            <input
-              type="text"
-              placeholder="Descripción, código o tipo..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      {/* Modal de Confirmación de Eliminación */}
+      {modalConfirmacion.mostrar && (
+        <>
+          <div className="modal-overlay"></div>
+          <div className="modal-confirmacion">
+            <div className="modal-confirmacion-header">
+              <h2>⚠️ ADVERTENCIA</h2>
+            </div>
+            <div className="modal-confirmacion-body">
+              <p><strong>¿Está seguro de eliminar el producto?</strong></p>
+              <div className="detalle-confirmacion">
+                <p><strong>Código:</strong> {modalConfirmacion.producto?.codigo_producto}</p>
+                <p><strong>Descripción:</strong> {modalConfirmacion.producto?.descripcion}</p>
+              </div>
+              <p className="advertencia-texto">Esta acción NO se puede deshacer.</p>
+            </div>
+            <div className="modal-confirmacion-footer">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setModalConfirmacion({ mostrar: false, producto: null })}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn btn-danger" 
+                onClick={confirmarEliminacion}
+              >
+                Eliminar
+              </button>
+            </div>
           </div>
-          <div className="filtro-group">
-            <label>Tipo de Producto</label>
-            <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
-              <option value="todos">Todos los tipos</option>
-              <option value="Herramientas">Herramientas</option>
-              <option value="Materiales">Materiales</option>
-              <option value="Equipos">Equipos</option>
-              <option value="Suministros">Suministros</option>
-            </select>
-          </div>
-          <div className="filtro-group">
-            <label>Unidad de Medida</label>
-            <select value={filtroUnidad} onChange={(e) => setFiltroUnidad(e.target.value)}>
-              <option value="todos">Todas las unidades</option>
-              <option value="Unidad">Unidad</option>
-              <option value="Bolsa">Bolsa</option>
-              <option value="Metro">Metro</option>
-              <option value="Resma">Resma</option>
-              <option value="Galón">Galón</option>
-              <option value="Juego">Juego</option>
-            </select>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
 
-      {/* Tabla */}
-      <div className="tabla-section">
-        <div className="tabla-header">
-          <h2>📦 Listado de Productos ({filteredData.length})</h2>
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Búsqueda rápida..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <span className="search-icon">🔍</span>
+      {/* Modal de Detalle del Producto */}
+      {modalDetalle.mostrar && modalDetalle.producto && (
+        <>
+          <div className="modal-overlay" onClick={() => setModalDetalle({ mostrar: false, producto: null })}></div>
+          <div className="modal-detalle">
+            <div className="modal-detalle-header">
+              <h2>👁️ Detalles del Producto</h2>
+              <button 
+                className="btn-close" 
+                onClick={() => setModalDetalle({ mostrar: false, producto: null })}
+              >
+                ✖
+              </button>
+            </div>
+            <div className="modal-detalle-body">
+              <div className="detalle-item">
+                <label>Código:</label>
+                <span>{modalDetalle.producto.codigo_producto}</span>
+              </div>
+              <div className="detalle-item">
+                <label>Tipo:</label>
+                <span>{modalDetalle.producto.tipo_producto_nombre || modalDetalle.producto.tipo_producto}</span>
+              </div>
+              <div className="detalle-item">
+                <label>Descripción:</label>
+                <span>{modalDetalle.producto.descripcion}</span>
+              </div>
+              <div className="detalle-item">
+                <label>Unidad:</label>
+                <span>{modalDetalle.producto.unidad}</span>
+              </div>
+              <div className="detalle-item">
+                <label>Observación:</label>
+                <span>{modalDetalle.producto.observacion || 'Sin observaciones'}</span>
+              </div>
+            </div>
+            <div className="modal-detalle-footer">
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setModalDetalle({ mostrar: false, producto: null })}
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="table-wrapper">
-          <table className="productos-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Tipo de Producto</th>
-                <th>Descripción</th>
-                <th>Código Generado</th>
-                <th>Unidad de Medida</th>
-                <th>Observaciones</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.length > 0 ? (
-                currentItems.map((producto) => (
-                  <tr key={producto.id}>
-                    <td><strong>{producto.id}</strong></td>
-                    <td>
-                      <span className={`tipo-badge ${producto.tipo_producto.toLowerCase()}`}>
-                        {producto.tipo_producto}
-                      </span>
-                    </td>
-                    <td><strong>{producto.descripcion}</strong></td>
-                    <td>{producto.codigo_generado}</td>
-                    <td>{producto.unidad_medida}</td>
-                    <td className="observaciones-cell">{producto.observaciones}</td>
-                    <td>
-                      <div className="actions-cell">
-                        <button className="btn-icon btn-view" onClick={() => handleView(producto)} title="Ver detalles">
-                          👁️
-                        </button>
-                        <button className="btn-icon btn-edit" onClick={() => handleEdit(producto)} title="Editar">
-                          ✏️
-                        </button>
-                        <button className="btn-icon btn-delete" onClick={() => handleDelete(producto)} title="Eliminar">
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '50px' }}>
-                    <div className="empty-state">
-                      <div className="empty-state-icon">📦</div>
-                      <h3>No se encontraron productos</h3>
-                      <p>Intenta ajustar los filtros de búsqueda</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Paginación */}
-        {filteredData.length > itemsPerPage && (
-          <div className="pagination">
-            <button 
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-            >
-              ← Anterior
-            </button>
-            <span>Página {currentPage} de {totalPages}</span>
-            <button 
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-            >
-              Siguiente →
-            </button>
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

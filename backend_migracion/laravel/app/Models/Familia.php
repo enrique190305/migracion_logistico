@@ -9,7 +9,7 @@ class Familia extends Model
 {
     use HasFactory;
 
-    protected $table = 'FAMILIA';
+    protected $table = 'familia';
     protected $primaryKey = 'tipo_producto';
     public $incrementing = false;
     protected $keyType = 'string';
@@ -19,6 +19,12 @@ class Familia extends Model
         'tipo_producto',
         'equivalencia'
     ];
+    
+    // Accessor para descripcion (alias de equivalencia)
+    public function getDescripcionAttribute()
+    {
+        return $this->equivalencia;
+    }
 
     // Relación con productos
     public function productos()

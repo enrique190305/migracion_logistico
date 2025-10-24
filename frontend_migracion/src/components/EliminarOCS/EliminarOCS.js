@@ -1,110 +1,188 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './EliminarOCS.css';
+import {
+  listarOrdenesCompra,
+  listarOrdenesServicio,
+  obtenerDetalleOrdenCompra,
+  obtenerDetalleOrdenServicio,
+  eliminarOrdenCompra,
+  eliminarOrdenServicio
+} from '../../services/ordenesEliminarAPI';
 
 const EliminarOCS = () => {
+  // Estados principales
   const [tipoOrden, setTipoOrden] = useState('OC');
-  const [razonSocial, setRazonSocial] = useState('');
-  const [correlativo, setCorrelativo] = useState('');
+  const [ordenes, setOrdenes] = useState([]);
+  const [razonSocialSeleccionada, setRazonSocialSeleccionada] = useState('');
+  const [correlativoSeleccionado, setCorrelativoSeleccionado] = useState('');
+  const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [detallesOrden, setDetallesOrden] = useState([]);
+  
+  // Estados de UI
+  const [loading, setLoading] = useState(false);
+  const [loadingDetalle, setLoadingDetalle] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Datos estáticos de razones sociales
-  const razonesSociales = [
-    'EMPRESA CONSTRUCTORA SAC',
-    'COMERCIAL RODRIGUEZ EIRL',
-    'INVERSIONES PERU SA',
-    'SERVICIOS GENERALES SAC',
-    'DISTRIBUIDORA NACIONAL SAC',
-    'TECNOLOGIA Y SISTEMAS SAC',
-    'IMPORTADORA DEL SUR EIRL',
-    'LOGISTICA INTEGRAL SAC'
-  ];
+  // Cargar órdenes cuando cambia el tipo
+  useEffect(() => {
+    cargarOrdenes();
+  }, [tipoOrden]);
 
-  // Datos estáticos de órdenes de compra
-  const ordenesCompra = {
-    'EMPRESA CONSTRUCTORA SAC': [
-      { correlativo: 'OC-2024-001', codigo: 'PROD-001', descripcion: 'Cemento Portland', cantidad: 100, unidad: 'Bolsa', precio: 25.50, subtotal: 2550.00, total: 2550.00 },
-      { correlativo: 'OC-2024-001', codigo: 'PROD-002', descripcion: 'Fierro 1/2"', cantidad: 50, unidad: 'Varilla', precio: 35.00, subtotal: 1750.00, total: 1750.00 }
-    ],
-    'COMERCIAL RODRIGUEZ EIRL': [
-      { correlativo: 'OC-2024-015', codigo: 'PROD-010', descripcion: 'Laptop HP Core i7', cantidad: 5, unidad: 'Unidad', precio: 2500.00, subtotal: 12500.00, total: 12500.00 },
-      { correlativo: 'OC-2024-015', codigo: 'PROD-011', descripcion: 'Mouse Inalámbrico', cantidad: 10, unidad: 'Unidad', precio: 25.00, subtotal: 250.00, total: 250.00 }
-    ],
-    'INVERSIONES PERU SA': [
-      { correlativo: 'OC-2024-023', codigo: 'PROD-020', descripcion: 'Escritorio Ejecutivo', cantidad: 8, unidad: 'Unidad', precio: 450.00, subtotal: 3600.00, total: 3600.00 }
-    ]
-  };
-
-  // Datos estáticos de órdenes de servicio
-  const ordenesServicio = {
-    'SERVICIOS GENERALES SAC': [
-      { correlativo: 'OS-2024-005', codigo: 'SERV-001', descripcion: 'Mantenimiento de Aires Acondicionados', cantidad: 1, unidad: 'Servicio', precio: 800.00, subtotal: 800.00, total: 800.00 }
-    ],
-    'TECNOLOGIA Y SISTEMAS SAC': [
-      { correlativo: 'OS-2024-012', codigo: 'SERV-010', descripcion: 'Desarrollo de Software', cantidad: 1, unidad: 'Proyecto', precio: 15000.00, subtotal: 15000.00, total: 15000.00 },
-      { correlativo: 'OS-2024-012', codigo: 'SERV-011', descripcion: 'Soporte Técnico Mensual', cantidad: 3, unidad: 'Mes', precio: 500.00, subtotal: 1500.00, total: 1500.00 }
-    ],
-    'LOGISTICA INTEGRAL SAC': [
-      { correlativo: 'OS-2024-018', codigo: 'SERV-015', descripcion: 'Transporte de Carga', cantidad: 10, unidad: 'Viaje', precio: 350.00, subtotal: 3500.00, total: 3500.00 }
-    ]
-  };
-
-  const handleBuscarOrden = () => {
-    if (!razonSocial) {
-      alert('⚠️ Por favor seleccione una Razón Social');
-      return;
-    }
-
-    if (!correlativo) {
-      alert('⚠️ Por favor seleccione un Correlativo');
-      return;
-    }
-
-    const ordenes = tipoOrden === 'OC' ? ordenesCompra : ordenesServicio;
-    const detalles = ordenes[razonSocial] || [];
-    const detallesFiltrados = detalles.filter(item => item.correlativo === correlativo);
+  /**
+   * Cargar lista de órdenes desde el backend
+   */
+  const cargarOrdenes = async () => {
+    setLoading(true);
+    setError(null);
+    setRazonSocialSeleccionada('');
+    setCorrelativoSeleccionado('');
+    setOrdenSeleccionada(null);
+    setDetallesOrden([]);
     
-    setDetallesOrden(detallesFiltrados);
-
-    if (detallesFiltrados.length === 0) {
-      alert('ℹ️ No se encontraron detalles para esta orden');
+    try {
+      const data = tipoOrden === 'OC' 
+        ? await listarOrdenesCompra() 
+        : await listarOrdenesServicio();
+      
+      console.log('📋 Órdenes cargadas:', data);
+      setOrdenes(data);
+      
+      if (data.length === 0) {
+        setError(`No hay ${tipoOrden === 'OC' ? 'Órdenes de Compra' : 'Órdenes de Servicio'} registradas`);
+      }
+    } catch (err) {
+      console.error('Error al cargar órdenes:', err);
+      setError('Error al cargar las órdenes. Verifique la conexión con el servidor.');
+      setOrdenes([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEliminar = () => {
-    if (detallesOrden.length === 0) {
+  /**
+   * Obtener razones sociales únicas de las órdenes
+   */
+  const getRazonesSociales = () => {
+    if (!ordenes || ordenes.length === 0) return [];
+    
+    // Extraer proveedores únicos
+    const proveedoresUnicos = [...new Map(
+      ordenes.map(orden => [
+        orden.proveedor?.id, 
+        orden.proveedor?.nombre
+      ])
+    ).values()];
+    
+    return proveedoresUnicos.filter(nombre => nombre);
+  };
+
+  /**
+   * Obtener correlativos por razón social
+   */
+  const getCorrelativos = (razonSocial) => {
+    if (!razonSocial || !ordenes) return [];
+    
+    return ordenes
+      .filter(orden => orden.proveedor?.nombre === razonSocial)
+      .map(orden => ({
+        id: orden.id,
+        correlativo: orden.correlativo
+      }));
+  };
+
+  /**
+   * Buscar y cargar detalle de la orden
+   */
+  const handleBuscarOrden = async () => {
+    if (!ordenSeleccionada) {
+      alert('⚠️ Por favor seleccione una orden');
+      return;
+    }
+
+    setLoadingDetalle(true);
+    setError(null);
+
+    try {
+      const detalle = tipoOrden === 'OC'
+        ? await obtenerDetalleOrdenCompra(ordenSeleccionada.id)
+        : await obtenerDetalleOrdenServicio(ordenSeleccionada.id);
+
+      console.log('📄 Detalle cargado:', detalle);
+      
+      if (detalle && detalle.detalles) {
+        setDetallesOrden(detalle.detalles);
+      } else {
+        setDetallesOrden([]);
+        alert('ℹ️ No se encontraron detalles para esta orden');
+      }
+    } catch (err) {
+      console.error('Error al buscar orden:', err);
+      setError('Error al cargar el detalle de la orden');
+      setDetallesOrden([]);
+      alert('❌ Error al cargar el detalle de la orden');
+    } finally {
+      setLoadingDetalle(false);
+    }
+  };
+
+  /**
+   * Eliminar orden
+   */
+  const handleEliminar = async () => {
+    if (!ordenSeleccionada || detallesOrden.length === 0) {
       alert('⚠️ No hay orden seleccionada para eliminar');
       return;
     }
 
     const tipoTexto = tipoOrden === 'OC' ? 'Orden de Compra' : 'Orden de Servicio';
     const confirmacion = window.confirm(
-      `⚠️ ADVERTENCIA\n\n¿Está seguro de eliminar permanentemente la ${tipoTexto} ${correlativo}?\n\nEsta acción NO se puede deshacer.\n\nSe eliminarán ${detallesOrden.length} registro(s).`
+      `⚠️ ADVERTENCIA\n\n¿Está seguro de eliminar permanentemente la ${tipoTexto} ${correlativoSeleccionado}?\n\nEsta acción NO se puede deshacer.\n\nSe eliminarán ${detallesOrden.length} registro(s).`
     );
 
-    if (confirmacion) {
-      alert(`✅ ${tipoTexto} eliminada correctamente\n\nCorrelativo: ${correlativo}\nRazón Social: ${razonSocial}\nRegistros eliminados: ${detallesOrden.length}`);
+    if (!confirmacion) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = tipoOrden === 'OC'
+        ? await eliminarOrdenCompra(ordenSeleccionada.id)
+        : await eliminarOrdenServicio(ordenSeleccionada.id);
+
+      console.log('✅ Eliminación exitosa:', result);
+
+      alert(`✅ ${tipoTexto} eliminada correctamente\n\nCorrelativo: ${correlativoSeleccionado}\nRegistros eliminados: ${result.detalles_eliminados || detallesOrden.length}`);
+      
+      // Recargar lista y limpiar formulario
       handleLimpiar();
+      await cargarOrdenes();
+      
+    } catch (err) {
+      console.error('Error al eliminar orden:', err);
+      const mensajeError = err.message || 'Error al eliminar la orden';
+      setError(mensajeError);
+      alert(`❌ ${mensajeError}`);
+    } finally {
+      setLoading(false);
     }
   };
 
+  /**
+   * Limpiar formulario
+   */
   const handleLimpiar = () => {
-    setRazonSocial('');
-    setCorrelativo('');
+    setRazonSocialSeleccionada('');
+    setCorrelativoSeleccionado('');
+    setOrdenSeleccionada(null);
     setDetallesOrden([]);
+    setError(null);
   };
 
-  const getCorrelativos = () => {
-    if (!razonSocial) return [];
-    
-    const ordenes = tipoOrden === 'OC' ? ordenesCompra : ordenesServicio;
-    const detalles = ordenes[razonSocial] || [];
-    const correlativos = [...new Set(detalles.map(item => item.correlativo))];
-    
-    return correlativos;
-  };
-
+  /**
+   * Calcular total general
+   */
   const calcularTotal = () => {
-    return detallesOrden.reduce((sum, item) => sum + item.total, 0).toFixed(2);
+    return detallesOrden.reduce((sum, item) => sum + parseFloat(item.total || 0), 0).toFixed(2);
   };
 
   return (
@@ -126,6 +204,14 @@ const EliminarOCS = () => {
         </p>
       </div>
 
+      {/* Mensaje de error general */}
+      {error && (
+        <div className="advertencia-box" style={{ backgroundColor: '#fee', borderColor: '#fcc' }}>
+          <span className="advertencia-icon">❌</span>
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
       {/* Formulario de Búsqueda */}
       <div className="busqueda-section">
         <div className="form-row">
@@ -141,6 +227,7 @@ const EliminarOCS = () => {
                   setTipoOrden(e.target.value);
                   handleLimpiar();
                 }}
+                disabled={loading}
               />
               <span className="radio-icon">🛒</span>
               Orden de Compra (OC)
@@ -155,6 +242,7 @@ const EliminarOCS = () => {
                   setTipoOrden(e.target.value);
                   handleLimpiar();
                 }}
+                disabled={loading}
               />
               <span className="radio-icon">🔧</span>
               Orden de Servicio (OS)
@@ -162,45 +250,71 @@ const EliminarOCS = () => {
           </div>
         </div>
 
-        <div className="form-row">
-          <label>🏢 Razón Social:</label>
-          <select
-            value={razonSocial}
-            onChange={(e) => {
-              setRazonSocial(e.target.value);
-              setCorrelativo('');
-              setDetallesOrden([]);
-            }}
-          >
-            <option value="">Seleccione una razón social...</option>
-            {razonesSociales.map((razon, index) => (
-              <option key={index} value={razon}>{razon}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="form-row">
-          <label>🔖 Correlativo:</label>
-          <div className="correlativo-row">
-            <select
-              value={correlativo}
-              onChange={(e) => setCorrelativo(e.target.value)}
-              disabled={!razonSocial}
-            >
-              <option value="">Seleccione un correlativo...</option>
-              {getCorrelativos().map((corr, index) => (
-                <option key={index} value={corr}>{corr}</option>
-              ))}
-            </select>
-            <button 
-              className="btn-buscar"
-              onClick={handleBuscarOrden}
-              disabled={!correlativo}
-            >
-              🔍 Buscar
-            </button>
+        {loading && !loadingDetalle ? (
+          <div className="form-row">
+            <p style={{ textAlign: 'center', color: '#666' }}>⏳ Cargando órdenes...</p>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="form-row">
+              <label>🏢 Razón Social:</label>
+              <select
+                value={razonSocialSeleccionada}
+                onChange={(e) => {
+                  const razonSocial = e.target.value;
+                  console.log('📌 Razón Social seleccionada:', razonSocial);
+                  setRazonSocialSeleccionada(razonSocial);
+                  setCorrelativoSeleccionado('');
+                  setOrdenSeleccionada(null);
+                  setDetallesOrden([]);
+                }}
+                disabled={loading || ordenes.length === 0}
+              >
+                <option value="">
+                  {ordenes.length === 0 
+                    ? 'No hay órdenes disponibles...' 
+                    : 'Seleccione una razón social...'}
+                </option>
+                {getRazonesSociales().map((razon, index) => (
+                  <option key={index} value={razon}>{razon}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-row">
+              <label>🔖 Correlativo:</label>
+              <div className="correlativo-row">
+                <select
+                  value={correlativoSeleccionado}
+                  onChange={(e) => {
+                    const correlativo = e.target.value;
+                    console.log('📌 Correlativo seleccionado:', correlativo);
+                    setCorrelativoSeleccionado(correlativo);
+                    
+                    // Buscar la orden completa con ese correlativo
+                    const orden = ordenes.find(o => o.correlativo === correlativo);
+                    console.log('📦 Orden encontrada:', orden);
+                    setOrdenSeleccionada(orden || null);
+                    setDetallesOrden([]);
+                  }}
+                  disabled={!razonSocialSeleccionada || loading}
+                >
+                  <option value="">Seleccione un correlativo...</option>
+                  {razonSocialSeleccionada && getCorrelativos(razonSocialSeleccionada).map((item, index) => (
+                    <option key={index} value={item.correlativo}>{item.correlativo}</option>
+                  ))}
+                </select>
+                <button 
+                  className="btn-buscar"
+                  onClick={handleBuscarOrden}
+                  disabled={!ordenSeleccionada?.id || loadingDetalle || loading}
+                >
+                  {loadingDetalle ? '⏳ Buscando...' : '🔍 Buscar'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Tabla de Detalles */}
@@ -219,16 +333,25 @@ const EliminarOCS = () => {
               </tr>
             </thead>
             <tbody>
-              {detallesOrden.length > 0 ? (
+              {loadingDetalle ? (
+                <tr>
+                  <td colSpan="7" className="empty-message">
+                    <div className="empty-state">
+                      <span className="empty-icon">⏳</span>
+                      <p>Cargando detalles...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : detallesOrden.length > 0 ? (
                 detallesOrden.map((detalle, index) => (
                   <tr key={index}>
                     <td><strong>{detalle.codigo}</strong></td>
                     <td>{detalle.descripcion}</td>
                     <td className="text-center">{detalle.cantidad}</td>
                     <td>{detalle.unidad}</td>
-                    <td className="text-right">S/ {detalle.precio.toFixed(2)}</td>
-                    <td className="text-right">S/ {detalle.subtotal.toFixed(2)}</td>
-                    <td className="text-right"><strong>S/ {detalle.total.toFixed(2)}</strong></td>
+                    <td className="text-right">S/ {parseFloat(detalle.precio || 0).toFixed(2)}</td>
+                    <td className="text-right">S/ {parseFloat(detalle.subtotal || 0).toFixed(2)}</td>
+                    <td className="text-right"><strong>S/ {parseFloat(detalle.total || 0).toFixed(2)}</strong></td>
                   </tr>
                 ))
               ) : (
@@ -243,7 +366,7 @@ const EliminarOCS = () => {
                 </tr>
               )}
             </tbody>
-            {detallesOrden.length > 0 && (
+            {detallesOrden.length > 0 && !loadingDetalle && (
               <tfoot>
                 <tr>
                   <td colSpan="6" className="text-right"><strong>TOTAL GENERAL:</strong></td>
@@ -260,9 +383,9 @@ const EliminarOCS = () => {
         <button 
           className="btn-eliminar"
           onClick={handleEliminar}
-          disabled={detallesOrden.length === 0}
+          disabled={detallesOrden.length === 0 || loading || loadingDetalle}
         >
-          <span>🗑️</span> ELIMINAR
+          <span>🗑️</span> {loading ? 'ELIMINANDO...' : 'ELIMINAR'}
         </button>
       </div>
     </div>

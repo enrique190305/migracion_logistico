@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AprobacionController;
 use App\Http\Controllers\Api\ProyectoController;
 use App\Http\Controllers\KardexController;
 use App\Http\Controllers\OrdenPedidoController;
+use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BodegaController;
@@ -48,9 +49,17 @@ Route::prefix('ordenes')->group(function () {
     Route::get('/ordenes-pedido-pendientes', [OrdenCompraServicioController::class, 'obtenerOrdenesPedidoPendientes']);
     Route::get('/ordenes-pedido/{id}', [OrdenCompraServicioController::class, 'obtenerOrdenPedido']);
     
-    // Guardar órdenes
+    // CRUD Órdenes de Compra
+    Route::get('/compra', [OrdenCompraServicioController::class, 'listarOrdenesCompra']);
+    Route::get('/compra/{id}', [OrdenCompraServicioController::class, 'obtenerDetalleOrdenCompra']);
     Route::post('/compra', [OrdenCompraServicioController::class, 'guardarOrdenCompra']);
+    Route::delete('/compra/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenCompra']);
+    
+    // CRUD Órdenes de Servicio
+    Route::get('/servicio', [OrdenCompraServicioController::class, 'listarOrdenesServicio']);
+    Route::get('/servicio/{id}', [OrdenCompraServicioController::class, 'obtenerDetalleOrdenServicio']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);
+    Route::delete('/servicio/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenServicio']);
 });
 
 /*
@@ -71,6 +80,28 @@ Route::prefix('kardex')->group(function () {
     
     // Stock actual de un producto
     Route::get('/stock/{codigo}/{proyecto?}', [KardexController::class, 'getStockProducto']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - PRODUCTOS (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('productos')->group(function () {
+    // Catálogos
+    Route::get('/familias', [ProductoController::class, 'obtenerFamilias']);
+    Route::get('/unidades', [ProductoController::class, 'obtenerUnidades']);
+    Route::get('/estadisticas', [ProductoController::class, 'estadisticas']);
+    Route::get('/generar-codigo', [ProductoController::class, 'generarCodigo']);
+    Route::get('/validar-codigo/{codigo}', [ProductoController::class, 'validarCodigo']);
+    
+    // CRUD Productos
+    Route::get('/', [ProductoController::class, 'index']);
+    Route::post('/', [ProductoController::class, 'store']);
+    Route::get('/{codigo}', [ProductoController::class, 'show']);
+    Route::put('/{codigo}', [ProductoController::class, 'update']);
+    Route::delete('/{codigo}', [ProductoController::class, 'destroy']);
 });
 
 /*
