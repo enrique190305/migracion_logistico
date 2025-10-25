@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\OrdenCompraServicioController;
 use App\Http\Controllers\Api\AprobacionController;
 use App\Http\Controllers\Api\ProyectoController;
 use App\Http\Controllers\Api\IngresoMaterialController;
+use App\Http\Controllers\Api\TrasladoMaterialesController;
 use App\Http\Controllers\KardexController;
 use App\Http\Controllers\Api\ProveedorController;
 use App\Http\Controllers\OrdenPedidoController;
@@ -97,6 +98,39 @@ Route::prefix('ingreso-materiales')->group(function () {
     
     // Ingreso Directo - Guardar
     Route::post('/guardar-directo', [IngresoMaterialController::class, 'guardarIngresoDirecto']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - TRASLADO DE MATERIALES (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('traslado-materiales')->group(function () {
+    
+    // Generar número de traslado
+    Route::get('/generar-numero', [TrasladoMaterialesController::class, 'generarNumero']);
+    
+    // Listar proyectos disponibles
+    Route::get('/proyectos', [TrasladoMaterialesController::class, 'listarProyectos']);
+    
+    // Productos con stock por proyecto
+    Route::get('/proyectos/{id}/productos-stock', [TrasladoMaterialesController::class, 'productosConStock']);
+    
+    // Obtener stock de un producto específico
+    Route::get('/stock/{codigo_producto}/proyecto/{proyecto_id}', [TrasladoMaterialesController::class, 'obtenerStock']);
+    
+    // Guardar traslado
+    Route::post('/', [TrasladoMaterialesController::class, 'store']);
+    
+    // Historial de traslados
+    Route::get('/historial', [TrasladoMaterialesController::class, 'historial']);
+    
+    // Generar PDF del traslado
+    Route::get('/{id}/pdf', [TrasladoMaterialesController::class, 'generarPDF']);
+    
+    // Detalle de un traslado
+    Route::get('/{id}', [TrasladoMaterialesController::class, 'detalle']);
 });
 
 /*

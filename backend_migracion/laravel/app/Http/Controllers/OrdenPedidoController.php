@@ -36,14 +36,15 @@ class OrdenPedidoController extends Controller
     {
         try {
             // Obtener proyectos de la empresa a través de la tabla intermedia
-            $proyectos = ProyectoAlmacen::select(
+            $proyectos = DB::table('proyecto_almacen')
+                ->select(
                     'proyecto_almacen.id_proyecto_almacen',
                     'proyecto_almacen.nombre_proyecto',
                     'proyecto_almacen.codigo_proyecto',
                     'proyecto_almacen.tipo_movil',
                     'proyecto_almacen.estado'
                 )
-                ->join('empresa_proyecto', 'proyecto_almacen.id_proyecto_almacen', '=', 'empresa_proyecto.id_proyecto_almacen')
+                ->join('empresa_proyecto', 'proyecto_almacen.id_proyecto_almacen', '=', 'empresa_proyecto.id_proyecto')
                 ->where('empresa_proyecto.id_empresa', $id_empresa)
                 ->where('proyecto_almacen.estado', 'ACTIVO')
                 ->orderBy('proyecto_almacen.nombre_proyecto', 'ASC')
@@ -134,11 +135,11 @@ class OrdenPedidoController extends Controller
 
             DB::beginTransaction();
 
-            // Crear orden de pedido
+            // Crear orden de pedido (usar id_proyecto en vez de id_proyecto_almacen)
             $orden = OrdenPedido::create([
                 'correlativo' => $validated['correlativo'],
                 'id_empresa' => $validated['id_empresa'],
-                'id_proyecto_almacen' => $validated['id_proyecto_almacen'],
+                'id_proyecto' => $validated['id_proyecto_almacen'], // Mapear correctamente
                 'fecha_pedido' => $validated['fecha_pedido'],
                 'observacion' => $validated['observacion'] ?? null,
                 'estado' => 'PENDIENTE',
