@@ -16,6 +16,7 @@ import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
+import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
 
 
 
@@ -59,7 +60,7 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'traslado-materiales':
         return <TrasladoMateriales />;
       case 'salida-materiales':
-        return <ModuleContent title="Salida de Materiales" icon="📤" />;
+        return <SalidaMateriales />;
       case 'registro-proveedores':
         return <RegistroProveedor />;
       case 'editar-proveedores':

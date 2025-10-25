@@ -428,3 +428,28 @@ Route::prefix('personal')->group(function () {
 Route::get('/areas', function() {
     return response()->json(DB::table('area')->get());
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Salida de Materiales
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Api\SalidaMaterialController;
+
+Route::prefix('salida-materiales')->group(function () {
+    // Catálogos
+    Route::get('/proyectos', [SalidaMaterialController::class, 'listarProyectos']);
+    Route::get('/trabajadores', [SalidaMaterialController::class, 'listarTrabajadores']);
+    Route::get('/productos-por-proyecto', [SalidaMaterialController::class, 'obtenerProductosPorProyecto']);
+    
+    // Generación de número
+    Route::get('/generar-numero', [SalidaMaterialController::class, 'generarNumeroSalida']);
+    
+    // CRUD
+    Route::post('/guardar', [SalidaMaterialController::class, 'guardarSalida']);
+    Route::get('/historial', [SalidaMaterialController::class, 'obtenerHistorial']);
+    Route::get('/detalle/{numeroSalida}', [SalidaMaterialController::class, 'obtenerDetalleSalida']);
+    
+    // PDF
+    Route::get('/pdf/{numeroSalida}', [SalidaMaterialController::class, 'generarPDF']);
+});

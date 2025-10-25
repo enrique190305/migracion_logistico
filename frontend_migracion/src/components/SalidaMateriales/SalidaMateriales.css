@@ -1,0 +1,472 @@
+/* ============================================
+   SALIDA DE MATERIALES - ESTILOS
+   ============================================ */
+
+/* CONTENEDOR PRINCIPAL */
+.salida-materiales-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
+/* ============================================
+   ENCABEZADO
+   ============================================ */
+.salida-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: white;
+  padding: 25px 30px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #667eea;
+}
+
+.salida-icon {
+  font-size: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.salida-title {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin: 0;
+}
+
+.salida-subtitle {
+  font-size: 15px;
+  color: #666;
+  margin: 5px 0 0 0;
+  font-weight: 400;
+}
+
+/* ============================================
+   MENSAJES
+   ============================================ */
+.salida-mensaje {
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  animation: slideInDown 0.3s ease-out;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.salida-mensaje-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.salida-mensaje-error {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+.salida-mensaje-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.salida-mensaje-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+/* ============================================
+   TABS
+   ============================================ */
+.salida-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.salida-tab {
+  background: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  color: #555;
+}
+
+.salida-tab:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background: #f8f9fa;
+}
+
+.salida-tab.activo {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* ============================================
+   CONTENIDO
+   ============================================ */
+.salida-content {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   CARDS
+   ============================================ */
+.salida-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.salida-card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.salida-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 18px 25px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.salida-card-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.salida-card-body {
+  padding: 25px;
+}
+
+/* ============================================
+   FORMULARIO
+   ============================================ */
+.salida-form-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  align-items: end;
+}
+
+.salida-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.salida-form-label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.salida-form-input,
+.salida-form-select,
+.salida-form-textarea {
+  padding: 12px 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  background: white;
+}
+
+.salida-form-input:focus,
+.salida-form-select:focus,
+.salida-form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.salida-form-input:disabled,
+.salida-form-select:disabled {
+  background-color: #f7fafc;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.salida-form-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* ============================================
+   BOTONES
+   ============================================ */
+.salida-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.salida-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.salida-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.salida-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.salida-btn-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.salida-btn-secondary {
+  background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+  color: white;
+}
+
+.salida-btn-icon {
+  font-size: 18px;
+}
+
+/* ============================================
+   TABLA
+   ============================================ */
+.salida-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.salida-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.salida-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.salida-table td {
+  padding: 15px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 14px;
+  color: #333;
+}
+
+.salida-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.salida-table tbody tr:hover {
+  background-color: #f7fafc;
+  transform: scale(1.01);
+}
+
+.salida-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.salida-table-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.salida-table-btn-eliminar {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+.salida-table-btn-eliminar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(235, 51, 73, 0.3);
+}
+
+.salida-table-btn-pdf {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.salida-table-btn-pdf:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* ============================================
+   BADGE
+   ============================================ */
+.tab-badge {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 10px;
+}
+
+/* ============================================
+   LOADER
+   ============================================ */
+.salida-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.salida-spinner {
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top: 5px solid white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.salida-loader p {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1024px) {
+  .salida-form-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .salida-materiales-container {
+    padding: 10px;
+  }
+
+  .salida-header {
+    padding: 20px;
+  }
+
+  .salida-title {
+    font-size: 24px;
+  }
+
+  .salida-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .salida-tabs {
+    flex-direction: column;
+  }
+
+  .salida-tab {
+    width: 100%;
+  }
+
+  .salida-table {
+    font-size: 12px;
+  }
+
+  .salida-table th,
+  .salida-table td {
+    padding: 10px;
+  }
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+.nueva-salida-form,
+.historial-container {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
