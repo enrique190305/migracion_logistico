@@ -201,7 +201,6 @@ const Kardex = () => {
     });
   };
 
-  // ✅ FUNCIÓN: Exportar a Excel
   const exportarExcel = (tipo) => {
     try {
       const data = tipo === 'inventario' ? inventarioData : historialData;
@@ -215,7 +214,6 @@ const Kardex = () => {
       let worksheetData = [];
       
       if (tipo === 'inventario') {
-        // Encabezados para inventario
         worksheetData.push([
           'Proyecto',
           'Código',
@@ -226,7 +224,6 @@ const Kardex = () => {
           'Precio Total'
         ]);
 
-        // Datos de inventario
         data.forEach(item => {
           worksheetData.push([
             item.proyecto || 'N/A',
@@ -239,13 +236,11 @@ const Kardex = () => {
           ]);
         });
 
-        // Totales
         const totalValor = data.reduce((sum, item) => sum + parseFloat(item.precio_total || 0), 0);
         worksheetData.push([]);
         worksheetData.push(['TOTAL GENERAL', '', '', '', data.length, '', totalValor.toFixed(2)]);
 
       } else {
-        // Encabezados para historial
         worksheetData.push([
           'Fecha',
           'Tipo',
@@ -258,7 +253,6 @@ const Kardex = () => {
           'Observaciones'
         ]);
 
-        // Datos de historial
         data.forEach(item => {
           worksheetData.push([
             formatearFecha(item.fecha),
@@ -273,7 +267,6 @@ const Kardex = () => {
           ]);
         });
 
-        // Resumen
         const ingresos = data.filter(i => i.tipo_movimiento === 'INGRESO').length;
         const salidas = data.filter(i => i.tipo_movimiento === 'SALIDA').length;
         worksheetData.push([]);
@@ -283,10 +276,8 @@ const Kardex = () => {
         worksheetData.push(['Salidas:', salidas, '', '', '', '', '', '', '']);
       }
 
-      // Crear libro de Excel
       const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
       
-      // Ajustar ancho de columnas
       const colWidths = tipo === 'inventario' 
         ? [{ wch: 20 }, { wch: 15 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 12 }, { wch: 12 }]
         : [{ wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 40 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 15 }, { wch: 30 }];
@@ -296,7 +287,6 @@ const Kardex = () => {
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, tipo === 'inventario' ? 'Inventario' : 'Historial');
 
-      // Descargar archivo
       XLSX.writeFile(workbook, `${nombre}.xlsx`);
       
       mostrarMensajeTemporal(`✅ ${tipo} exportado a Excel exitosamente`, 'success');
@@ -306,7 +296,6 @@ const Kardex = () => {
     }
   };
 
-  // ✅ FUNCIÓN CORREGIDA: Exportar a PDF
   const exportarPDF = (tipo) => {
     try {
       const data = tipo === 'inventario' ? inventarioData : historialData;
@@ -317,17 +306,13 @@ const Kardex = () => {
         return;
       }
 
-      // ✅ Crear documento PDF correctamente con jsPDF
       const doc = new jsPDF({
         orientation: tipo === 'inventario' ? 'portrait' : 'landscape',
         unit: 'mm',
         format: 'a4'
       });
 
-      // Configuración de fuente
       doc.setFont('helvetica');
-
-      // Encabezado del documento
       doc.setFontSize(18);
       doc.setTextColor(102, 126, 234);
       doc.text('ProcessMart - Sistema de Gestión', 14, 15);
@@ -345,7 +330,6 @@ const Kardex = () => {
         doc.text(`Período: ${formatearFecha(fechaInicio)} - ${formatearFecha(fechaFin)}`, 14, 38);
       }
 
-      // Preparar datos para la tabla
       let columns, rows;
 
       if (tipo === 'inventario') {
@@ -369,7 +353,6 @@ const Kardex = () => {
           precio_total: formatearMoneda(item.precio_total, item.moneda)
         }));
 
-        // ✅ Usar autoTable correctamente
         doc.autoTable({
           columns: columns,
           body: rows,
@@ -392,7 +375,6 @@ const Kardex = () => {
             precio_total: { halign: 'right' }
           },
           didDrawPage: function(hookData) {
-            // Pie de página
             const pageCount = doc.internal.getNumberOfPages();
             doc.setFontSize(8);
             doc.setTextColor(150);
@@ -405,7 +387,6 @@ const Kardex = () => {
           }
         });
 
-        // Resumen al final
         const finalY = doc.lastAutoTable.finalY + 10;
         const totalProductos = data.length;
         const totalValor = data.reduce((sum, item) => sum + parseFloat(item.precio_total || 0), 0);
@@ -438,7 +419,6 @@ const Kardex = () => {
           documento: (item.documento || 'N/A').substring(0, 12)
         }));
 
-        // ✅ Usar autoTable correctamente
         doc.autoTable({
           columns: columns,
           body: rows,
@@ -463,7 +443,6 @@ const Kardex = () => {
             cantidad: { halign: 'center', cellWidth: 15 }
           },
           didDrawPage: function(hookData) {
-            // Pie de página
             const pageCount = doc.internal.getNumberOfPages();
             doc.setFontSize(8);
             doc.setTextColor(150);
@@ -476,7 +455,6 @@ const Kardex = () => {
           }
         });
 
-        // Resumen al final
         const finalY = doc.lastAutoTable.finalY + 10;
         const ingresos = data.filter(i => i.tipo_movimiento === 'INGRESO').length;
         const salidas = data.filter(i => i.tipo_movimiento === 'SALIDA').length;
@@ -488,7 +466,6 @@ const Kardex = () => {
         doc.text(`Salidas: ${salidas}`, 14, finalY + 12);
       }
 
-      // Guardar PDF
       doc.save(`${nombre}.pdf`);
       
       mostrarMensajeTemporal(`✅ ${tipo} exportado a PDF exitosamente`, 'success');
@@ -543,16 +520,16 @@ const Kardex = () => {
   };
 
   const obtenerClaseStock = (stock) => {
-    if (stock < 10) return 'stock-bajo';
-    if (stock > 100) return 'stock-alto';
-    return 'stock-normal';
+    if (stock < 10) return 'stock-bajo-kardex';
+    if (stock > 100) return 'stock-alto-kardex';
+    return 'stock-normal-kardex';
   };
 
   if (loading) {
     return (
       <div className="kardex-container">
-        <div className="loading-container">
-          <div className="spinner"></div>
+        <div className="loading-container-kardex">
+          <div className="spinner-kardex"></div>
           <p>Cargando sistema Kardex...</p>
         </div>
       </div>
@@ -563,79 +540,79 @@ const Kardex = () => {
     <div className="kardex-container">
       {/* Header */}
       <div className="kardex-header">
-        <div className="header-icon">
-          <span className="icon-kardex">📊</span>
+        <div className="header-icon-kardex">
+          <span>📊</span>
         </div>
-        <div className="header-content">
-          <h1 className="header-title">Sistema de Kardex</h1>
-          <p className="header-subtitle">Gestión y control de inventario</p>
+        <div className="header-content-kardex">
+          <h1 className="header-title-kardex">Sistema de Kardex</h1>
+          <p className="header-subtitle-kardex">Gestión y control de inventario</p>
         </div>
       </div>
 
       {/* Tabs */}
       <div className="kardex-tabs">
         <button
-          className={`tab-button ${activeTab === 'inventario' ? 'active' : ''}`}
+          className={`tab-button-kardex ${activeTab === 'inventario' ? 'active' : ''}`}
           onClick={() => setActiveTab('inventario')}
         >
-          <span className="tab-icon">📦</span>
+          <span className="tab-icon-kardex">📦</span>
           Inventario Actual
           {inventarioData.length > 0 && (
-            <span className="tab-badge">{inventarioData.length}</span>
+            <span className="tab-badge-kardex">{inventarioData.length}</span>
           )}
         </button>
         <button
-          className={`tab-button ${activeTab === 'historial' ? 'active' : ''}`}
+          className={`tab-button-kardex ${activeTab === 'historial' ? 'active' : ''}`}
           onClick={() => setActiveTab('historial')}
         >
-          <span className="tab-icon">📋</span>
+          <span className="tab-icon-kardex">📋</span>
           Historial de Movimientos
           {historialData.length > 0 && (
-            <span className="tab-badge">{historialData.length}</span>
+            <span className="tab-badge-kardex">{historialData.length}</span>
           )}
         </button>
       </div>
 
       {/* Contenido de Inventario */}
       {activeTab === 'inventario' && (
-        <div className="tab-content">
+        <div className="tab-content-kardex">
           {/* Estadísticas */}
-          <div className="stats-panel inventario-stats">
-            <span className="stats-icon">📊</span>
-            <span className="stats-text">
+          <div className="stats-panel-kardex">
+            <span className="stats-icon-kardex">📊</span>
+            <span className="stats-text-kardex">
               {statsInventario.totalProductos} productos en stock | 💰 Valor total: {formatearMoneda(statsInventario.valorTotal)} | 📈 Producto mayor valor: {statsInventario.productoMayor}
             </span>
           </div>
 
           {/* Búsqueda */}
-          <div className="search-container">
-            <div className="search-box">
-              <span className="search-icon">🔍</span>
+          <div className="search-container-kardex">
+            <div className="search-box-kardex">
+              <span className="search-icon-kardex">🔍</span>
               <input
                 type="text"
                 placeholder="Buscar por proyecto, código o descripción..."
                 value={searchInventario}
                 onChange={(e) => aplicarFiltroInventario(e.target.value)}
-                className="search-input"
+                className="search-input-kardex"
               />
             </div>
           </div>
 
           {/* Botones de exportación */}
-          <div className="export-buttons">
-            <button className="btn-export btn-excel" onClick={() => exportarExcel('inventario')}>
+          <div className="export-buttons-kardex">
+            <button className="btn-export-kardex btn-excel-kardex" onClick={() => exportarExcel('inventario')}>
               📊 Excel
             </button>
-            <button className="btn-export btn-pdf" onClick={() => exportarPDF('inventario')}>
+            <button className="btn-export-kardex btn-pdf-kardex" onClick={() => exportarPDF('inventario')}>
               📄 PDF
             </button>
-            <button className="btn-export btn-csv" onClick={() => exportarCSV('inventario')}>
+            <button className="btn-export-kardex btn-csv-kardex" onClick={() => exportarCSV('inventario')}>
               📋 CSV
             </button>
           </div>
 
           {/* Tabla de Inventario */}
-          <div className="table-wrapper">
+          <div className="table-wrapper-kardex">
             <table className="kardex-table">
               <thead>
                 <tr>
@@ -651,9 +628,12 @@ const Kardex = () => {
               <tbody>
                 {inventarioData.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="empty-state">
-                      <span className="empty-icon">📦</span>
-                      <p>No hay productos en el inventario</p>
+                    <td colSpan="7">
+                      <div className="empty-state-kardex">
+                        <span className="empty-icon-kardex">📦</span>
+                        <h3>No hay productos en el inventario</h3>
+                        <p>Los productos ingresados aparecerán aquí</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -666,10 +646,10 @@ const Kardex = () => {
                       <td className={obtenerClaseStock(item.stock)}>
                         {item.stock}
                       </td>
-                      <td className="precio-cell">
+                      <td className="precio-cell-kardex">
                         {formatearMoneda(item.precio_unitario, item.moneda)}
                       </td>
-                      <td className="precio-cell">
+                      <td className="precio-cell-kardex">
                         {formatearMoneda(item.precio_total, item.moneda)}
                       </td>
                     </tr>
@@ -683,72 +663,72 @@ const Kardex = () => {
 
       {/* Contenido de Historial */}
       {activeTab === 'historial' && (
-        <div className="tab-content">
+        <div className="tab-content-kardex">
           {/* Estadísticas */}
-          <div className="stats-panel historial-stats">
-            <span className="stats-icon">📈</span>
-            <span className="stats-text">
+          <div className="stats-panel-kardex">
+            <span className="stats-icon-kardex">📈</span>
+            <span className="stats-text-kardex">
               {statsHistorial.totalMovimientos} movimientos | ⬆️ {statsHistorial.ingresos} ingresos | ⬇️ {statsHistorial.salidas} salidas | 📅 Período: {formatearFecha(fechaInicio)} - {formatearFecha(fechaFin)}
             </span>
           </div>
 
           {/* Filtros de fecha */}
-          <div className="filter-container">
-            <div className="filter-group">
+          <div className="filter-container-kardex">
+            <div className="filter-group-kardex">
               <label>Fecha Inicio:</label>
               <input
                 type="date"
                 value={fechaInicio}
                 onChange={(e) => setFechaInicio(e.target.value)}
-                className="date-input"
+                className="date-input-kardex"
               />
             </div>
-            <div className="filter-group">
+            <div className="filter-group-kardex">
               <label>Fecha Fin:</label>
               <input
                 type="date"
                 value={fechaFin}
                 onChange={(e) => setFechaFin(e.target.value)}
-                className="date-input"
+                className="date-input-kardex"
               />
             </div>
-            <button className="btn-filter" onClick={aplicarFiltroFechas}>
+            <button className="btn-filter-kardex" onClick={aplicarFiltroFechas}>
               🔍 Filtrar
             </button>
-            <button className="btn-clear-filter" onClick={limpiarFiltros}>
+            <button className="btn-clear-filter-kardex" onClick={limpiarFiltros}>
               🔄 Limpiar Filtros
             </button>
           </div>
 
           {/* Búsqueda */}
-          <div className="search-container">
-            <div className="search-box">
-              <span className="search-icon">🔍</span>
+          <div className="search-container-kardex">
+            <div className="search-box-kardex">
+              <span className="search-icon-kardex">🔍</span>
               <input
                 type="text"
                 placeholder="Buscar por código, descripción, documento o proyecto..."
                 value={searchHistorial}
                 onChange={(e) => aplicarFiltroHistorial(e.target.value)}
-                className="search-input"
+                className="search-input-kardex"
               />
             </div>
           </div>
 
           {/* Botones de exportación */}
-          <div className="export-buttons">
-            <button className="btn-export btn-excel" onClick={() => exportarExcel('historial')}>
+          <div className="export-buttons-kardex">
+            <button className="btn-export-kardex btn-excel-kardex" onClick={() => exportarExcel('historial')}>
               📊 Excel
             </button>
-            <button className="btn-export btn-pdf" onClick={() => exportarPDF('historial')}>
+            <button className="btn-export-kardex btn-pdf-kardex" onClick={() => exportarPDF('historial')}>
               📄 PDF
             </button>
-            <button className="btn-export btn-csv" onClick={() => exportarCSV('historial')}>
+            <button className="btn-export-kardex btn-csv-kardex" onClick={() => exportarCSV('historial')}>
               📋 CSV
             </button>
           </div>
 
           {/* Tabla de Historial */}
-          <div className="table-wrapper">
+          <div className="table-wrapper-kardex">
             <table className="kardex-table">
               <thead>
                 <tr>
@@ -766,9 +746,12 @@ const Kardex = () => {
               <tbody>
                 {historialData.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="empty-state">
-                      <span className="empty-icon">📋</span>
-                      <p>No hay movimientos en el período seleccionado</p>
+                    <td colSpan="9">
+                      <div className="empty-state-kardex">
+                        <span className="empty-icon-kardex">📋</span>
+                        <h3>No hay movimientos en el período seleccionado</h3>
+                        <p>Ajusta los filtros de fecha para ver movimientos</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -776,7 +759,7 @@ const Kardex = () => {
                     <tr key={index}>
                       <td>{formatearFecha(item.fecha)}</td>
                       <td>
-                        <span className={`tipo-badge tipo-${item.tipo_movimiento.toLowerCase()}`}>
+                        <span className={`tipo-badge-kardex tipo-${item.tipo_movimiento.toLowerCase()}-kardex`}>
                           {item.tipo_movimiento}
                         </span>
                       </td>

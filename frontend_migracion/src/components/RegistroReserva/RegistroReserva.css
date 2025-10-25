@@ -15,41 +15,46 @@
   align-items: center;
 }
 
-.header-title {
+.registro-reserva-header .header-title-reserva {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.header-icon {
+.registro-reserva-header .header-icon-reserva {
   font-size: 36px;
-  animation: bounce 2s infinite;
+  animation: bounce-reserva 2s infinite;
 }
 
-@keyframes bounce {
+@keyframes bounce-reserva {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
 
-.header-title h1 {
+.registro-reserva-header .header-title-reserva h1 {
   font-size: 28px;
-  color: #2c3e50;
+  color: #000000 !important;
   margin: 0;
-  font-weight: 700;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: none !important;
 }
 
-.header-title p {
-  color: #7f8c8d;
+.registro-reserva-header .header-title-reserva p {
+  color: #4a5568 !important;
   margin: 5px 0 0 0;
   font-size: 14px;
+  font-weight: 500;
+  text-shadow: none !important;
 }
 
-.header-actions {
+.registro-reserva-header .header-actions-reserva {
   display: flex;
   gap: 15px;
 }
 
-.btn {
+.registro-reserva-header .btn-reserva {
   padding: 12px 24px;
   border: none;
   border-radius: 8px;
@@ -62,29 +67,29 @@
   gap: 8px;
 }
 
-.btn-primary {
+.registro-reserva-header .btn-primary-reserva {
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   color: white;
 }
 
-.btn-primary:hover {
+.registro-reserva-header .btn-primary-reserva:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 20px rgba(250, 112, 154, 0.4);
 }
 
-.btn-secondary {
+.registro-reserva-header .btn-secondary-reserva {
   background: white;
   color: #fa709a;
   border: 2px solid #fa709a;
 }
 
-.btn-secondary:hover {
+.registro-reserva-header .btn-secondary-reserva:hover {
   background: #fa709a;
   color: white;
 }
 
 /* Filtros */
-.filtros-section {
+.registro-reserva-container .filtros-section-reserva {
   background: white;
   padding: 25px;
   border-radius: 15px;
@@ -92,27 +97,27 @@
   margin-bottom: 30px;
 }
 
-.filtros-grid {
+.registro-reserva-container .filtros-grid-reserva {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-top: 20px;
 }
 
-.filtro-group {
+.registro-reserva-container .filtro-group-reserva {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.filtro-group label {
+.registro-reserva-container .filtro-group-reserva label {
   font-size: 14px;
   font-weight: 600;
   color: #2c3e50;
 }
 
-.filtro-group input,
-.filtro-group select {
+.registro-reserva-container .filtro-group-reserva input,
+.registro-reserva-container .filtro-group-reserva select {
   padding: 12px;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
@@ -120,22 +125,22 @@
   transition: all 0.3s ease;
 }
 
-.filtro-group input:focus,
-.filtro-group select:focus {
+.registro-reserva-container .filtro-group-reserva input:focus,
+.registro-reserva-container .filtro-group-reserva select:focus {
   outline: none;
   border-color: #fa709a;
   box-shadow: 0 0 0 3px rgba(250, 112, 154, 0.1);
 }
 
 /* Estadísticas */
-.estadisticas-grid {
+.registro-reserva-container .estadisticas-grid-reserva {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }
 
-.stat-card {
+.registro-reserva-container .stat-card-reserva {
   background: white;
   padding: 25px;
   border-radius: 15px;
@@ -146,12 +151,12 @@
   transition: all 0.3s ease;
 }
 
-.stat-card:hover {
+.registro-reserva-container .stat-card-reserva:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
-.stat-icon {
+.registro-reserva-container .stat-icon-reserva {
   font-size: 48px;
   width: 80px;
   height: 80px;
@@ -161,51 +166,51 @@
   border-radius: 15px;
 }
 
-.stat-icon.blue {
+.registro-reserva-container .stat-icon-reserva.blue-reserva {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.stat-icon.green {
+.registro-reserva-container .stat-icon-reserva.green-reserva {
   background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
 
-.stat-icon.red {
+.registro-reserva-container .stat-icon-reserva.red-reserva {
   background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
 }
 
-.stat-icon.purple {
+.registro-reserva-container .stat-icon-reserva.purple-reserva {
   background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
 }
 
-.stat-info h3 {
+.registro-reserva-container .stat-info-reserva h3 {
   font-size: 32px;
   font-weight: 700;
   color: #2c3e50;
   margin: 0;
 }
 
-.stat-info p {
+.registro-reserva-container .stat-info-reserva p {
   color: #7f8c8d;
   margin: 5px 0 0 0;
   font-size: 14px;
 }
 
-/* Tabla */
-.tabla-section {
+/* Tabla - CORRECCIÓN DEL SCROLL */
+.registro-reserva-container .tabla-section-reserva {
   background: white;
   padding: 25px;
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.tabla-header {
+.registro-reserva-container .tabla-header-reserva {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.tabla-header h2 {
+.registro-reserva-container .tabla-header-reserva h2 {
   color: #2c3e50;
   font-size: 20px;
   margin: 0;
@@ -214,12 +219,12 @@
   gap: 10px;
 }
 
-.search-box {
+.registro-reserva-container .search-box-reserva {
   position: relative;
   width: 300px;
 }
 
-.search-box input {
+.registro-reserva-container .search-box-reserva input {
   width: 100%;
   padding: 12px 40px 12px 15px;
   border: 2px solid #e0e0e0;
@@ -227,12 +232,12 @@
   font-size: 14px;
 }
 
-.search-box input:focus {
+.registro-reserva-container .search-box-reserva input:focus {
   outline: none;
   border-color: #fa709a;
 }
 
-.search-icon {
+.registro-reserva-container .search-icon-reserva {
   position: absolute;
   right: 12px;
   top: 50%;
@@ -241,21 +246,51 @@
   color: #7f8c8d;
 }
 
-.table-wrapper {
+/* CORRECCIÓN: Solo scroll horizontal */
+.registro-reserva-container .table-wrapper-reserva {
   overflow-x: auto;
+  overflow-y: visible;
+  border-radius: 10px;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
-.reserva-table {
+/* Scrollbar mejorado */
+.registro-reserva-container .table-wrapper-reserva::-webkit-scrollbar {
+  height: 10px;
+}
+
+.registro-reserva-container .table-wrapper-reserva::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 10px;
+}
+
+.registro-reserva-container .table-wrapper-reserva::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  border-radius: 10px;
+  border: 2px solid #f1f3f5;
+}
+
+.registro-reserva-container .table-wrapper-reserva::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #f85687 0%, #fed120 100%);
+}
+
+.registro-reserva-container .reserva-table-unique {
   width: 100%;
+  min-width: 1200px;
   border-collapse: separate;
   border-spacing: 0;
+  table-layout: fixed;
 }
 
-.reserva-table thead {
+.registro-reserva-container .reserva-table-unique thead {
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.reserva-table th {
+.registro-reserva-container .reserva-table-unique th {
   padding: 15px;
   text-align: left;
   color: white;
@@ -263,33 +298,40 @@
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.reserva-table th:first-child {
+.registro-reserva-container .reserva-table-unique th:first-child {
   border-top-left-radius: 10px;
 }
 
-.reserva-table th:last-child {
+.registro-reserva-container .reserva-table-unique th:last-child {
   border-top-right-radius: 10px;
 }
 
-.reserva-table tbody tr {
-  transition: all 0.3s ease;
+/* CORRECCIÓN: Eliminado problemas de transform */
+.registro-reserva-container .reserva-table-unique tbody {
+  position: relative;
+}
+
+/* CORRECCIÓN: Solo transición de color, sin scale */
+.registro-reserva-container .reserva-table-unique tbody tr {
+  transition: background-color 0.2s ease;
   border-bottom: 1px solid #f0f0f0;
 }
 
-.reserva-table tbody tr:hover {
+.registro-reserva-container .reserva-table-unique tbody tr:hover {
   background: #fff8f9;
-  transform: scale(1.01);
 }
 
-.reserva-table td {
+.registro-reserva-container .reserva-table-unique td {
   padding: 15px;
   color: #2c3e50;
   font-size: 14px;
 }
 
-.estado-badge {
+.registro-reserva-container .estado-badge-reserva {
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -297,22 +339,24 @@
   display: inline-block;
 }
 
-.estado-badge.activo {
+.registro-reserva-container .estado-badge-reserva.activo-reserva {
   background: #d4edda;
   color: #155724;
 }
 
-.estado-badge.inactivo {
+.registro-reserva-container .estado-badge-reserva.inactivo-reserva {
   background: #f8d7da;
   color: #721c24;
 }
 
-.actions-cell {
+.registro-reserva-container .actions-cell-reserva {
   display: flex;
   gap: 10px;
+  position: relative;
+  z-index: 1;
 }
 
-.btn-icon {
+.registro-reserva-container .btn-icon-reserva {
   padding: 8px 12px;
   border: none;
   border-radius: 6px;
@@ -321,38 +365,38 @@
   transition: all 0.3s ease;
 }
 
-.btn-edit {
+.registro-reserva-container .btn-edit-reserva {
   background: #fa709a;
   color: white;
 }
 
-.btn-edit:hover {
+.registro-reserva-container .btn-edit-reserva:hover {
   background: #f85687;
   transform: translateY(-2px);
 }
 
-.btn-delete {
+.registro-reserva-container .btn-delete-reserva {
   background: #f5576c;
   color: white;
 }
 
-.btn-delete:hover {
+.registro-reserva-container .btn-delete-reserva:hover {
   background: #e14256;
   transform: translateY(-2px);
 }
 
-.btn-view {
+.registro-reserva-container .btn-view-reserva {
   background: #38ef7d;
   color: white;
 }
 
-.btn-view:hover {
+.registro-reserva-container .btn-view-reserva:hover {
   background: #2dd46a;
   transform: translateY(-2px);
 }
 
 /* Paginación */
-.pagination {
+.registro-reserva-container .pagination-reserva {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -360,7 +404,7 @@
   margin-top: 25px;
 }
 
-.pagination button {
+.registro-reserva-container .pagination-reserva button {
   padding: 10px 15px;
   border: 2px solid #fa709a;
   background: white;
@@ -371,17 +415,17 @@
   transition: all 0.3s ease;
 }
 
-.pagination button:hover:not(:disabled) {
+.registro-reserva-container .pagination-reserva button:hover:not(:disabled) {
   background: #fa709a;
   color: white;
 }
 
-.pagination button:disabled {
+.registro-reserva-container .pagination-reserva button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.pagination span {
+.registro-reserva-container .pagination-reserva span {
   color: #2c3e50;
   font-weight: 600;
 }
@@ -393,50 +437,50 @@
     gap: 20px;
   }
 
-  .header-actions {
+  .registro-reserva-header .header-actions-reserva {
     width: 100%;
     justify-content: stretch;
   }
 
-  .btn {
+  .registro-reserva-header .btn-reserva {
     flex: 1;
   }
 
-  .estadisticas-grid {
+  .registro-reserva-container .estadisticas-grid-reserva {
     grid-template-columns: 1fr;
   }
 
-  .filtros-grid {
+  .registro-reserva-container .filtros-grid-reserva {
     grid-template-columns: 1fr;
   }
 
-  .tabla-header {
+  .registro-reserva-container .tabla-header-reserva {
     flex-direction: column;
     gap: 15px;
   }
 
-  .search-box {
+  .registro-reserva-container .search-box-reserva {
     width: 100%;
   }
 
-  .table-wrapper {
+  .registro-reserva-container .table-wrapper-reserva {
     overflow-x: scroll;
   }
 }
 
 /* Empty State */
-.empty-state {
+.registro-reserva-container .empty-state-reserva {
   text-align: center;
   padding: 50px;
   color: #7f8c8d;
 }
 
-.empty-state-icon {
+.registro-reserva-container .empty-state-icon-reserva {
   font-size: 64px;
   margin-bottom: 20px;
 }
 
-.empty-state h3 {
+.registro-reserva-container .empty-state-reserva h3 {
   color: #2c3e50;
   font-size: 24px;
   margin-bottom: 10px;

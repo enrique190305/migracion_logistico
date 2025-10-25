@@ -375,18 +375,18 @@ const RegistroProductos = () => {
     <div className="registro-productos-container">
       {/* Header */}
       <div className="registro-productos-header">
-        <div className="header-title">
-          <span className="header-icon">📦</span>
+        <div className="header-title-productos">
+          <span className="header-icon-productos">📦</span>
           <div>
             <h1>REGISTRO DE PRODUCTOS</h1>
             <p>Gestión del catálogo de productos</p>
           </div>
         </div>
-        <div className="header-actions">
-          <button className="btn btn-primary" onClick={handleNuevoProducto} disabled={loading}>
+        <div className="header-actions-productos">
+          <button className="btn-productos btn-primary-productos" onClick={handleNuevoProducto} disabled={loading}>
             <span>➕</span> Nuevo Producto
           </button>
-          <button className="btn btn-secondary" onClick={handleExportar}>
+          <button className="btn-productos btn-secondary-productos" onClick={handleExportar}>
             <span>📊</span> Exportar
           </button>
         </div>
@@ -394,50 +394,50 @@ const RegistroProductos = () => {
 
       {/* Mensaje de error */}
       {error && (
-        <div className="alert-error">
+        <div className="alert-error-productos">
           <span>❌</span> {error}
         </div>
       )}
 
       {/* Estadísticas */}
-      <div className="stats-container">
-        <div className="stat-card">
-          <div className="stat-icon">📦</div>
-          <div className="stat-content">
-            <div className="stat-value">{loading ? '...' : totalProductos}</div>
-            <div className="stat-label">Total Productos</div>
+      <div className="stats-container-productos">
+        <div className="stat-card-productos">
+          <div className="stat-icon-productos">📦</div>
+          <div className="stat-content-productos">
+            <div className="stat-value-productos">{loading ? '...' : totalProductos}</div>
+            <div className="stat-label-productos">Total Productos</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon">📁</div>
-          <div className="stat-content">
-            <div className="stat-value">{loading ? '...' : tiposUnicos}</div>
-            <div className="stat-label">Tipos de Productos</div>
+        <div className="stat-card-productos">
+          <div className="stat-icon-productos">📁</div>
+          <div className="stat-content-productos">
+            <div className="stat-value-productos">{loading ? '...' : tiposUnicos}</div>
+            <div className="stat-label-productos">Tipos de Productos</div>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon">📏</div>
-          <div className="stat-content">
-            <div className="stat-value">{loading ? '...' : unidadesUnicas}</div>
-            <div className="stat-label">Unidades de Medida</div>
+        <div className="stat-card-productos">
+          <div className="stat-icon-productos">📏</div>
+          <div className="stat-content-productos">
+            <div className="stat-value-productos">{loading ? '...' : unidadesUnicas}</div>
+            <div className="stat-label-productos">Unidades de Medida</div>
           </div>
         </div>
       </div>
 
       {/* Filtros y búsqueda */}
-      <div className="filters-container">
-        <div className="search-box">
-          <span className="search-icon">🔍</span>
+      <div className="filters-container-productos">
+        <div className="filter-group-productos">
+          <label>🔍 Buscar:</label>
           <input
             type="text"
-            placeholder="Buscar por código o descripción..."
+            placeholder="Código o descripción..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             disabled={loading}
           />
         </div>
         
-        <div className="filter-group">
+        <div className="filter-group-productos">
           <label>📁 Tipo:</label>
           <select 
             value={filtroTipo} 
@@ -453,7 +453,7 @@ const RegistroProductos = () => {
           </select>
         </div>
 
-        <div className="filter-group">
+        <div className="filter-group-productos">
           <label>📏 Unidad:</label>
           <select 
             value={filtroUnidad} 
@@ -469,107 +469,122 @@ const RegistroProductos = () => {
           </select>
         </div>
 
-        <div className="filter-group">
-          <label style={{opacity: 0}}>.</label>
-          <button 
-            className="btn-limpiar-filtros" 
-            onClick={handleLimpiarFiltros}
-            disabled={loading}
-            title="Limpiar filtros"
-          >
-            🗑️ Limpiar
-          </button>
-        </div>
+        <button 
+          className="btn-limpiar-filtros-productos" 
+          onClick={handleLimpiarFiltros}
+          disabled={loading || (searchTerm === '' && filtroTipo === 'todos' && filtroUnidad === 'todos')}
+          title="Limpiar filtros"
+        >
+          🗑️ Limpiar
+        </button>
       </div>
 
       {/* Tabla */}
-      <div className="table-container">
-        {loading && productos.length === 0 ? (
-          <div className="loading-state">
-            <p>⏳ Cargando productos...</p>
+      <div className="table-container-productos">
+        <div className="tabla-header-productos">
+          <h2>📦 Catálogo de Productos ({productos.length})</h2>
+          <div className="search-box-productos">
+            <input
+              type="text"
+              placeholder="Búsqueda rápida..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              disabled={loading}
+            />
+            <span className="search-icon-productos">🔍</span>
           </div>
-        ) : productos.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-icon">📦</span>
-            <p>No hay productos registrados</p>
-            <span className="empty-hint">Haga clic en "Nuevo Producto" para comenzar</span>
-          </div>
-        ) : (
-          <table className="productos-table">
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Tipo</th>
-                <th>Descripción</th>
-                <th>Unidad</th>
-                <th>Observaciones</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.map((producto) => (
-                <tr key={producto.codigo_producto}>
-                  <td><strong>{producto.codigo_producto}</strong></td>
-                  <td>
-                    <span className="badge">{producto.tipo_producto_nombre || producto.tipo_producto}</span>
-                  </td>
-                  <td>{producto.descripcion}</td>
-                  <td className="text-center">{producto.unidad}</td>
-                  <td>{producto.observacion || '-'}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button className="btn-action btn-view" onClick={() => handleView(producto)} title="Ver detalles">
-                        👁️
-                      </button>
-                      <button className="btn-action btn-edit" onClick={() => handleEdit(producto)} title="Editar">
-                        ✏️
-                      </button>
-                      <button className="btn-action btn-delete" onClick={() => handleDelete(producto)} title="Eliminar">
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
+        </div>
+
+        <div className="table-wrapper-productos">
+          {loading && productos.length === 0 ? (
+            <div className="loading-state-productos">
+              <p>⏳ Cargando productos...</p>
+            </div>
+          ) : productos.length === 0 ? (
+            <div className="empty-state-productos">
+              <span className="empty-icon-productos">📦</span>
+              <h3>No hay productos registrados</h3>
+              <span className="empty-hint-productos">Haga clic en "Nuevo Producto" para comenzar</span>
+            </div>
+          ) : (
+            <table className="productos-table-unique">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Tipo</th>
+                  <th>Descripción</th>
+                  <th>Unidad</th>
+                  <th>Observaciones</th>
+                  <th className="text-center-productos">Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentItems.map((producto) => (
+                  <tr key={producto.codigo_producto}>
+                    <td><strong>{producto.codigo_producto}</strong></td>
+                    <td>
+                      <span className={`badge-productos ${producto.tipo_producto.toLowerCase()}-productos`}>
+                        {producto.tipo_producto_nombre || producto.tipo_producto}
+                      </span>
+                    </td>
+                    <td>{producto.descripcion}</td>
+                    <td className="text-center-productos">{producto.unidad}</td>
+                    <td className="observaciones-cell-productos">{producto.observacion || '-'}</td>
+                    <td>
+                      <div className="action-buttons-productos">
+                        <button className="btn-action-productos btn-view-productos" onClick={() => handleView(producto)} title="Ver detalles">
+                          👁️
+                        </button>
+                        <button className="btn-action-productos btn-edit-productos" onClick={() => handleEdit(producto)} title="Editar">
+                          ✏️
+                        </button>
+                        <button className="btn-action-productos btn-delete-productos" onClick={() => handleDelete(producto)} title="Eliminar">
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Paginación */}
+        {productos.length > itemsPerPage && (
+          <div className="pagination-productos">
+            <button 
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="pagination-btn-productos"
+            >
+              ◀ Anterior
+            </button>
+            
+            <div className="pagination-info-productos">
+              Página {currentPage} de {totalPages} ({productos.length} productos)
+            </div>
+            
+            <button 
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="pagination-btn-productos"
+            >
+              Siguiente ▶
+            </button>
+          </div>
         )}
       </div>
 
-      {/* Paginación */}
-      {productos.length > itemsPerPage && (
-        <div className="pagination">
-          <button 
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="pagination-btn"
-          >
-            ◀ Anterior
-          </button>
-          
-          <div className="pagination-info">
-            Página {currentPage} de {totalPages} ({productos.length} productos)
-          </div>
-          
-          <button 
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="pagination-btn"
-          >
-            Siguiente ▶
-          </button>
-        </div>
-      )}
-
-      {/* Modal */}
+      {/* Modal Formulario */}
       {mostrarModal && (
         <>
-          <div className="modal-overlay" onClick={() => !loadingModal && setMostrarModal(false)}></div>
-          <div className="modal-container">
-            <div className="modal-header">
+          <div className="modal-overlay-productos" onClick={() => !loadingModal && setMostrarModal(false)}></div>
+          <div className="modal-container-productos">
+            <div className="modal-header-productos">
               <h2>{modoEdicion ? '✏️ Editar Producto' : '📝 Nuevo Producto'}</h2>
               <button 
-                className="btn-close" 
+                className="btn-close-productos" 
                 onClick={() => !loadingModal && setMostrarModal(false)}
                 disabled={loadingModal}
               >
@@ -577,8 +592,8 @@ const RegistroProductos = () => {
               </button>
             </div>
             
-            <div className="modal-body">
-              <div className="form-group">
+            <div className="modal-body-productos">
+              <div className="form-group-productos">
                 <label>📁 Tipo de Producto: *</label>
                 <select
                   name="tipo_producto"
@@ -596,7 +611,7 @@ const RegistroProductos = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="form-group-productos">
                 <label>📝 Descripción: *</label>
                 <input
                   type="text"
@@ -609,8 +624,8 @@ const RegistroProductos = () => {
                 />
               </div>
 
-              <div className="form-group-row">
-                <div className="form-group">
+              <div className="form-group-row-productos">
+                <div className="form-group-productos">
                   <label>🔢 Código: *</label>
                   <div style={{ display: 'flex', gap: '10px' }}>
                     <input
@@ -625,7 +640,7 @@ const RegistroProductos = () => {
                     {!modoEdicion && (
                       <button 
                         type="button"
-                        className="btn btn-secondary"
+                        className="btn-productos btn-secondary-productos"
                         onClick={handleGenerarCodigo}
                         disabled={loadingModal}
                         title="Generar código automático"
@@ -636,7 +651,7 @@ const RegistroProductos = () => {
                   </div>
                 </div>
 
-                <div className="form-group">
+                <div className="form-group-productos">
                   <label>📏 Unidad de Medida: *</label>
                   <select
                     name="unidad"
@@ -655,7 +670,7 @@ const RegistroProductos = () => {
                 </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-group-productos">
                 <label>📋 Observaciones:</label>
                 <textarea
                   name="observacion"
@@ -668,16 +683,16 @@ const RegistroProductos = () => {
               </div>
             </div>
 
-            <div className="modal-footer">
+            <div className="modal-footer-productos">
               <button 
-                className="btn btn-secondary" 
+                className="btn-productos btn-cancel-productos" 
                 onClick={() => !loadingModal && setMostrarModal(false)}
                 disabled={loadingModal}
               >
                 ✖ Cancelar
               </button>
               <button 
-                className="btn btn-primary" 
+                className="btn-productos btn-success-productos" 
                 onClick={handleRegistrar}
                 disabled={loadingModal}
               >
@@ -691,18 +706,18 @@ const RegistroProductos = () => {
       {/* Modal de Éxito */}
       {modalExito.mostrar && (
         <>
-          <div className="modal-overlay" onClick={() => setModalExito({ mostrar: false, titulo: '', mensaje: '' })}></div>
-          <div className="modal-exito">
-            <div className="modal-exito-header">
+          <div className="modal-overlay-productos" onClick={() => setModalExito({ mostrar: false, titulo: '', mensaje: '' })}></div>
+          <div className="modal-exito-productos">
+            <div className="modal-exito-header-productos">
               <h2>{modalExito.titulo}</h2>
             </div>
-            <div className="modal-exito-body">
-              <div className="modal-exito-icon">✅</div>
+            <div className="modal-exito-body-productos">
+              <div className="modal-exito-icon-productos">✅</div>
               <p style={{ whiteSpace: 'pre-line' }}>{modalExito.mensaje}</p>
             </div>
-            <div className="modal-exito-footer">
+            <div className="modal-exito-footer-productos">
               <button 
-                className="btn btn-primary" 
+                className="btn-productos btn-success-productos" 
                 onClick={() => setModalExito({ mostrar: false, titulo: '', mensaje: '' })}
               >
                 Aceptar
@@ -715,28 +730,28 @@ const RegistroProductos = () => {
       {/* Modal de Confirmación de Eliminación */}
       {modalConfirmacion.mostrar && (
         <>
-          <div className="modal-overlay"></div>
-          <div className="modal-confirmacion">
-            <div className="modal-confirmacion-header">
+          <div className="modal-overlay-productos"></div>
+          <div className="modal-confirmacion-productos">
+            <div className="modal-confirmacion-header-productos">
               <h2>⚠️ ADVERTENCIA</h2>
             </div>
-            <div className="modal-confirmacion-body">
+            <div className="modal-confirmacion-body-productos">
               <p><strong>¿Está seguro de eliminar el producto?</strong></p>
-              <div className="detalle-confirmacion">
+              <div className="detalle-confirmacion-productos">
                 <p><strong>Código:</strong> {modalConfirmacion.producto?.codigo_producto}</p>
                 <p><strong>Descripción:</strong> {modalConfirmacion.producto?.descripcion}</p>
               </div>
-              <p className="advertencia-texto">Esta acción NO se puede deshacer.</p>
+              <p className="advertencia-texto-productos">Esta acción NO se puede deshacer.</p>
             </div>
-            <div className="modal-confirmacion-footer">
+            <div className="modal-confirmacion-footer-productos">
               <button 
-                className="btn btn-secondary" 
+                className="btn-productos btn-cancel-productos" 
                 onClick={() => setModalConfirmacion({ mostrar: false, producto: null })}
               >
                 Cancelar
               </button>
               <button 
-                className="btn btn-danger" 
+                className="btn-productos btn-danger-productos" 
                 onClick={confirmarEliminacion}
               >
                 Eliminar
@@ -749,42 +764,42 @@ const RegistroProductos = () => {
       {/* Modal de Detalle del Producto */}
       {modalDetalle.mostrar && modalDetalle.producto && (
         <>
-          <div className="modal-overlay" onClick={() => setModalDetalle({ mostrar: false, producto: null })}></div>
-          <div className="modal-detalle">
-            <div className="modal-detalle-header">
+          <div className="modal-overlay-productos" onClick={() => setModalDetalle({ mostrar: false, producto: null })}></div>
+          <div className="modal-detalle-productos">
+            <div className="modal-detalle-header-productos">
               <h2>👁️ Detalles del Producto</h2>
               <button 
-                className="btn-close" 
+                className="btn-close-productos" 
                 onClick={() => setModalDetalle({ mostrar: false, producto: null })}
               >
                 ✖
               </button>
             </div>
-            <div className="modal-detalle-body">
-              <div className="detalle-item">
+            <div className="modal-detalle-body-productos">
+              <div className="detalle-item-productos">
                 <label>Código:</label>
                 <span>{modalDetalle.producto.codigo_producto}</span>
               </div>
-              <div className="detalle-item">
+              <div className="detalle-item-productos">
                 <label>Tipo:</label>
                 <span>{modalDetalle.producto.tipo_producto_nombre || modalDetalle.producto.tipo_producto}</span>
               </div>
-              <div className="detalle-item">
+              <div className="detalle-item-productos">
                 <label>Descripción:</label>
                 <span>{modalDetalle.producto.descripcion}</span>
               </div>
-              <div className="detalle-item">
+              <div className="detalle-item-productos">
                 <label>Unidad:</label>
                 <span>{modalDetalle.producto.unidad}</span>
               </div>
-              <div className="detalle-item">
+              <div className="detalle-item-productos">
                 <label>Observación:</label>
                 <span>{modalDetalle.producto.observacion || 'Sin observaciones'}</span>
               </div>
             </div>
-            <div className="modal-detalle-footer">
+            <div className="modal-detalle-footer-productos">
               <button 
-                className="btn btn-primary" 
+                className="btn-productos btn-primary-productos" 
                 onClick={() => setModalDetalle({ mostrar: false, producto: null })}
               >
                 Cerrar

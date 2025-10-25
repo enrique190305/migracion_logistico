@@ -1,145 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './EditarProveedor.css';
+import * as proveedorAPI from '../../services/proveedorAPI';
 
 const EditarProveedor = () => {
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [panelMinimizado, setPanelMinimizado] = useState(false); // Estado para minimizar/maximizar
-
-  const [proveedores, setProveedores] = useState([
-    {
-      id: 1,
-      proveedor: 'A&V IMPORTADORA Y DISTRIBUIDORA S.A.C',
-      ruc: '20605524738',
-      direccion: 'CAL.SAO PAULO NRO. 1462 URB. PERU LIMA - SAN MARTIN DE PORRES',
-      contacto: 'VANESSA ESTEFANY SANTAM',
-      telefono: '991761185',
-      email: 'comexterior@gmail.com',
-      formaPago: '25% ADELANTO - 75% CONTRA ENTREGA',
-      servicios: 'TRANSPORTE'
-    },
-    {
-      id: 2,
-      proveedor: 'ALAN CLAUDIO QUISPE MOYOCCO',
-      ruc: '10418634630',
-      direccion: 'URB. NUEVO HORIZONTE M2 E CUZCO - SAN JERONIMO',
-      contacto: 'JEAN',
-      telefono: '963718160',
-      email: 'Extintoresmetropolitancusco@gmail.com',
-      formaPago: 'CONTADO',
-      servicios: 'SEGURIDAD INDUSTRIAL'
-    },
-    {
-      id: 3,
-      proveedor: 'BS CONTROL INDUSTRIAL S.A.C',
-      ruc: '20607032514',
-      direccion: 'AV. MARIANO CORNEJO NRO. 1434 DPTO. 1201 LIMA',
-      contacto: 'RUBEN BALDEON',
-      telefono: '986974986',
-      email: 'bsingenieria@gmail.com',
-      formaPago: 'CONTADO',
-      servicios: 'SERVICIOS VARIOS'
-    },
-    {
-      id: 4,
-      proveedor: 'CARTOCOR DE PERU S.A.',
-      ruc: '20515685911',
-      direccion: 'GUILLERMO PRESCOTT 325 SAN ISIDRO LIMA PERU',
-      contacto: 'JUAN DANIEL LAZO',
-      telefono: '92365147',
-      email: 'wincho@arcor.com',
-      formaPago: 'CRÉDITO',
-      servicios: 'EMPAQUES INDUSTRIALES'
-    },
-    {
-      id: 5,
-      proveedor: 'CARTONES VILLA MARINA S.A.C',
-      ruc: '20424649990',
-      direccion: 'CAR.PANAMERICANA SUR KM.19 MZ.F INT. I1 2 END. ASOC. LA CONCORDIA',
-      contacto: 'ALDO MAQUIN',
-      telefono: '987425147',
-      email: 'aldo.maquin@carvimsa.com',
-      formaPago: 'CRÉDITO',
-      servicios: 'EMPAQUES INDUSTRIALES'
-    },
-    {
-      id: 6,
-      proveedor: 'CB SOLUCIONES GLOBALES S.A.C',
-      ruc: '20608998871',
-      direccion: 'AV. BRASIL 1459 OFICINA 1102 JESUS MARIA - LIMA',
-      contacto: 'KEYLA TORRES',
-      telefono: '905450485',
-      email: 'ventas3@cbsolucionesglobales.com',
-      formaPago: 'AL CONTADO / EVALUACIÓN DE CRÉDITO',
-      servicios: 'SERVICIOS DE SOPORTE TÉCNICO / MANTENIMIENTO'
-    },
-    {
-      id: 7,
-      proveedor: 'DIMERC PERU S.A.C',
-      ruc: '20537231190',
-      direccion: 'AV. ANDRES AVELINO CACERES NRO. 920',
-      contacto: 'LILIANA AVASHI',
-      telefono: '947859201',
-      email: 'lilian.avashi@dimerc.pe',
-      formaPago: 'CONTADO',
-      servicios: 'SERVICIOS VARIOS'
-    },
-    {
-      id: 8,
-      proveedor: 'ECOPACKING CARTONES SA',
-      ruc: '20603749645',
-      direccion: 'AV. PORTILLO GRANDE SUB - LOTE 32 ETAPA TERRENO RUSTICO LOMAS DE',
-      contacto: 'DANNY MENACHO',
-      telefono: '965112233',
-      email: 'dmenacho@ecopacking.com',
-      formaPago: 'CHEQUE DIFERIDO A 120 DÍAS',
-      servicios: 'CARTONERA'
-    },
-    {
-      id: 9,
-      proveedor: 'HURTADO SOCA LOURDES',
-      ruc: '10243769430',
-      direccion: 'CUSCO - LIMA TAMBO',
-      contacto: 'LOURDES HURTADO SOCA',
-      telefono: '972309990',
-      email: 'hurtado.soca@hotmail.com',
-      formaPago: 'CONTADO',
-      servicios: 'SERVICIOS VARIOS'
-    },
-    {
-      id: 10,
-      proveedor: 'INVERSIONES DAVEMIR EIRL',
-      ruc: '20605308968',
-      direccion: 'Calle las retamas MZ L LOTE 17',
-      contacto: 'Joseph Gutiérrez',
-      telefono: '970287307',
-      email: 'Jgutierrez@4gepp.com',
-      formaPago: 'CONTADO',
-      servicios: 'Vta. May. Maquinaria, Equipo y Herramientas'
-    },
-    {
-      id: 11,
-      proveedor: 'Metritek EIRL',
-      ruc: '20612003565',
-      direccion: 'Centro comercial San Felipe, of. 41, Jesús María, Lima',
-      contacto: 'Alexander Santana',
-      telefono: '983542039',
-      email: 'ventas@politec.pe',
-      formaPago: 'CONTADO',
-      servicios: 'ENSAYOS, ANÁLISIS TÉCNICOS Y VENTAS DE EQUIPOS AL POR MAYOR'
-    },
-    {
-      id: 12,
-      proveedor: 'PROMOTORA SUR AMERICA',
-      ruc: '20325566607',
-      direccion: 'Av. República de Chile 295 Lima',
-      contacto: 'Emma Salguero',
-      telefono: '94074394',
-      email: 'prboy@promosurperu.com',
-      formaPago: 'FACTURA A 15 DÍAS',
-      servicios: 'Venta al por Mayor de Otros Productos'
-    }
-  ]);
+  const [panelMinimizado, setPanelMinimizado] = useState(false);
+  const [proveedores, setProveedores] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [formulario, setFormulario] = useState({
     proveedor: '',
@@ -152,17 +20,40 @@ const EditarProveedor = () => {
     servicios: ''
   });
 
+  // Cargar proveedores al montar el componente
+  useEffect(() => {
+    cargarProveedores();
+  }, []);
+
+  const cargarProveedores = async () => {
+    try {
+      setLoading(true);
+      const response = await proveedorAPI.obtenerProveedores();
+      
+      if (response.success) {
+        setProveedores(response.data);
+      } else {
+        alert('❌ Error al cargar proveedores');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ Error de conexión con el servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleProveedorClick = (proveedor) => {
     setProveedorSeleccionado(proveedor);
     setFormulario({
       proveedor: proveedor.proveedor,
       ruc: proveedor.ruc,
-      direccion: proveedor.direccion,
-      contacto: proveedor.contacto,
-      telefono: proveedor.telefono,
-      email: proveedor.email,
-      formaPago: proveedor.formaPago,
-      servicios: proveedor.servicios
+      direccion: proveedor.direccion || '',
+      contacto: proveedor.contacto || '',
+      telefono: proveedor.telefono || '',
+      email: proveedor.email || '',
+      formaPago: proveedor.formaPago || '',
+      servicios: proveedor.servicios || ''
     });
   };
 
@@ -174,7 +65,7 @@ const EditarProveedor = () => {
     });
   };
 
-  const handleActualizar = () => {
+  const handleActualizar = async () => {
     if (!proveedorSeleccionado) {
       alert('⚠️ Por favor seleccione un proveedor de la lista');
       return;
@@ -185,38 +76,90 @@ const EditarProveedor = () => {
       return;
     }
 
+    if (formulario.ruc.length !== 11 || !/^\d+$/.test(formulario.ruc)) {
+      alert('⚠️ El RUC debe tener 11 dígitos numéricos');
+      return;
+    }
+
     if (formulario.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
       alert('⚠️ Por favor ingrese un email válido');
       return;
     }
 
-    setProveedores(proveedores.map(prov => 
-      prov.id === proveedorSeleccionado.id 
-        ? { ...formulario, id: proveedorSeleccionado.id }
-        : prov
-    ));
-
-    alert(`✅ Proveedor actualizado correctamente\n\nProveedor: ${formulario.proveedor}\nRUC: ${formulario.ruc}`);
+    try {
+      setLoading(true);
+      
+      const response = await proveedorAPI.actualizarProveedor(proveedorSeleccionado.id, {
+        nombre: formulario.proveedor,
+        ruc: formulario.ruc,
+        direccion: formulario.direccion,
+        contacto: formulario.contacto,
+        celular: formulario.telefono,
+        correo: formulario.email,
+        forma_pago: formulario.formaPago,
+        servicio: formulario.servicios
+      });
+      
+      if (response.success) {
+        alert(`✅ Proveedor actualizado correctamente\n\nProveedor: ${formulario.proveedor}\nRUC: ${formulario.ruc}`);
+        await cargarProveedores(); // Recargar lista
+        
+        // Actualizar el proveedor seleccionado con los nuevos datos
+        const proveedorActualizado = proveedores.find(p => p.id === proveedorSeleccionado.id);
+        if (proveedorActualizado) {
+          setProveedorSeleccionado({
+            ...proveedorActualizado,
+            proveedor: formulario.proveedor,
+            direccion: formulario.direccion,
+            contacto: formulario.contacto,
+            telefono: formulario.telefono,
+            email: formulario.email,
+            formaPago: formulario.formaPago,
+            servicios: formulario.servicios
+          });
+        }
+      } else {
+        alert(`❌ Error: ${response.message}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ Error al actualizar el proveedor: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleRefrescar = () => {
-    if (proveedorSeleccionado) {
-      const proveedorOriginal = proveedores.find(p => p.id === proveedorSeleccionado.id);
-      if (proveedorOriginal) {
+  const handleRefrescar = async () => {
+    if (!proveedorSeleccionado) {
+      alert('⚠️ Seleccione un proveedor primero');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await proveedorAPI.obtenerProveedorPorId(proveedorSeleccionado.id);
+      
+      if (response.success) {
+        const proveedorActualizado = response.data;
         setFormulario({
-          proveedor: proveedorOriginal.proveedor,
-          ruc: proveedorOriginal.ruc,
-          direccion: proveedorOriginal.direccion,
-          contacto: proveedorOriginal.contacto,
-          telefono: proveedorOriginal.telefono,
-          email: proveedorOriginal.email,
-          formaPago: proveedorOriginal.formaPago,
-          servicios: proveedorOriginal.servicios
+          proveedor: proveedorActualizado.proveedor,
+          ruc: proveedorActualizado.ruc,
+          direccion: proveedorActualizado.direccion || '',
+          contacto: proveedorActualizado.contacto || '',
+          telefono: proveedorActualizado.telefono || '',
+          email: proveedorActualizado.email || '',
+          formaPago: proveedorActualizado.formaPago || '',
+          servicios: proveedorActualizado.servicios || ''
         });
         alert('🔄 Datos refrescados desde la base de datos');
+      } else {
+        alert('❌ Error al refrescar datos');
       }
-    } else {
-      alert('⚠️ Seleccione un proveedor primero');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ Error al refrescar datos del proveedor');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -234,44 +177,83 @@ const EditarProveedor = () => {
     setProveedorSeleccionado(null);
   };
 
-  const handleEliminar = () => {
+  const handleEliminar = async () => {
     if (!proveedorSeleccionado) {
       alert('⚠️ Por favor seleccione un proveedor de la lista');
       return;
     }
 
     if (window.confirm(`¿Está seguro de eliminar el proveedor "${proveedorSeleccionado.proveedor}"?\n\nEsta acción no se puede deshacer.`)) {
-      setProveedores(proveedores.filter(prov => prov.id !== proveedorSeleccionado.id));
-      alert(`🗑️ Proveedor eliminado: ${proveedorSeleccionado.proveedor}`);
-      handleLimpiar();
+      try {
+        setLoading(true);
+        const response = await proveedorAPI.eliminarProveedor(proveedorSeleccionado.id);
+        
+        if (response.success) {
+          alert(`🗑️ Proveedor eliminado: ${proveedorSeleccionado.proveedor}`);
+          await cargarProveedores(); // Recargar lista
+          handleLimpiar();
+        } else {
+          alert(`❌ Error: ${response.message}`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error al eliminar el proveedor');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const filteredProveedores = proveedores.filter(prov =>
     prov.proveedor.toLowerCase().includes(searchTerm.toLowerCase()) ||
     prov.ruc.includes(searchTerm) ||
-    prov.contacto.toLowerCase().includes(searchTerm.toLowerCase())
+    (prov.contacto && prov.contacto.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  if (loading && proveedores.length === 0) {
+    return (
+      <div className="editar-proveedor-container">
+        <div className="loading-container-editar-prov">
+          <div className="spinner-editar-prov"></div>
+          <p>Cargando proveedores...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="editar-proveedor-container">
       {/* Header */}
       <div className="editar-proveedor-header">
-        <div className="header-icon-title">
-          <span className="header-icon">⚙️</span>
+        <div className="header-icon-title-editar-prov">
+          <span className="header-icon-editar-prov">⚙️</span>
           <div>
             <h1>EDITAR PROVEEDORES</h1>
             <p>Seleccione un proveedor para editar su información</p>
           </div>
         </div>
+        <div className="header-stats-editar-prov">
+          <div className="stat-item-editar-prov">
+            <span className="stat-icon-editar-prov">📊</span>
+            <span className="stat-text-editar-prov">
+              <strong>{proveedores.length}</strong> Proveedores
+            </span>
+          </div>
+          <div className="stat-item-editar-prov">
+            <span className="stat-icon-editar-prov">🔍</span>
+            <span className="stat-text-editar-prov">
+              <strong>{filteredProveedores.length}</strong> Filtrados
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* PANEL HORIZONTAL - SIEMPRE VISIBLE CON OPCIÓN DE MINIMIZAR */}
-      <div className={`datos-proveedor-horizontal ${panelMinimizado ? 'minimizado' : ''}`}>
-        <div className="datos-header-horizontal">
+      {/* PANEL HORIZONTAL - DATOS DEL PROVEEDOR */}
+      <div className={`datos-proveedor-horizontal-editar-prov ${panelMinimizado ? 'minimizado' : ''}`}>
+        <div className="datos-header-horizontal-editar-prov">
           <h2>✏️ DATOS DEL PROVEEDOR</h2>
           <button 
-            className="btn-minimizar"
+            className="btn-minimizar-editar-prov"
             onClick={() => setPanelMinimizado(!panelMinimizado)}
             title={panelMinimizado ? "Maximizar panel" : "Minimizar panel"}
           >
@@ -281,28 +263,31 @@ const EditarProveedor = () => {
 
         {!panelMinimizado && (
           <>
-            <div className="datos-grid-horizontal">
-              <div className="dato-field">
-                <label>🏢 PROVEEDOR</label>
+            <div className="datos-grid-horizontal-editar-prov">
+              <div className="dato-field-editar-prov">
+                <label>🏢 PROVEEDOR *</label>
                 <input
                   type="text"
                   name="proveedor"
                   value={formulario.proveedor}
                   onChange={handleInputChange}
                   placeholder="Seleccione un proveedor de la lista"
+                  disabled={!proveedorSeleccionado}
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>📋 RUC (NO EDITABLE)</label>
                 <input
                   type="text"
                   value={formulario.ruc}
                   disabled
-                  className="input-disabled"
+                  className="input-disabled-editar-prov"
                   placeholder="RUC del proveedor"
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>📍 DIRECCIÓN</label>
                 <textarea
                   name="direccion"
@@ -310,9 +295,11 @@ const EditarProveedor = () => {
                   onChange={handleInputChange}
                   rows="2"
                   placeholder="Dirección completa"
+                  disabled={!proveedorSeleccionado}
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>👤 NOMBRE CONTACTO</label>
                 <input
                   type="text"
@@ -320,9 +307,11 @@ const EditarProveedor = () => {
                   value={formulario.contacto}
                   onChange={handleInputChange}
                   placeholder="Nombre del contacto"
+                  disabled={!proveedorSeleccionado}
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>📞 TELÉFONO</label>
                 <input
                   type="text"
@@ -330,9 +319,11 @@ const EditarProveedor = () => {
                   value={formulario.telefono}
                   onChange={handleInputChange}
                   placeholder="Número de teléfono"
+                  disabled={!proveedorSeleccionado}
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>📧 EMAIL</label>
                 <input
                   type="email"
@@ -340,9 +331,11 @@ const EditarProveedor = () => {
                   value={formulario.email}
                   onChange={handleInputChange}
                   placeholder="correo@ejemplo.com"
+                  disabled={!proveedorSeleccionado}
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>💳 FORMA DE PAGO</label>
                 <input
                   type="text"
@@ -350,9 +343,12 @@ const EditarProveedor = () => {
                   value={formulario.formaPago}
                   onChange={handleInputChange}
                   placeholder="Forma de pago"
+                  disabled={!proveedorSeleccionado}
+                  className={!proveedorSeleccionado ? '' : ''}
                 />
               </div>
-              <div className="dato-field">
+              
+              <div className="dato-field-editar-prov">
                 <label>🛠️ SERVICIOS</label>
                 <input
                   type="text"
@@ -360,21 +356,38 @@ const EditarProveedor = () => {
                   value={formulario.servicios}
                   onChange={handleInputChange}
                   placeholder="Servicios que ofrece"
+                  disabled={!proveedorSeleccionado}
                 />
               </div>
             </div>
 
-            <div className="datos-footer-horizontal">
-              <button className="btn-actualizar" onClick={handleActualizar}>
-                <span>✅</span> ACTUALIZAR
+            <div className="datos-footer-horizontal-editar-prov">
+              <button 
+                className="btn-actualizar-editar-prov" 
+                onClick={handleActualizar}
+                disabled={!proveedorSeleccionado || loading}
+              >
+                <span>✅</span> {loading ? 'ACTUALIZANDO...' : 'ACTUALIZAR'}
               </button>
-              <button className="btn-refrescar" onClick={handleRefrescar}>
+              <button 
+                className="btn-refrescar-editar-prov" 
+                onClick={handleRefrescar}
+                disabled={!proveedorSeleccionado || loading}
+              >
                 <span>🔄</span> REFRESCAR
               </button>
-              <button className="btn-limpiar-editar" onClick={handleLimpiar}>
+              <button 
+                className="btn-limpiar-editar-prov" 
+                onClick={handleLimpiar}
+                disabled={loading}
+              >
                 <span>🗑️</span> LIMPIAR
               </button>
-              <button className="btn-eliminar-editar" onClick={handleEliminar}>
+              <button 
+                className="btn-eliminar-editar-prov" 
+                onClick={handleEliminar}
+                disabled={!proveedorSeleccionado || loading}
+              >
                 <span>❌</span> ELIMINAR
               </button>
             </div>
@@ -382,26 +395,27 @@ const EditarProveedor = () => {
         )}
       </div>
 
-      {/* LISTA DE PROVEEDORES CON TODOS LOS CAMPOS */}
-      <div className="lista-proveedores-section">
-        <div className="lista-header">
+      {/* LISTA DE PROVEEDORES */}
+      <div className="lista-proveedores-section-editar-prov">
+        <div className="lista-header-editar-prov">
           <h2>📋 LISTA DE PROVEEDORES</h2>
         </div>
 
-        <div className="search-proveedor">
+        <div className="search-proveedor-editar-prov">
           <input
             type="text"
             placeholder="Buscar por nombre, RUC o contacto..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <span className="search-icon-editar">🔍</span>
+          <span className="search-icon-editar-prov">🔍</span>
         </div>
 
-        <div className="tabla-proveedores-wrapper">
-          <table className="tabla-proveedores-editar">
+        <div className="tabla-proveedores-wrapper-editar-prov">
+          <table className="tabla-proveedores-editar-prov">
             <thead>
               <tr>
+                <th>ID</th>
                 <th>PROVEEDOR</th>
                 <th>RUC</th>
                 <th>DIRECCIÓN</th>
@@ -417,24 +431,25 @@ const EditarProveedor = () => {
                 filteredProveedores.map((proveedor) => (
                   <tr
                     key={proveedor.id}
-                    className={proveedorSeleccionado?.id === proveedor.id ? 'selected' : ''}
+                    className={proveedorSeleccionado?.id === proveedor.id ? 'selected-editar-prov' : ''}
                     onClick={() => handleProveedorClick(proveedor)}
                   >
+                    <td>{proveedor.id}</td>
                     <td><strong>{proveedor.proveedor}</strong></td>
                     <td>{proveedor.ruc}</td>
-                    <td>{proveedor.direccion}</td>
-                    <td>{proveedor.contacto}</td>
-                    <td>{proveedor.telefono}</td>
-                    <td className="email-cell">{proveedor.email}</td>
-                    <td>{proveedor.formaPago}</td>
-                    <td>{proveedor.servicios}</td>
+                    <td>{proveedor.direccion || '-'}</td>
+                    <td>{proveedor.contacto || '-'}</td>
+                    <td>{proveedor.telefono || '-'}</td>
+                    <td className="email-cell-editar-prov">{proveedor.email || '-'}</td>
+                    <td>{proveedor.formaPago || '-'}</td>
+                    <td>{proveedor.servicios || '-'}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="empty-message-editar">
-                    <div className="empty-state-editar">
-                      <span className="empty-icon-editar">📋</span>
+                  <td colSpan="9" className="empty-message-editar-prov">
+                    <div className="empty-state-editar-prov">
+                      <span className="empty-icon-editar-prov">📋</span>
                       <p>No se encontraron proveedores</p>
                     </div>
                   </td>

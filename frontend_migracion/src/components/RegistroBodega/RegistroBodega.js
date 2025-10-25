@@ -87,61 +87,61 @@ const RegistroBodega = () => {
   return (
     <div className="registro-bodega-container">
       {/* Mensaje de carga */}
-      {loading && <div className="mensaje-info">⏳ Cargando datos...</div>}
+      {loading && <div className="loading-bodega">⏳ Cargando datos...</div>}
 
       {/* Header */}
       <div className="registro-bodega-header">
-        <div className="header-title">
-          <span className="header-icon">🏢</span>
+        <div className="header-title-bodega">
+          <span className="header-icon-bodega">🏢</span>
           <div>
             <h1>Registro de Bodega</h1>
             <p>Gestión y control de bodegas por empresa</p>
           </div>
         </div>
-        <div className="header-actions">
-          <button className="btn btn-primary" onClick={handleNuevaBodega}>
+        <div className="header-actions-bodega">
+          <button className="btn-bodega btn-primary-bodega" onClick={handleNuevaBodega}>
             <span>➕</span> Nueva Bodega
           </button>
-          <button className="btn btn-secondary" onClick={handleExportar}>
+          <button className="btn-bodega btn-secondary-bodega" onClick={handleExportar}>
             <span>📊</span> Exportar
           </button>
         </div>
       </div>
 
       {/* Estadísticas */}
-      <div className="estadisticas-grid">
-        <div className="stat-card">
-          <div className="stat-icon blue">
+      <div className="estadisticas-grid-bodega">
+        <div className="stat-card-bodega">
+          <div className="stat-icon-bodega blue-bodega">
             <span>🏢</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-bodega">
             <h3>{estadisticas.total}</h3>
             <p>Total Bodegas</p>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon green">
+        <div className="stat-card-bodega">
+          <div className="stat-icon-bodega green-bodega">
             <span>✅</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-bodega">
             <h3>{estadisticas.activas}</h3>
             <p>Activas</p>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon red">
+        <div className="stat-card-bodega">
+          <div className="stat-icon-bodega red-bodega">
             <span>❌</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-bodega">
             <h3>{estadisticas.inactivas}</h3>
             <p>Inactivas</p>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon purple">
+        <div className="stat-card-bodega">
+          <div className="stat-icon-bodega purple-bodega">
             <span>🏢</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-bodega">
             <h3>{empresasUnicas.length}</h3>
             <p>Empresas</p>
           </div>
@@ -149,10 +149,10 @@ const RegistroBodega = () => {
       </div>
 
       {/* Filtros */}
-      <div className="filtros-section">
+      <div className="filtros-section-bodega">
         <h2>🔍 Filtros de Búsqueda</h2>
-        <div className="filtros-grid">
-          <div className="filtro-group">
+        <div className="filtros-grid-bodega">
+          <div className="filtro-group-bodega">
             <label>Buscar</label>
             <input
               type="text"
@@ -161,7 +161,7 @@ const RegistroBodega = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="filtro-group">
+          <div className="filtro-group-bodega">
             <label>Estado</label>
             <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
               <option value="todos">Todos los estados</option>
@@ -169,7 +169,7 @@ const RegistroBodega = () => {
               <option value="inactivo">Inactivo</option>
             </select>
           </div>
-          <div className="filtro-group">
+          <div className="filtro-group-bodega">
             <label>Empresa</label>
             <select value={filtroEmpresa} onChange={(e) => setFiltroEmpresa(e.target.value)}>
               <option value="todos">Todas las empresas</option>
@@ -182,22 +182,22 @@ const RegistroBodega = () => {
       </div>
 
       {/* Tabla */}
-      <div className="tabla-section">
-        <div className="tabla-header">
+      <div className="tabla-section-bodega">
+        <div className="tabla-header-bodega">
           <h2>🏢 Listado de Bodegas ({filteredData.length})</h2>
-          <div className="search-box">
+          <div className="search-box-bodega">
             <input
               type="text"
               placeholder="Búsqueda rápida..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="search-icon">🔍</span>
+            <span className="search-icon-bodega">🔍</span>
           </div>
         </div>
 
-        <div className="table-wrapper">
-          <table className="bodega-table">
+        <div className="table-wrapper-bodega">
+          <table className="bodega-table-unique">
             <thead>
               <tr>
                 <th>ID</th>
@@ -218,20 +218,20 @@ const RegistroBodega = () => {
                     <td>{bodega.ubicacion}</td>
                     <td>{bodega.empresa.razon_social}</td>
                     <td>
-                      <span className={`estado-badge ${bodega.estado.toLowerCase()}`}>
+                      <span className={`estado-badge-bodega ${bodega.estado.toLowerCase()}-bodega`}>
                         {bodega.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'}
                       </span>
                     </td>
                     <td>{bodega.fecha_creacion}</td>
                     <td>
-                      <div className="actions-cell">
-                        <button className="btn-icon btn-view" onClick={() => handleView(bodega)} title="Ver detalles">
+                      <div className="actions-cell-bodega">
+                        <button className="btn-icon-bodega btn-view-bodega" onClick={() => handleView(bodega)} title="Ver detalles">
                           👁️
                         </button>
-                        <button className="btn-icon btn-edit" onClick={() => handleEdit(bodega)} title="Editar">
+                        <button className="btn-icon-bodega btn-edit-bodega" onClick={() => handleEdit(bodega)} title="Editar">
                           ✏️
                         </button>
-                        <button className="btn-icon btn-delete" onClick={() => handleDelete(bodega)} title="Eliminar">
+                        <button className="btn-icon-bodega btn-delete-bodega" onClick={() => handleDelete(bodega)} title="Eliminar">
                           🗑️
                         </button>
                       </div>
@@ -241,8 +241,8 @@ const RegistroBodega = () => {
               ) : (
                 <tr>
                   <td colSpan="7" style={{ textAlign: 'center', padding: '50px' }}>
-                    <div className="empty-state">
-                      <div className="empty-state-icon">🏢</div>
+                    <div className="empty-state-bodega">
+                      <div className="empty-state-icon-bodega">🏢</div>
                       <h3>No se encontraron bodegas</h3>
                       <p>Intenta ajustar los filtros de búsqueda</p>
                     </div>
@@ -255,7 +255,7 @@ const RegistroBodega = () => {
 
         {/* Paginación */}
         {filteredData.length > itemsPerPage && (
-          <div className="pagination">
+          <div className="pagination-bodega">
             <button 
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}

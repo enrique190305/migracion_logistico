@@ -1,8 +1,8 @@
-/* Contenedor principal */
+/* Contenedor principal - OCUPA TODO EL ESPACIO */
 .kardex-container {
   padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
+  background: #f5f7fa;
+  min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 30px;
+  padding: 30px 40px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 15px;
   color: white;
@@ -19,20 +19,24 @@
   box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
 }
 
-.header-icon {
+.header-icon-kardex {
   font-size: 50px;
   background: rgba(255, 255, 255, 0.2);
   padding: 15px;
   border-radius: 15px;
 }
 
-.header-title {
+.header-content-kardex {
+  flex: 1;
+}
+
+.header-title-kardex {
   font-size: 32px;
   font-weight: 700;
   margin: 0;
 }
 
-.header-subtitle {
+.header-subtitle-kardex {
   font-size: 16px;
   opacity: 0.9;
   margin: 5px 0 0 0;
@@ -41,47 +45,56 @@
 /* Tabs */
 .kardex-tabs {
   display: flex;
-  gap: 15px;
+  gap: 0;
   margin-bottom: 25px;
   border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
+  padding-bottom: 0;
 }
 
-.tab-button {
+.tab-button-kardex {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 24px;
   background: white;
   border: 2px solid #e0e0e0;
+  border-bottom: none;
   border-radius: 10px 10px 0 0;
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
   color: #666;
   transition: all 0.3s ease;
+  position: relative;
+  flex: 1;
+  justify-content: center;
+  margin-right: -2px;
 }
 
-.tab-button.active {
+.tab-button-kardex:last-child {
+  margin-right: 0;
+}
+
+.tab-button-kardex.active {
   background: #667eea;
   color: white;
   border-color: #667eea;
-  transform: translateY(-2px);
+  z-index: 1;
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
-.tab-button:hover:not(.active) {
+.tab-button-kardex:hover:not(.active) {
   background: #f5f7fa;
   border-color: #667eea;
 }
 
-.tab-icon {
+.tab-icon-kardex {
   font-size: 20px;
 }
 
-.tab-badge {
-  background: #667eea; /* Fondo morado */
-  color: white; /* Texto blanco */
+.tab-badge-kardex {
+  background: #667eea;
+  color: white;
   padding: 3px 12px;
   border-radius: 15px;
   font-size: 12px;
@@ -91,19 +104,19 @@
   box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
 }
 
-.tab-button.active .tab-badge {
-  background: #ffc107; /* Amarillo cuando está activo */
-  color: #333; /* Texto oscuro */
+.tab-button-kardex.active .tab-badge-kardex {
+  background: #ffc107;
+  color: #333;
   box-shadow: 0 2px 8px rgba(255, 193, 7, 0.5);
 }
 
-.tab-button:not(.active) .tab-badge {
-  background: #667eea; /* Morado cuando NO está activo */
+.tab-button-kardex:not(.active) .tab-badge-kardex {
+  background: #667eea;
   color: white;
 }
 
 /* Estadísticas */
-.stats-panel {
+.stats-panel-kardex {
   padding: 20px 30px;
   background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
   border-radius: 12px;
@@ -115,21 +128,21 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
-.stats-icon {
+.stats-icon-kardex {
   font-size: 24px;
 }
 
-.stats-text {
+.stats-text-kardex {
   font-size: 14px;
   line-height: 1.6;
 }
 
 /* Búsqueda */
-.search-container {
+.search-container-kardex {
   margin-bottom: 20px;
 }
 
-.search-box {
+.search-box-kardex {
   display: flex;
   align-items: center;
   background: white;
@@ -140,17 +153,17 @@
   transition: all 0.3s ease;
 }
 
-.search-box:focus-within {
+.search-box-kardex:focus-within {
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.search-icon {
+.search-icon-kardex {
   font-size: 20px;
   color: #999;
 }
 
-.search-input {
+.search-input-kardex {
   flex: 1;
   border: none;
   outline: none;
@@ -158,12 +171,12 @@
   color: #333;
 }
 
-.search-input::placeholder {
+.search-input-kardex::placeholder {
   color: #999;
 }
 
 /* Filtros de fecha */
-.filter-container {
+.filter-container-kardex {
   display: flex;
   gap: 15px;
   margin-bottom: 20px;
@@ -171,19 +184,19 @@
   align-items: flex-end;
 }
 
-.filter-group {
+.filter-group-kardex {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.filter-group label {
+.filter-group-kardex label {
   font-size: 14px;
   font-weight: 600;
   color: #555;
 }
 
-.date-input {
+.date-input-kardex {
   padding: 10px 15px;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
@@ -192,12 +205,12 @@
   transition: all 0.3s ease;
 }
 
-.date-input:focus {
+.date-input-kardex:focus {
   border-color: #667eea;
 }
 
-.btn-filter,
-.btn-clear-filter {
+.btn-filter-kardex,
+.btn-clear-filter-kardex {
   padding: 10px 24px;
   border: none;
   border-radius: 8px;
@@ -207,34 +220,34 @@
   transition: all 0.3s ease;
 }
 
-.btn-filter {
+.btn-filter-kardex {
   background: #667eea;
   color: white;
 }
 
-.btn-filter:hover {
+.btn-filter-kardex:hover {
   background: #5568d3;
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
 }
 
-.btn-clear-filter {
+.btn-clear-filter-kardex {
   background: #6c757d;
   color: white;
 }
 
-.btn-clear-filter:hover {
+.btn-clear-filter-kardex:hover {
   background: #5a6268;
 }
 
 /* Botones de exportación */
-.export-buttons {
+.export-buttons-kardex {
   display: flex;
   gap: 10px;
   margin-bottom: 20px;
 }
 
-.btn-export {
+.btn-export-kardex {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -245,35 +258,35 @@
   transition: all 0.3s ease;
 }
 
-.btn-excel {
+.btn-excel-kardex {
   background: #107C10;
 }
 
-.btn-excel:hover {
+.btn-excel-kardex:hover {
   background: #0e6b0e;
   transform: translateY(-2px);
 }
 
-.btn-pdf {
+.btn-pdf-kardex {
   background: #C00000;
 }
 
-.btn-pdf:hover {
+.btn-pdf-kardex:hover {
   background: #a00000;
   transform: translateY(-2px);
 }
 
-.btn-csv {
+.btn-csv-kardex {
   background: #0078D7;
 }
 
-.btn-csv:hover {
+.btn-csv-kardex:hover {
   background: #005a9e;
   transform: translateY(-2px);
 }
 
 /* Tabla */
-.table-wrapper {
+.table-wrapper-kardex {
   background: white;
   border-radius: 12px;
   overflow: hidden;
@@ -312,14 +325,13 @@
   color: #333;
 }
 
-.precio-cell {
+.precio-cell-kardex {
   text-align: right;
   font-weight: 600;
 }
 
-/* ✅ ESTILOS CORREGIDOS: Niveles de stock */
-
-.stock-bajo {
+/* Niveles de stock */
+.stock-bajo-kardex {
   color: #dc3545 !important;
   font-weight: 700;
   padding: 6px 12px;
@@ -329,7 +341,7 @@
   text-align: center;
 }
 
-.stock-normal {
+.stock-normal-kardex {
   color: #28a745 !important;
   font-weight: 500; 
   padding: 6px 12px;
@@ -339,7 +351,7 @@
   text-align: center;
 }
 
-.stock-alto {
+.stock-alto-kardex {
   color: #007bff !important;
   font-weight: 700;
   padding: 6px 12px;
@@ -350,38 +362,49 @@
 }
 
 /* Tipo de movimiento */
-.tipo-badge {
+.tipo-badge-kardex {
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
 }
 
-.tipo-ingreso {
+.tipo-ingreso-kardex {
   background: #d4edda;
   color: #155724;
 }
 
-.tipo-salida {
+.tipo-salida-kardex {
   background: #f8d7da;
   color: #721c24;
 }
 
 /* Estado vacío */
-.empty-state {
+.empty-state-kardex {
   text-align: center;
   padding: 60px 20px;
   color: #999;
 }
 
-.empty-icon {
+.empty-icon-kardex {
   font-size: 64px;
   display: block;
   margin-bottom: 20px;
 }
 
+.empty-state-kardex h3 {
+  color: #333;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.empty-state-kardex p {
+  font-size: 14px;
+  color: #999;
+}
+
 /* Loading */
-.loading-container {
+.loading-container-kardex {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -389,40 +412,69 @@
   min-height: 400px;
 }
 
-.spinner {
+.spinner-kardex {
   border: 4px solid #f3f3f3;
   border-top: 4px solid #667eea;
   border-radius: 50%;
   width: 50px;
   height: 50px;
-  animation: spin 1s linear infinite;
+  animation: spin-kardex 1s linear infinite;
 }
 
-@keyframes spin {
+@keyframes spin-kardex {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
+.loading-container-kardex p {
+  margin-top: 20px;
+  color: #666;
+  font-size: 16px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .kardex-container {
+    padding: 15px;
+  }
+
   .kardex-header {
     flex-direction: column;
     text-align: center;
+    padding: 20px;
+  }
+
+  .header-icon-kardex {
+    font-size: 40px;
+    padding: 12px;
+  }
+
+  .header-title-kardex {
+    font-size: 24px;
+  }
+
+  .header-subtitle-kardex {
+    font-size: 14px;
   }
 
   .kardex-tabs {
     flex-direction: column;
+    gap: 10px;
   }
 
-  .filter-container {
+  .tab-button-kardex {
+    margin-right: 0;
+  }
+
+  .filter-container-kardex {
     flex-direction: column;
   }
 
-  .export-buttons {
+  .export-buttons-kardex {
     flex-direction: column;
   }
 
-  .table-wrapper {
+  .table-wrapper-kardex {
     overflow-x: auto;
   }
 }

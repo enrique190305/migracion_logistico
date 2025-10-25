@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AprobacionController;
 use App\Http\Controllers\Api\ProyectoController;
 use App\Http\Controllers\Api\IngresoMaterialController;
 use App\Http\Controllers\KardexController;
+use App\Http\Controllers\Api\ProveedorController;
 use App\Http\Controllers\OrdenPedidoController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AuthController;
@@ -139,6 +140,25 @@ Route::prefix('productos')->group(function () {
     Route::put('/{codigo}', [ProductoController::class, 'update']);
     Route::delete('/{codigo}', [ProductoController::class, 'destroy']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - PROVEEDORES (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('proveedores')->group(function () {
+    // Buscar debe ir ANTES de /{id} para evitar conflictos
+    Route::get('/buscar', [ProveedorController::class, 'buscar']);
+    
+    // CRUD Proveedores
+    Route::get('/', [ProveedorController::class, 'index']);
+    Route::post('/', [ProveedorController::class, 'store']);
+    Route::get('/{id}', [ProveedorController::class, 'show']);
+    Route::put('/{id}', [ProveedorController::class, 'update']);
+    Route::delete('/{id}', [ProveedorController::class, 'destroy']);
+});
+
 
 /*
 |--------------------------------------------------------------------------

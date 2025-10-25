@@ -217,6 +217,14 @@ const Aprobacion = () => {
     return date.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
+  // ✅ CALCULAR TOTAL DE LOS DETALLES
+  const calcularTotalDetalles = () => {
+    return detallesOrden.reduce((total, item) => {
+      const subtotal = parseFloat(item.subtotal) || 0;
+      return total + subtotal;
+    }, 0);
+  };
+
   return (
     <div className="aprobacion-container">
       <div className="aprobacion-header">
@@ -377,6 +385,16 @@ const Aprobacion = () => {
                         </tr>
                       ))}
                     </tbody>
+                    <tfoot>
+                      <tr className="detalle-total-row">
+                        <td colSpan="5" className="detalle-total-label">
+                          <strong>TOTAL GENERAL:</strong>
+                        </td>
+                        <td className="detalle-total-value">
+                          <strong>{formatCurrency(calcularTotalDetalles(), selectedOrden.moneda)}</strong>
+                        </td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
               ) : (

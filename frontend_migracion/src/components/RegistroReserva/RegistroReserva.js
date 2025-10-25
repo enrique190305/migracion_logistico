@@ -89,57 +89,57 @@ const RegistroReserva = () => {
 
       {/* Header */}
       <div className="registro-reserva-header">
-        <div className="header-title">
-          <span className="header-icon">📋</span>
+        <div className="header-title-reserva">
+          <span className="header-icon-reserva">📋</span>
           <div>
             <h1>Registro de Reserva</h1>
             <p>Gestión de tipos de reserva</p>
           </div>
         </div>
-        <div className="header-actions">
-          <button className="btn btn-primary" onClick={handleNuevaReserva}>
+        <div className="header-actions-reserva">
+          <button className="btn-reserva btn-primary-reserva" onClick={handleNuevaReserva}>
             <span>➕</span> Nueva Reserva
           </button>
-          <button className="btn btn-secondary" onClick={handleExportar}>
+          <button className="btn-reserva btn-secondary-reserva" onClick={handleExportar}>
             <span>📊</span> Exportar
           </button>
         </div>
       </div>
 
       {/* Estadísticas */}
-      <div className="estadisticas-grid">
-        <div className="stat-card">
-          <div className="stat-icon blue">
+      <div className="estadisticas-grid-reserva">
+        <div className="stat-card-reserva">
+          <div className="stat-icon-reserva blue-reserva">
             <span>📋</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-reserva">
             <h3>{estadisticas.total}</h3>
             <p>Total Reservas</p>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon green">
+        <div className="stat-card-reserva">
+          <div className="stat-icon-reserva green-reserva">
             <span>✅</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-reserva">
             <h3>{estadisticas.activas}</h3>
             <p>Activas</p>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon red">
+        <div className="stat-card-reserva">
+          <div className="stat-icon-reserva red-reserva">
             <span>❌</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-reserva">
             <h3>{estadisticas.inactivas}</h3>
             <p>Inactivas</p>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon purple">
+        <div className="stat-card-reserva">
+          <div className="stat-icon-reserva purple-reserva">
             <span>📊</span>
           </div>
-          <div className="stat-info">
+          <div className="stat-info-reserva">
             <h3>{tiposUnicos.length}</h3>
             <p>Tipos Únicos</p>
           </div>
@@ -147,10 +147,10 @@ const RegistroReserva = () => {
       </div>
 
       {/* Filtros */}
-      <div className="filtros-section">
+      <div className="filtros-section-reserva">
         <h2>🔍 Filtros de Búsqueda</h2>
-        <div className="filtros-grid">
-          <div className="filtro-group">
+        <div className="filtros-grid-reserva">
+          <div className="filtro-group-reserva">
             <label>Buscar</label>
             <input
               type="text"
@@ -159,7 +159,7 @@ const RegistroReserva = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="filtro-group">
+          <div className="filtro-group-reserva">
             <label>Estado</label>
             <select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
               <option value="todos">Todos los estados</option>
@@ -167,7 +167,7 @@ const RegistroReserva = () => {
               <option value="Inactivo">Inactivo</option>
             </select>
           </div>
-          <div className="filtro-group">
+          <div className="filtro-group-reserva">
             <label>Tipo de Reserva</label>
             <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}>
               <option value="todos">Todos los tipos</option>
@@ -182,22 +182,22 @@ const RegistroReserva = () => {
       </div>
 
       {/* Tabla */}
-      <div className="tabla-section">
-        <div className="tabla-header">
+      <div className="tabla-section-reserva">
+        <div className="tabla-header-reserva">
           <h2>📋 Listado de Reservas ({filteredData.length})</h2>
-          <div className="search-box">
+          <div className="search-box-reserva">
             <input
               type="text"
               placeholder="Búsqueda rápida..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <span className="search-icon">🔍</span>
+            <span className="search-icon-reserva">🔍</span>
           </div>
         </div>
 
-        <div className="table-wrapper">
-          <table className="reserva-table">
+        <div className="table-wrapper-reserva">
+          <table className="reserva-table-unique">
             <thead>
               <tr>
                 <th>ID</th>
@@ -214,20 +214,20 @@ const RegistroReserva = () => {
                     <td><strong>{reserva.id_reserva}</strong></td>
                     <td><strong>{reserva.tipo_reserva}</strong></td>
                     <td>
-                      <span className={`estado-badge ${reserva.estado.toLowerCase()}`}>
+                      <span className={`estado-badge-reserva ${reserva.estado.toLowerCase()}-reserva`}>
                         {reserva.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'}
                       </span>
                     </td>
                     <td>{reserva.fecha_creacion}</td>
                     <td>
-                      <div className="actions-cell">
-                        <button className="btn-icon btn-view" onClick={() => handleView(reserva)} title="Ver detalles">
+                      <div className="actions-cell-reserva">
+                        <button className="btn-icon-reserva btn-view-reserva" onClick={() => handleView(reserva)} title="Ver detalles">
                           👁️
                         </button>
-                        <button className="btn-icon btn-edit" onClick={() => handleEdit(reserva)} title="Editar">
+                        <button className="btn-icon-reserva btn-edit-reserva" onClick={() => handleEdit(reserva)} title="Editar">
                           ✏️
                         </button>
-                        <button className="btn-icon btn-delete" onClick={() => handleDelete(reserva)} title="Eliminar">
+                        <button className="btn-icon-reserva btn-delete-reserva" onClick={() => handleDelete(reserva)} title="Eliminar">
                           🗑️
                         </button>
                       </div>
@@ -237,8 +237,8 @@ const RegistroReserva = () => {
               ) : (
                 <tr>
                   <td colSpan="5" style={{ textAlign: 'center', padding: '50px' }}>
-                    <div className="empty-state">
-                      <div className="empty-state-icon">📋</div>
+                    <div className="empty-state-reserva">
+                      <div className="empty-state-icon-reserva">📋</div>
                       <h3>No se encontraron reservas</h3>
                       <p>Intenta ajustar los filtros de búsqueda</p>
                     </div>
@@ -251,7 +251,7 @@ const RegistroReserva = () => {
 
         {/* Paginación */}
         {filteredData.length > itemsPerPage && (
-          <div className="pagination">
+          <div className="pagination-reserva">
             <button 
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
