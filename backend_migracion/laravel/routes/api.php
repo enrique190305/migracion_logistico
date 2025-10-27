@@ -262,6 +262,15 @@ Route::prefix('bodegas')->group(function () {
     
     // Ver una bodega específica
     Route::get('/{id}', [BodegaController::class, 'show']);
+    
+    // Crear nueva bodega
+    Route::post('/', [BodegaController::class, 'store']);
+    
+    // Actualizar bodega
+    Route::put('/{id}', [BodegaController::class, 'update']);
+    
+    // Eliminar bodega
+    Route::delete('/{id}', [BodegaController::class, 'destroy']);
 });
 
 /*

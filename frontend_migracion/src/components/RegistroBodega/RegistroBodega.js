@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './RegistroBodega.css';
+import './ModalMensaje.css';
 import * as bodegasAPI from '../../services/bodegasAPI';
 
 const RegistroBodega = () => {
+  // Estados principales
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [filtroEmpresa, setFiltroEmpresa] = useState('todos');
@@ -11,6 +13,7 @@ const RegistroBodega = () => {
 
   // Estados para datos del backend
   const [bodegas, setBodegas] = useState([]);
+  const [empresas, setEmpresas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [estadisticas, setEstadisticas] = useState({
     total: 0,
@@ -18,10 +21,53 @@ const RegistroBodega = () => {
     inactivas: 0
   });
 
+  // Estados de modales
+  const [modalNuevo, setModalNuevo] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [modalVer, setModalVer] = useState(false);
+  const [modalEliminar, setModalEliminar] = useState(false);
+  const [bodegaSeleccionada, setBodegaSeleccionada] = useState(null);
+
+  // Estado para formulario
+  const [formulario, setFormulario] = useState({
+    nombre: '',
+    ubicacion: '',
+    id_empresa: '',
+    estado: 'ACTIVO'
+  });
+
+  // Estado para modal de mensajes
+  const [modalMensaje, setModalMensaje] = useState({
+    mostrar: false,
+    tipo: '',
+    titulo: '',
+    mensaje: ''
+  });
+
   // Cargar datos al montar el componente
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  // Función para mostrar modal de mensaje
+  const mostrarModalMensaje = (tipo, titulo, mensaje) => {
+    setModalMensaje({
+      mostrar: true,
+      tipo,
+      titulo,
+      mensaje
+    });
+  };
+
+  // Función para cerrar modal de mensaje
+  const cerrarModalMensaje = () => {
+    setModalMensaje({
+      mostrar: false,
+      tipo: '',
+      titulo: '',
+      mensaje: ''
+    });
+  };
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -33,9 +79,19 @@ const RegistroBodega = () => {
       
       setBodegas(bodegasData);
       setEstadisticas(stats);
+
+      // Extraer empresas únicas
+      const empresasUnicas = Array.from(
+        new Set(bodegasData.map(b => JSON.stringify({ 
+          id: b.empresa.id_empresa, 
+          nombre: b.empresa.razon_social 
+        })))
+      ).map(e => JSON.parse(e));
+      
+      setEmpresas(empresasUnicas);
     } catch (error) {
       console.error('Error al cargar datos:', error);
-      alert('Error al cargar las bodegas: ' + (error.message || 'Error desconocido'));
+      mostrarModalMensaje('error', '❌ Error de Carga', 'No se pudieron cargar las bodegas. Verifique que el servidor esté activo.');
     } finally {
       setLoading(false);
     }
@@ -62,32 +118,141 @@ const RegistroBodega = () => {
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+  // Handlers de formulario
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormulario({
+      ...formulario,
+      [name]: value
+    });
+  };
+
+  const limpiarFormulario = () => {
+    setFormulario({
+      nombre: '',
+      ubicacion: '',
+      id_empresa: '',
+      estado: 'ACTIVO'
+    });
+  };
+
+  // Handlers de modales
   const handleNuevaBodega = () => {
-    alert('🏢 Nueva Bodega\n\nAquí se abrirá el formulario para registrar una nueva bodega.');
+    limpiarFormulario();
+    setModalNuevo(true);
   };
 
-  const handleExportar = () => {
-    alert('📊 Exportando datos...\n\nSe generará un archivo Excel con el listado de bodegas.');
-  };
+  const handleGuardarNuevo = async () => {
+    // Validaciones
+    if (!formulario.nombre.trim()) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'El nombre de la bodega es obligatorio');
+      return;
+    }
 
-  const handleEdit = (bodega) => {
-    alert(`✏️ Editar Bodega\n\nEditando: ${bodega.nombre}\nBodega No.: ${bodega.id_bodega}\nUbicación: ${bodega.ubicacion}\nEmpresa: ${bodega.empresa.razon_social}`);
-  };
+    if (!formulario.ubicacion.trim()) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'La ubicación es obligatoria');
+      return;
+    }
 
-  const handleDelete = (bodega) => {
-    if (window.confirm(`¿Está seguro de eliminar la bodega "${bodega.nombre}"?`)) {
-      alert(`🗑️ Bodega eliminada: ${bodega.nombre}`);
+    if (!formulario.id_empresa) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'Debe seleccionar una empresa');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await bodegasAPI.crearBodega(formulario);
+      mostrarModalMensaje('success', '✅ Registro Exitoso', `Bodega "${formulario.nombre}" registrada correctamente`);
+      setModalNuevo(false);
+      limpiarFormulario();
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al crear bodega:', error);
+      mostrarModalMensaje('error', '❌ Error al Guardar', error.message || 'No se pudo registrar la bodega');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleView = (bodega) => {
-    alert(`👁️ Detalles de la Bodega\n\nBodega No.: ${bodega.id_bodega}\nNombre: ${bodega.nombre}\nUbicación: ${bodega.ubicacion}\nEmpresa: ${bodega.empresa.razon_social}\nEstado: ${bodega.estado}\nFecha Creación: ${bodega.fecha_creacion}`);
+    setBodegaSeleccionada(bodega);
+    setModalVer(true);
+  };
+
+  const handleEdit = (bodega) => {
+    setBodegaSeleccionada(bodega);
+    setFormulario({
+      nombre: bodega.nombre,
+      ubicacion: bodega.ubicacion,
+      id_empresa: bodega.empresa.id_empresa,
+      estado: bodega.estado
+    });
+    setModalEditar(true);
+  };
+
+  const handleGuardarEdicion = async () => {
+    // Validaciones
+    if (!formulario.nombre.trim()) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'El nombre de la bodega es obligatorio');
+      return;
+    }
+
+    if (!formulario.ubicacion.trim()) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'La ubicación es obligatoria');
+      return;
+    }
+
+    if (!formulario.id_empresa) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'Debe seleccionar una empresa');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await bodegasAPI.actualizarBodega(bodegaSeleccionada.id_bodega, formulario);
+      mostrarModalMensaje('success', '✅ Actualización Exitosa', `Bodega "${formulario.nombre}" actualizada correctamente`);
+      setModalEditar(false);
+      limpiarFormulario();
+      setBodegaSeleccionada(null);
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al actualizar bodega:', error);
+      mostrarModalMensaje('error', '❌ Error al Actualizar', error.message || 'No se pudo actualizar la bodega');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = (bodega) => {
+    setBodegaSeleccionada(bodega);
+    setModalEliminar(true);
+  };
+
+  const confirmarEliminar = async () => {
+    try {
+      setLoading(true);
+      await bodegasAPI.eliminarBodega(bodegaSeleccionada.id_bodega);
+      mostrarModalMensaje('success', '✅ Eliminación Exitosa', `Bodega "${bodegaSeleccionada.nombre}" eliminada correctamente`);
+      setModalEliminar(false);
+      setBodegaSeleccionada(null);
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al eliminar bodega:', error);
+      mostrarModalMensaje('error', '❌ Error al Eliminar', error.message || 'No se pudo eliminar la bodega');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="registro-bodega-container">
       {/* Mensaje de carga */}
-      {loading && <div className="loading-bodega">⏳ Cargando datos...</div>}
+      {loading && (
+        <div className="loading-overlay-bodega">
+          <div className="loading-spinner-bodega"></div>
+          <p>Cargando...</p>
+        </div>
+      )}
 
       {/* Header */}
       <div className="registro-bodega-header">
@@ -101,9 +266,6 @@ const RegistroBodega = () => {
         <div className="header-actions-bodega">
           <button className="btn-bodega btn-primary-bodega" onClick={handleNuevaBodega}>
             <span>➕</span> Nueva Bodega
-          </button>
-          <button className="btn-bodega btn-secondary-bodega" onClick={handleExportar}>
-            <span>📊</span> Exportar
           </button>
         </div>
       </div>
@@ -272,6 +434,251 @@ const RegistroBodega = () => {
           </div>
         )}
       </div>
+
+      {/* MODAL: NUEVA BODEGA */}
+      {modalNuevo && (
+        <>
+          <div className="modal-overlay-bodega" onClick={() => setModalNuevo(false)}></div>
+          <div className="modal-bodega">
+            <div className="modal-header-bodega">
+              <h2>➕ Nueva Bodega</h2>
+              <button className="btn-close-bodega" onClick={() => setModalNuevo(false)}>✖</button>
+            </div>
+            <div className="modal-body-bodega">
+              <div className="form-group-bodega">
+                <label>Nombre de la Bodega *</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formulario.nombre}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Bodega Principal Lima"
+                />
+              </div>
+              <div className="form-group-bodega">
+                <label>Ubicación *</label>
+                <input
+                  type="text"
+                  name="ubicacion"
+                  value={formulario.ubicacion}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Lima, Callao, Ica, etc."
+                />
+              </div>
+              <div className="form-group-bodega">
+                <label>Empresa *</label>
+                <select
+                  name="id_empresa"
+                  value={formulario.id_empresa}
+                  onChange={handleInputChange}
+                >
+                  <option value="">-- Seleccione una empresa --</option>
+                  {empresas.map((empresa) => (
+                    <option key={empresa.id} value={empresa.id}>
+                      {empresa.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group-bodega">
+                <label>Estado</label>
+                <select
+                  name="estado"
+                  value={formulario.estado}
+                  onChange={handleInputChange}
+                >
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer-bodega">
+              <button className="btn-secondary-bodega" onClick={() => setModalNuevo(false)}>
+                ✕ Cancelar
+              </button>
+              <button className="btn-primary-bodega" onClick={handleGuardarNuevo}>
+                ✓ Guardar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL: EDITAR BODEGA */}
+      {modalEditar && bodegaSeleccionada && (
+        <>
+          <div className="modal-overlay-bodega" onClick={() => setModalEditar(false)}></div>
+          <div className="modal-bodega">
+            <div className="modal-header-bodega">
+              <h2>✏️ Editar Bodega</h2>
+              <button className="btn-close-bodega" onClick={() => setModalEditar(false)}>✖</button>
+            </div>
+            <div className="modal-body-bodega">
+              <div className="form-group-bodega">
+                <label>Nombre de la Bodega *</label>
+                <input
+                  type="text"
+                  name="nombre"
+                  value={formulario.nombre}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Bodega Principal Lima"
+                />
+              </div>
+              <div className="form-group-bodega">
+                <label>Ubicación *</label>
+                <input
+                  type="text"
+                  name="ubicacion"
+                  value={formulario.ubicacion}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Lima, Callao, Ica, etc."
+                />
+              </div>
+              <div className="form-group-bodega">
+                <label>Empresa *</label>
+                <select
+                  name="id_empresa"
+                  value={formulario.id_empresa}
+                  onChange={handleInputChange}
+                >
+                  <option value="">-- Seleccione una empresa --</option>
+                  {empresas.map((empresa) => (
+                    <option key={empresa.id} value={empresa.id}>
+                      {empresa.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group-bodega">
+                <label>Estado</label>
+                <select
+                  name="estado"
+                  value={formulario.estado}
+                  onChange={handleInputChange}
+                >
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer-bodega">
+              <button className="btn-secondary-bodega" onClick={() => setModalEditar(false)}>
+                ✕ Cancelar
+              </button>
+              <button className="btn-primary-bodega" onClick={handleGuardarEdicion}>
+                ✓ Actualizar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL: VER DETALLES */}
+      {modalVer && bodegaSeleccionada && (
+        <>
+          <div className="modal-overlay-bodega" onClick={() => setModalVer(false)}></div>
+          <div className="modal-bodega">
+            <div className="modal-header-bodega">
+              <h2>👁️ Detalles de la Bodega</h2>
+              <button className="btn-close-bodega" onClick={() => setModalVer(false)}>✖</button>
+            </div>
+            <div className="modal-body-bodega">
+              <div className="detalle-row-bodega">
+                <strong>ID Bodega:</strong>
+                <span>{bodegaSeleccionada.id_bodega}</span>
+              </div>
+              <div className="detalle-row-bodega">
+                <strong>Nombre:</strong>
+                <span>{bodegaSeleccionada.nombre}</span>
+              </div>
+              <div className="detalle-row-bodega">
+                <strong>Ubicación:</strong>
+                <span>{bodegaSeleccionada.ubicacion}</span>
+              </div>
+              <div className="detalle-row-bodega">
+                <strong>Empresa:</strong>
+                <span>{bodegaSeleccionada.empresa.razon_social}</span>
+              </div>
+              <div className="detalle-row-bodega">
+                <strong>Estado:</strong>
+                <span className={`estado-badge-bodega ${bodegaSeleccionada.estado.toLowerCase()}-bodega`}>
+                  {bodegaSeleccionada.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'}
+                </span>
+              </div>
+              <div className="detalle-row-bodega">
+                <strong>Fecha de Creación:</strong>
+                <span>{bodegaSeleccionada.fecha_creacion}</span>
+              </div>
+            </div>
+            <div className="modal-footer-bodega">
+              <button className="btn-success-bodega" onClick={() => setModalVer(false)}>
+                ✓ Cerrar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL: CONFIRMAR ELIMINAR */}
+      {modalEliminar && bodegaSeleccionada && (
+        <>
+          <div className="modal-overlay-bodega" onClick={() => setModalEliminar(false)}></div>
+          <div className="modal-bodega modal-bodega-small">
+            <div className="modal-header-bodega modal-header-danger">
+              <h2>🗑️ Confirmar Eliminación</h2>
+              <button className="btn-close-bodega" onClick={() => setModalEliminar(false)}>✖</button>
+            </div>
+            <div className="modal-body-bodega">
+              <p style={{ textAlign: 'center', fontSize: '16px', margin: '20px 0' }}>
+                ¿Está seguro que desea eliminar la bodega:
+              </p>
+              <p style={{ textAlign: 'center', fontSize: '20px', fontWeight: 'bold', color: '#e74c3c' }}>
+                "{bodegaSeleccionada.nombre}"?
+              </p>
+              <p style={{ textAlign: 'center', fontSize: '14px', color: '#999', marginTop: '15px' }}>
+                Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="modal-footer-bodega">
+              <button className="btn-secondary-bodega" onClick={() => setModalEliminar(false)}>
+                ✕ Cancelar
+              </button>
+              <button className="btn-danger-bodega" onClick={confirmarEliminar}>
+                ✓ Eliminar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* MODAL DE MENSAJES */}
+      {modalMensaje.mostrar && (
+        <>
+          <div className="modal-overlay-bodega" onClick={cerrarModalMensaje}></div>
+          <div className={`modal-mensaje-bodega modal-mensaje-${modalMensaje.tipo}`}>
+            <div className="modal-mensaje-header">
+              <div className={`modal-mensaje-icono modal-mensaje-icono-${modalMensaje.tipo}`}>
+                {modalMensaje.tipo === 'success' && '✅'}
+                {modalMensaje.tipo === 'error' && '❌'}
+                {modalMensaje.tipo === 'warning' && '⚠️'}
+                {modalMensaje.tipo === 'info' && 'ℹ️'}
+              </div>
+              <h3>{modalMensaje.titulo}</h3>
+            </div>
+            <div className="modal-mensaje-body">
+              <p style={{ whiteSpace: 'pre-line' }}>{modalMensaje.mensaje}</p>
+            </div>
+            <div className="modal-mensaje-footer">
+              <button 
+                onClick={cerrarModalMensaje} 
+                className={`btn-mensaje-bodega btn-mensaje-${modalMensaje.tipo}`}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

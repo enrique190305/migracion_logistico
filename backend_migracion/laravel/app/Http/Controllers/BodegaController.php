@@ -135,4 +135,158 @@ class BodegaController extends Controller
             ], 404);
         }
     }
+
+    /**
+     * Crear una nueva bodega
+     */
+    public function store(Request $request)
+    {
+        try {
+            // Validar datos
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:100',
+                'ubicacion' => 'required|string|max:150',
+                'id_empresa' => 'required|integer|exists:empresa,id_empresa',
+                'estado' => 'required|in:ACTIVO,INACTIVO'
+            ]);
+
+            // Crear bodega
+            $bodega = Bodega::create([
+                'nombre' => $validated['nombre'],
+                'ubicacion' => $validated['ubicacion'],
+                'id_empresa' => $validated['id_empresa'],
+                'estado' => $validated['estado'],
+                'fecha_creacion' => now()
+            ]);
+
+            // Cargar relación con empresa
+            $bodega->load('empresa:id_empresa,razon_social');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bodega creada exitosamente',
+                'data' => $bodega
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Errores de validación',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear la bodega',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar una bodega existente
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            // Buscar bodega
+            $bodega = Bodega::findOrFail($id);
+
+            // Validar datos
+            $validated = $request->validate([
+                'nombre' => 'required|string|max:100',
+                'ubicacion' => 'required|string|max:150',
+                'id_empresa' => 'required|integer|exists:empresa,id_empresa',
+                'estado' => 'required|in:ACTIVO,INACTIVO'
+            ]);
+
+            // Actualizar bodega
+            $bodega->update([
+                'nombre' => $validated['nombre'],
+                'ubicacion' => $validated['ubicacion'],
+                'id_empresa' => $validated['id_empresa'],
+                'estado' => $validated['estado']
+            ]);
+
+            // Cargar relación con empresa
+            $bodega->load('empresa:id_empresa,razon_social');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Bodega actualizada exitosamente',
+                'data' => $bodega
+            ], 200);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Errores de validación',
+                'errors' => $e->errors()
+            ], 422);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bodega no encontrada'
+            ], 404);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar la bodega',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar una bodega
+     */
+    public function destroy($id)
+    {
+        try {
+            // Buscar bodega
+            $bodega = Bodega::findOrFail($id);
+
+            // Guardar nombre para el mensaje
+            $nombreBodega = $bodega->nombre;
+
+            // Intentar eliminar bodega
+            $bodega->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Bodega '{$nombreBodega}' eliminada exitosamente"
+            ], 200);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bodega no encontrada'
+            ], 404);
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Error de restricción de llave foránea
+            if ($e->getCode() == '23000') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No se puede eliminar la bodega porque tiene registros asociados (productos, movimientos, etc.)'
+                ], 409);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de base de datos al eliminar la bodega',
+                'error' => $e->getMessage()
+            ], 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar la bodega',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

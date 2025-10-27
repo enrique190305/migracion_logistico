@@ -53,3 +53,42 @@ export const obtenerBodega = async (id) => {
     throw error.response?.data || error;
   }
 };
+
+/**
+ * Crear una nueva bodega
+ */
+export const crearBodega = async (data) => {
+  try {
+    const response = await axios.post(API_URL, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear bodega:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Actualizar una bodega existente
+ */
+export const actualizarBodega = async (id, data) => {
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar bodega:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Eliminar una bodega
+ */
+export const eliminarBodega = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al eliminar bodega:', error);
+    throw error.response?.data || error;
+  }
+};
