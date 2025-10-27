@@ -53,3 +53,42 @@ export const obtenerReserva = async (id) => {
     throw error.response?.data || error;
   }
 };
+
+/**
+ * Crear una nueva reserva
+ */
+export const crearReserva = async (data) => {
+  try {
+    const response = await axios.post(API_URL, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al crear reserva:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Actualizar una reserva existente
+ */
+export const actualizarReserva = async (id, data) => {
+  try {
+    const response = await axios.put(`${API_URL}/${id}`, data);
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar reserva:', error);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Eliminar una reserva
+ */
+export const eliminarReserva = async (id) => {
+  try {
+    const response = await axios.delete(`${API_URL}/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error al eliminar reserva:', error);
+    throw error.response?.data || error;
+  }
+};

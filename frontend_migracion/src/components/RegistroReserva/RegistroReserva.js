@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './RegistroReserva.css';
+import './ModalMensaje.css';
 import * as reservasAPI from '../../services/reservasAPI';
 
 const RegistroReserva = () => {
+  // Estados principales
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('todos');
   const [filtroTipo, setFiltroTipo] = useState('todos');
@@ -16,6 +18,27 @@ const RegistroReserva = () => {
     total: 0,
     activas: 0,
     inactivas: 0
+  });
+
+  // Estados para modales
+  const [modalNuevo, setModalNuevo] = useState(false);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [modalVer, setModalVer] = useState(false);
+  const [modalEliminar, setModalEliminar] = useState(false);
+  const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
+
+  // Estado para formulario
+  const [formulario, setFormulario] = useState({
+    tipo_reserva: '',
+    estado: 'ACTIVO'
+  });
+
+  // Estado para modal de mensajes
+  const [modalMensaje, setModalMensaje] = useState({
+    mostrar: false,
+    tipo: '',
+    titulo: '',
+    mensaje: ''
   });
 
   // Cargar datos al montar el componente
@@ -35,7 +58,127 @@ const RegistroReserva = () => {
       setEstadisticas(stats);
     } catch (error) {
       console.error('Error al cargar datos:', error);
-      alert('Error al cargar las reservas: ' + (error.message || 'Error desconocido'));
+      mostrarModalMensaje('error', '❌ Error al Cargar', 'Error al cargar las reservas: ' + (error.message || 'Error desconocido'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Funciones para modal de mensajes
+  const mostrarModalMensaje = (tipo, titulo, mensaje) => {
+    setModalMensaje({
+      mostrar: true,
+      tipo,
+      titulo,
+      mensaje
+    });
+  };
+
+  const cerrarModalMensaje = () => {
+    setModalMensaje({
+      mostrar: false,
+      tipo: '',
+      titulo: '',
+      mensaje: ''
+    });
+  };
+
+  // Funciones para manejar formulario
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormulario(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const limpiarFormulario = () => {
+    setFormulario({
+      tipo_reserva: '',
+      estado: 'ACTIVO'
+    });
+  };
+
+  const handleNuevaReserva = () => {
+    limpiarFormulario();
+    setModalNuevo(true);
+  };
+
+  const handleGuardarNuevo = async () => {
+    // Validaciones
+    if (!formulario.tipo_reserva.trim()) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'El tipo de reserva es obligatorio');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await reservasAPI.crearReserva(formulario);
+      mostrarModalMensaje('success', '✅ Registro Exitoso', `Reserva "${formulario.tipo_reserva}" registrada correctamente`);
+      setModalNuevo(false);
+      limpiarFormulario();
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al crear reserva:', error);
+      mostrarModalMensaje('error', '❌ Error al Guardar', error.message || 'No se pudo registrar la reserva');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleView = (reserva) => {
+    setReservaSeleccionada(reserva);
+    setModalVer(true);
+  };
+
+  const handleEdit = (reserva) => {
+    setReservaSeleccionada(reserva);
+    setFormulario({
+      tipo_reserva: reserva.tipo_reserva,
+      estado: reserva.estado
+    });
+    setModalEditar(true);
+  };
+
+  const handleGuardarEdicion = async () => {
+    // Validaciones
+    if (!formulario.tipo_reserva.trim()) {
+      mostrarModalMensaje('warning', '⚠️ Campo Requerido', 'El tipo de reserva es obligatorio');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await reservasAPI.actualizarReserva(reservaSeleccionada.id_reserva, formulario);
+      mostrarModalMensaje('success', '✅ Actualización Exitosa', `Reserva "${formulario.tipo_reserva}" actualizada correctamente`);
+      setModalEditar(false);
+      limpiarFormulario();
+      setReservaSeleccionada(null);
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al actualizar reserva:', error);
+      mostrarModalMensaje('error', '❌ Error al Actualizar', error.message || 'No se pudo actualizar la reserva');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = (reserva) => {
+    setReservaSeleccionada(reserva);
+    setModalEliminar(true);
+  };
+
+  const confirmarEliminar = async () => {
+    try {
+      setLoading(true);
+      await reservasAPI.eliminarReserva(reservaSeleccionada.id_reserva);
+      mostrarModalMensaje('success', '✅ Eliminación Exitosa', `Reserva "${reservaSeleccionada.tipo_reserva}" eliminada correctamente`);
+      setModalEliminar(false);
+      setReservaSeleccionada(null);
+      await cargarDatos();
+    } catch (error) {
+      console.error('Error al eliminar reserva:', error);
+      mostrarModalMensaje('error', '❌ Error al Eliminar', error.message || 'No se pudo eliminar la reserva');
     } finally {
       setLoading(false);
     }
@@ -60,32 +203,15 @@ const RegistroReserva = () => {
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  const handleNuevaReserva = () => {
-    alert('📋 Nueva Reserva\n\nAquí se abrirá el formulario para registrar un nuevo tipo de reserva.');
-  };
-
-  const handleExportar = () => {
-    alert('📊 Exportando datos...\n\nSe generará un archivo Excel con el listado de reservas.');
-  };
-
-  const handleEdit = (reserva) => {
-    alert(`✏️ Editar Reserva\n\nEditando: ${reserva.tipo_reserva}\nTipo Reserva #: ${reserva.id_reserva}`);
-  };
-
-  const handleDelete = (reserva) => {
-    if (window.confirm(`¿Está seguro de eliminar la reserva "${reserva.tipo_reserva}"?`)) {
-      alert(`🗑️ Reserva eliminada: ${reserva.tipo_reserva}`);
-    }
-  };
-
-  const handleView = (reserva) => {
-    alert(`👁️ Detalles de la Reserva\n\nTipo Reserva #: ${reserva.id_reserva}\nNombre Tipo Reserva: ${reserva.tipo_reserva}\nEstado: ${reserva.estado}\nFecha Creación: ${reserva.fecha_creacion}`);
-  };
-
   return (
     <div className="registro-reserva-container">
       {/* Mensaje de carga */}
-      {loading && <div className="mensaje-info">⏳ Cargando datos...</div>}
+      {loading && (
+        <div className="loading-overlay-reserva">
+          <div className="loading-spinner-reserva"></div>
+          <p>Cargando...</p>
+        </div>
+      )}
 
       {/* Header */}
       <div className="registro-reserva-header">
@@ -99,9 +225,6 @@ const RegistroReserva = () => {
         <div className="header-actions-reserva">
           <button className="btn-reserva btn-primary-reserva" onClick={handleNuevaReserva}>
             <span>➕</span> Nueva Reserva
-          </button>
-          <button className="btn-reserva btn-secondary-reserva" onClick={handleExportar}>
-            <span>📊</span> Exportar
           </button>
         </div>
       </div>
@@ -268,6 +391,187 @@ const RegistroReserva = () => {
           </div>
         )}
       </div>
+
+      {/* Modal Nueva Reserva */}
+      {modalNuevo && (
+        <>
+          <div className="modal-overlay-reserva" onClick={() => setModalNuevo(false)}></div>
+          <div className="modal-reserva">
+            <div className="modal-header-reserva">
+              <h2>➕ Nueva Reserva</h2>
+              <button className="btn-close-reserva" onClick={() => setModalNuevo(false)}>✖</button>
+            </div>
+            <div className="modal-body-reserva">
+              <div className="form-group-reserva">
+                <label>Tipo de Reserva *</label>
+                <input
+                  type="text"
+                  name="tipo_reserva"
+                  value={formulario.tipo_reserva}
+                  onChange={handleInputChange}
+                  placeholder="Ej: EXTERNA, INTERNA, COMERCIAL"
+                  maxLength="100"
+                />
+              </div>
+              <div className="form-group-reserva">
+                <label>Estado</label>
+                <select name="estado" value={formulario.estado} onChange={handleInputChange}>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer-reserva">
+              <button className="btn-secondary-reserva" onClick={() => setModalNuevo(false)}>
+                ✕ Cancelar
+              </button>
+              <button className="btn-primary-reserva" onClick={handleGuardarNuevo}>
+                ✓ Guardar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal Editar Reserva */}
+      {modalEditar && reservaSeleccionada && (
+        <>
+          <div className="modal-overlay-reserva" onClick={() => setModalEditar(false)}></div>
+          <div className="modal-reserva">
+            <div className="modal-header-reserva">
+              <h2>✏️ Editar Reserva</h2>
+              <button className="btn-close-reserva" onClick={() => setModalEditar(false)}>✖</button>
+            </div>
+            <div className="modal-body-reserva">
+              <div className="form-group-reserva">
+                <label>Tipo de Reserva *</label>
+                <input
+                  type="text"
+                  name="tipo_reserva"
+                  value={formulario.tipo_reserva}
+                  onChange={handleInputChange}
+                  placeholder="Ej: EXTERNA, INTERNA, COMERCIAL"
+                  maxLength="100"
+                />
+              </div>
+              <div className="form-group-reserva">
+                <label>Estado</label>
+                <select name="estado" value={formulario.estado} onChange={handleInputChange}>
+                  <option value="ACTIVO">Activo</option>
+                  <option value="INACTIVO">Inactivo</option>
+                </select>
+              </div>
+            </div>
+            <div className="modal-footer-reserva">
+              <button className="btn-secondary-reserva" onClick={() => setModalEditar(false)}>
+                ✕ Cancelar
+              </button>
+              <button className="btn-primary-reserva" onClick={handleGuardarEdicion}>
+                ✓ Actualizar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal Ver Detalles */}
+      {modalVer && reservaSeleccionada && (
+        <>
+          <div className="modal-overlay-reserva" onClick={() => setModalVer(false)}></div>
+          <div className="modal-reserva">
+            <div className="modal-header-reserva">
+              <h2>👁️ Detalles de la Reserva</h2>
+              <button className="btn-close-reserva" onClick={() => setModalVer(false)}>✖</button>
+            </div>
+            <div className="modal-body-reserva">
+              <div className="detalle-row-reserva">
+                <strong>ID Reserva:</strong>
+                <span>{reservaSeleccionada.id_reserva}</span>
+              </div>
+              <div className="detalle-row-reserva">
+                <strong>Tipo de Reserva:</strong>
+                <span>{reservaSeleccionada.tipo_reserva}</span>
+              </div>
+              <div className="detalle-row-reserva">
+                <strong>Estado:</strong>
+                <span className={`estado-badge-reserva ${reservaSeleccionada.estado.toLowerCase()}-reserva`}>
+                  {reservaSeleccionada.estado === 'ACTIVO' ? '✅ Activo' : '❌ Inactivo'}
+                </span>
+              </div>
+              <div className="detalle-row-reserva">
+                <strong>Fecha de Creación:</strong>
+                <span>{reservaSeleccionada.fecha_creacion}</span>
+              </div>
+            </div>
+            <div className="modal-footer-reserva">
+              <button className="btn-success-reserva" onClick={() => setModalVer(false)}>
+                ✓ Cerrar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal Confirmar Eliminar */}
+      {modalEliminar && reservaSeleccionada && (
+        <>
+          <div className="modal-overlay-reserva" onClick={() => setModalEliminar(false)}></div>
+          <div className="modal-reserva modal-reserva-small">
+            <div className="modal-header-reserva modal-header-danger">
+              <h2>🗑️ Confirmar Eliminación</h2>
+              <button className="btn-close-reserva" onClick={() => setModalEliminar(false)}>✖</button>
+            </div>
+            <div className="modal-body-reserva">
+              <p style={{ textAlign: 'center', marginBottom: '15px' }}>
+                ¿Está seguro que desea eliminar la reserva:
+              </p>
+              <p style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold', color: '#e53e3e' }}>
+                "{reservaSeleccionada.tipo_reserva}"?
+              </p>
+              <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px', color: '#666' }}>
+                Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="modal-footer-reserva">
+              <button className="btn-secondary-reserva" onClick={() => setModalEliminar(false)}>
+                ✕ Cancelar
+              </button>
+              <button className="btn-danger-reserva" onClick={confirmarEliminar}>
+                ✓ Eliminar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de Mensajes */}
+      {modalMensaje.mostrar && (
+        <>
+          <div className="modal-overlay-reserva" onClick={cerrarModalMensaje}></div>
+          <div className={`modal-mensaje-reserva modal-mensaje-${modalMensaje.tipo}`}>
+            <div className="modal-mensaje-header">
+              <div className="modal-mensaje-icono">
+                {modalMensaje.tipo === 'success' && '✅'}
+                {modalMensaje.tipo === 'error' && '❌'}
+                {modalMensaje.tipo === 'warning' && '⚠️'}
+                {modalMensaje.tipo === 'info' && 'ℹ️'}
+              </div>
+              <h3>{modalMensaje.titulo}</h3>
+            </div>
+            <div className="modal-mensaje-body">
+              <p style={{ whiteSpace: 'pre-line' }}>{modalMensaje.mensaje}</p>
+            </div>
+            <div className="modal-mensaje-footer">
+              <button 
+                className={`btn-mensaje-reserva btn-mensaje-${modalMensaje.tipo}`}
+                onClick={cerrarModalMensaje}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -1,0 +1,435 @@
+/* ============================================
+   MODAL DE MENSAJES - RESERVA
+   ============================================ */
+
+.modal-mensaje-reserva {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  z-index: 10001;
+  min-width: 400px;
+  max-width: 500px;
+  animation: modalMensajeSlideIn 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes modalMensajeSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal-mensaje-header {
+  padding: 25px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-mensaje-icono {
+  font-size: 64px;
+  margin-bottom: 15px;
+  animation: modalIconoBounce 0.6s ease-out;
+}
+
+@keyframes modalIconoBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.modal-mensaje-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Colores según tipo */
+.modal-mensaje-success .modal-mensaje-header {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.modal-mensaje-error .modal-mensaje-header {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.modal-mensaje-warning .modal-mensaje-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.modal-mensaje-info .modal-mensaje-header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.modal-mensaje-body {
+  padding: 30px;
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  line-height: 1.8;
+  background: white;
+}
+
+.modal-mensaje-body p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.modal-mensaje-footer {
+  padding: 20px 30px;
+  background: #f8f9fa;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-mensaje-reserva {
+  padding: 12px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-mensaje-reserva:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.btn-mensaje-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.btn-mensaje-error {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+.btn-mensaje-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.btn-mensaje-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+/* ============================================
+   MODALES DE FORMULARIO - RESERVA
+   ============================================ */
+
+.modal-overlay-reserva {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-reserva {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  z-index: 10001;
+  min-width: 500px;
+  max-width: 600px;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+.modal-reserva-small {
+  min-width: 400px;
+  max-width: 450px;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal-header-reserva {
+  padding: 20px 25px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 15px 15px 0 0;
+}
+
+.modal-header-danger {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.modal-header-reserva h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.btn-close-reserva {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-close-reserva:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.modal-body-reserva {
+  padding: 25px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.form-group-reserva {
+  margin-bottom: 20px;
+}
+
+.form-group-reserva label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-group-reserva input,
+.form-group-reserva select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.form-group-reserva input:focus,
+.form-group-reserva select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.detalle-row-reserva {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detalle-row-reserva:last-child {
+  border-bottom: none;
+}
+
+.detalle-row-reserva strong {
+  color: #555;
+  font-weight: 600;
+}
+
+.detalle-row-reserva span {
+  color: #333;
+  font-weight: 500;
+}
+
+.modal-footer-reserva {
+  padding: 20px 25px;
+  background: #f8f9fa;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  border-radius: 0 0 15px 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+/* Estilos base para todos los botones de modal */
+.modal-footer-reserva button {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-transform: none;
+  letter-spacing: 0.3px;
+}
+
+.modal-footer-reserva button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal-footer-reserva button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Botón primario (Guardar, Actualizar, Aceptar) */
+.btn-primary-reserva {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary-reserva:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #65408b 100%);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Botón secundario (Cancelar, Cerrar) */
+.btn-secondary-reserva {
+  background: #e2e8f0;
+  color: #475569;
+  border: 2px solid #cbd5e1;
+}
+
+.btn-secondary-reserva:hover {
+  background: #cbd5e1;
+  border-color: #94a3b8;
+  color: #334155;
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.3);
+}
+
+/* Botón de peligro (Eliminar) */
+.btn-danger-reserva {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+.btn-danger-reserva:hover {
+  background: linear-gradient(135deg, #d91e33 0%, #e34a36 100%);
+  box-shadow: 0 6px 20px rgba(235, 51, 73, 0.4);
+}
+
+/* Botón success (para modal de detalles) */
+.btn-success-reserva {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.btn-success-reserva:hover {
+  background: linear-gradient(135deg, #0e8478 0%, #2dd46b 100%);
+  box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
+}
+
+/* Estado deshabilitado */
+.modal-footer-reserva button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modal-footer-reserva button:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   LOADING OVERLAY
+   ============================================ */
+
+.loading-overlay-reserva {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10002;
+}
+
+.loading-spinner-reserva {
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top: 5px solid white;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-overlay-reserva p {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-mensaje-reserva,
+  .modal-reserva {
+    min-width: 90%;
+    max-width: 90%;
+  }
+
+  .modal-mensaje-icono {
+    font-size: 48px;
+  }
+
+  .modal-mensaje-header h3 {
+    font-size: 18px;
+  }
+
+  .modal-mensaje-body {
+    padding: 20px;
+    font-size: 14px;
+  }
+}

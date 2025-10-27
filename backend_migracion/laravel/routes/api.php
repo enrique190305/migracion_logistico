@@ -291,6 +291,15 @@ Route::prefix('reservas')->group(function () {
     
     // Ver una reserva específica
     Route::get('/{id}', [ReservaController::class, 'show']);
+    
+    // Crear nueva reserva
+    Route::post('/', [ReservaController::class, 'store']);
+    
+    // Actualizar reserva
+    Route::put('/{id}', [ReservaController::class, 'update']);
+    
+    // Eliminar reserva
+    Route::delete('/{id}', [ReservaController::class, 'destroy']);
 });
 
 /*
