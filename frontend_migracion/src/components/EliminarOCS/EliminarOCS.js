@@ -47,9 +47,8 @@ const EliminarOCS = () => {
       console.log('📋 Órdenes cargadas:', data);
       setOrdenes(data);
       
-      if (data.length === 0) {
-        setError(`No hay ${tipoOrden === 'OC' ? 'Órdenes de Compra' : 'Órdenes de Servicio'} registradas`);
-      }
+      // No mostrar mensaje de error si no hay órdenes, solo limpiar
+      // El usuario verá "No hay órdenes disponibles" en el select
     } catch (err) {
       console.error('Error al cargar órdenes:', err);
       setError('Error al cargar las órdenes. Verifique la conexión con el servidor.');
@@ -204,8 +203,8 @@ const EliminarOCS = () => {
         </p>
       </div>
 
-      {/* Mensaje de error general */}
-      {error && (
+      {/* Mensaje de error general - Solo mostrar errores de conexión */}
+      {error && error.includes('conexión') && (
         <div className="advertencia-box" style={{ backgroundColor: '#fee', borderColor: '#fcc' }}>
           <span className="advertencia-icon">❌</span>
           <p><strong>Error:</strong> {error}</p>
