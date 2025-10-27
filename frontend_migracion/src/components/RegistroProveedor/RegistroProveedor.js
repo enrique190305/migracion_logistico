@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './RegistroProveedor.css';
+import './ModalMensaje.css';
 import * as proveedorAPI from '../../services/proveedorAPI';
 
 const RegistroProveedor = () => {
@@ -10,6 +11,14 @@ const RegistroProveedor = () => {
   const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 10;
+
+  // Estados para el modal de mensajes
+  const [modalMensaje, setModalMensaje] = useState({
+    mostrar: false,
+    tipo: '', // 'success', 'error', 'warning', 'info'
+    titulo: '',
+    mensaje: ''
+  });
 
   const [formulario, setFormulario] = useState({
     proveedor: '',
@@ -26,6 +35,26 @@ const RegistroProveedor = () => {
     cargarProveedores();
   }, []);
 
+  // Función para mostrar modal de mensaje
+  const mostrarModalMensaje = (tipo, titulo, mensaje) => {
+    setModalMensaje({
+      mostrar: true,
+      tipo,
+      titulo,
+      mensaje
+    });
+  };
+
+  // Función para cerrar modal de mensaje
+  const cerrarModalMensaje = () => {
+    setModalMensaje({
+      mostrar: false,
+      tipo: '',
+      titulo: '',
+      mensaje: ''
+    });
+  };
+
   const cargarProveedores = async () => {
     try {
       setLoading(true);
@@ -34,11 +63,11 @@ const RegistroProveedor = () => {
       if (response.success) {
         setProveedores(response.data);
       } else {
-        alert('❌ Error al cargar proveedores');
+        mostrarModalMensaje('error', '❌ Error', 'Error al cargar proveedores');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error de conexión con el servidor');
+      mostrarModalMensaje('error', '❌ Error de Conexión', 'No se pudo conectar con el servidor. Verifique que Laravel esté ejecutándose.');
     } finally {
       setLoading(false);
     }
@@ -54,17 +83,17 @@ const RegistroProveedor = () => {
 
   const handleRegistrar = async () => {
     if (!formulario.proveedor || !formulario.ruc) {
-      alert('⚠️ Por favor complete los campos obligatorios (Proveedor y RUC)');
+      mostrarModalMensaje('warning', '⚠️ Campos Incompletos', 'Por favor complete los campos obligatorios: Proveedor y RUC');
       return;
     }
 
     if (formulario.ruc.length !== 11 || !/^\d+$/.test(formulario.ruc)) {
-      alert('⚠️ El RUC debe tener 11 dígitos numéricos');
+      mostrarModalMensaje('warning', '⚠️ RUC Inválido', 'El RUC debe tener exactamente 11 dígitos numéricos');
       return;
     }
 
     if (formulario.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
-      alert('⚠️ Por favor ingrese un email válido');
+      mostrarModalMensaje('warning', '⚠️ Email Inválido', 'Por favor ingrese un correo electrónico válido');
       return;
     }
 
@@ -82,16 +111,20 @@ const RegistroProveedor = () => {
       });
       
       if (response.success) {
-        alert(`✅ Proveedor registrado correctamente\n\nProveedor: ${formulario.proveedor}\nRUC: ${formulario.ruc}`);
+        mostrarModalMensaje(
+          'success',
+          '✅ Registro Exitoso',
+          `Proveedor registrado correctamente:\n\n• Proveedor: ${formulario.proveedor}\n• RUC: ${formulario.ruc}`
+        );
         await cargarProveedores();
         handleLimpiar();
         setMostrarModal(false);
       } else {
-        alert(`❌ Error: ${response.message}`);
+        mostrarModalMensaje('error', '❌ Error al Registrar', response.message);
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al guardar el proveedor: ' + error.message);
+      mostrarModalMensaje('error', '❌ Error', `No se pudo guardar el proveedor: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -448,6 +481,35 @@ const RegistroProveedor = () => {
               </button>
               <button onClick={handleRegistrar} className="btn-proveedor btn-success-proveedor" disabled={loading}>
                 {loading ? '⏳ GUARDANDO...' : '💾 REGISTRAR'}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de Mensajes */}
+      {modalMensaje.mostrar && (
+        <>
+          <div className="modal-overlay-proveedor" onClick={cerrarModalMensaje}></div>
+          <div className={`modal-mensaje-proveedor modal-mensaje-${modalMensaje.tipo}`}>
+            <div className="modal-mensaje-header">
+              <div className={`modal-mensaje-icono modal-mensaje-icono-${modalMensaje.tipo}`}>
+                {modalMensaje.tipo === 'success' && '✅'}
+                {modalMensaje.tipo === 'error' && '❌'}
+                {modalMensaje.tipo === 'warning' && '⚠️'}
+                {modalMensaje.tipo === 'info' && 'ℹ️'}
+              </div>
+              <h3>{modalMensaje.titulo}</h3>
+            </div>
+            <div className="modal-mensaje-body">
+              <p style={{ whiteSpace: 'pre-line' }}>{modalMensaje.mensaje}</p>
+            </div>
+            <div className="modal-mensaje-footer">
+              <button 
+                onClick={cerrarModalMensaje} 
+                className={`btn-mensaje-proveedor btn-mensaje-${modalMensaje.tipo}`}
+              >
+                Aceptar
               </button>
             </div>
           </div>

@@ -1,0 +1,152 @@
+/* ============================================
+   MODAL DE MENSAJES
+   ============================================ */
+
+.modal-mensaje-proveedor {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  z-index: 10001;
+  min-width: 400px;
+  max-width: 500px;
+  animation: modalMensajeSlideIn 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes modalMensajeSlideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -60%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.modal-mensaje-header {
+  padding: 25px;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-mensaje-icono {
+  font-size: 64px;
+  margin-bottom: 15px;
+  animation: modalIconoBounce 0.6s ease-out;
+}
+
+@keyframes modalIconoBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.modal-mensaje-header h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Colores según tipo */
+.modal-mensaje-success .modal-mensaje-header {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.modal-mensaje-error .modal-mensaje-header {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.modal-mensaje-warning .modal-mensaje-header {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.modal-mensaje-info .modal-mensaje-header {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.modal-mensaje-body {
+  padding: 30px;
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  line-height: 1.8;
+  background: white;
+}
+
+.modal-mensaje-body p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.modal-mensaje-footer {
+  padding: 20px 30px;
+  background: #f8f9fa;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-mensaje-proveedor {
+  padding: 12px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-mensaje-proveedor:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+.btn-mensaje-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.btn-mensaje-error {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  color: white;
+}
+
+.btn-mensaje-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.btn-mensaje-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+/* Responsive para modal de mensajes */
+@media (max-width: 768px) {
+  .modal-mensaje-proveedor {
+    min-width: 90%;
+    max-width: 90%;
+  }
+
+  .modal-mensaje-icono {
+    font-size: 48px;
+  }
+
+  .modal-mensaje-header h3 {
+    font-size: 18px;
+  }
+
+  .modal-mensaje-body {
+    padding: 20px;
+    font-size: 14px;
+  }
+}
