@@ -196,37 +196,12 @@
 }
 
 /* Campo de número de traslado especial */
-.traslado-numero-display {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
 .traslado-numero-input {
-  flex: 1;
   font-weight: 700 !important;
   font-size: 18px !important;
   color: #1e88e5 !important;
   text-align: center;
   letter-spacing: 1px;
-}
-
-.traslado-btn-cerrar {
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
-}
-
-.traslado-btn-cerrar:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(229, 57, 53, 0.4);
 }
 
 /* ============================================
@@ -467,16 +442,6 @@
   .traslado-table tbody td {
     padding: 10px;
   }
-
-  .traslado-numero-display {
-    flex-direction: column;
-  }
-
-  .traslado-btn-cerrar {
-    width: 100%;
-  }
-}
-
 @media (max-width: 480px) {
   .traslado-icon {
     font-size: 32px;
@@ -494,4 +459,5 @@
     padding: 10px 20px;
     font-size: 14px;
   }
+}
 }

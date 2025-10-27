@@ -383,21 +383,12 @@ const TrasladoMateriales = () => {
               <label className="traslado-form-label">
                 🔢 N° Traslado
               </label>
-              <div className="traslado-numero-display">
-                <input
-                  type="text"
-                  className="traslado-form-input traslado-numero-input"
-                  value={numeroTraslado}
-                  disabled
-                />
-                <button 
-                  className="traslado-btn-cerrar"
-                  onClick={handleLimpiar}
-                  title="Cerrar"
-                >
-                  Cerrar
-                </button>
-              </div>
+              <input
+                type="text"
+                className="traslado-form-input traslado-numero-input"
+                value={numeroTraslado}
+                disabled
+              />
             </div>
 
           </div>
