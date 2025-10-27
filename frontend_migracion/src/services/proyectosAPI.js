@@ -279,6 +279,59 @@ export const crearSubproyecto = async (idProyecto, subproyectoData) => {
   }
 };
 
+/**
+ * Actualizar subproyecto
+ */
+export const actualizarSubproyecto = async (idProyecto, idSubproyecto, subproyectoData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/proyectos/${idProyecto}/subproyectos/${idSubproyecto}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(subproyectoData)
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data;
+    }
+    
+    // Si hay errores de validación
+    if (data.errors) {
+      const errores = Object.values(data.errors).flat().join('\n');
+      throw new Error(errores);
+    }
+    
+    throw new Error(data.message || 'Error al actualizar subproyecto');
+  } catch (error) {
+    console.error('Error en actualizarSubproyecto:', error);
+    throw error;
+  }
+};
+
+/**
+ * Eliminar (desactivar) subproyecto
+ */
+export const eliminarSubproyecto = async (idProyecto, idSubproyecto) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/proyectos/${idProyecto}/subproyectos/${idSubproyecto}`, {
+      method: 'DELETE'
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data;
+    }
+    throw new Error(data.message || 'Error al eliminar subproyecto');
+  } catch (error) {
+    console.error('Error en eliminarSubproyecto:', error);
+    throw error;
+  }
+};
+
 export default {
   // Catálogos
   obtenerEmpresas,
@@ -296,5 +349,7 @@ export default {
   
   // Subproyectos
   obtenerSubproyectos,
-  crearSubproyecto
+  crearSubproyecto,
+  actualizarSubproyecto,
+  eliminarSubproyecto
 };

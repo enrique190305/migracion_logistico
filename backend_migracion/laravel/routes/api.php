@@ -242,6 +242,8 @@ Route::prefix('proyectos')->group(function () {
     // SUBPROYECTOS
     Route::get('/{id}/subproyectos', [ProyectoController::class, 'obtenerSubproyectos']);
     Route::post('/{id}/subproyectos', [ProyectoController::class, 'crearSubproyecto']);
+    Route::put('/{idProyecto}/subproyectos/{idSubproyecto}', [ProyectoController::class, 'actualizarSubproyecto']);
+    Route::delete('/{idProyecto}/subproyectos/{idSubproyecto}', [ProyectoController::class, 'eliminarSubproyecto']);
 });
 
 /*

@@ -77,6 +77,35 @@ const RegistroProyecto = () => {
     fecha_registro: new Date().toISOString().split('T')[0]
   });
 
+  // Estados para editar subproyecto
+  const [editandoSubproyecto, setEditandoSubproyecto] = useState(false);
+  const [subproyectoEditando, setSubproyectoEditando] = useState(null);
+  const [formEditarSubproyecto, setFormEditarSubproyecto] = useState({
+    nombre_proyecto: '',
+    descripcion: '',
+    responsable: '',
+    fecha_registro: ''
+  });
+
+  // Estados para editar móvil sin proyecto (persona)
+  const [editandoPersona, setEditandoPersona] = useState(false);
+  const [personaEditando, setPersonaEditando] = useState(null);
+  const [formEditarPersona, setFormEditarPersona] = useState({
+    nombre_proyecto: '',
+    responsable: '',
+    fecha_registro: ''
+  });
+
+  // Estados para editar proyecto con subproyectos
+  const [editandoProyecto, setEditandoProyecto] = useState(false);
+  const [proyectoEditando, setProyectoEditando] = useState(null);
+  const [formEditarProyecto, setFormEditarProyecto] = useState({
+    nombre_proyecto: '',
+    descripcion: '',
+    responsable: '',
+    fecha_registro: ''
+  });
+
   // Cargar datos iniciales
   useEffect(() => {
     cargarEmpresas();
@@ -467,9 +496,19 @@ const RegistroProyecto = () => {
 
     setLoading(true);
     try {
+      // ✅ Obtener usuario logueado del localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const idUsuarioLogueado = user.id || 1; // Por defecto ID 1 si no hay usuario
+
+      // ✅ Agregar id_usuario_logueado al objeto a enviar
+      const datosSubproyecto = {
+        ...formSubproyecto,
+        id_usuario_logueado: idUsuarioLogueado
+      };
+
       const response = await proyectosAPI.crearSubproyecto(
         proyectoSeleccionado.id_proyecto_almacen,
-        formSubproyecto
+        datosSubproyecto
       );
 
       mostrarNotificacion(
@@ -524,6 +563,447 @@ const RegistroProyecto = () => {
       fecha_registro: new Date().toISOString().split('T')[0]
     });
     setMostrarFormSubproyecto(false);
+  };
+
+  // Función para iniciar edición de subproyecto
+  const iniciarEdicionSubproyecto = (sub) => {
+    setSubproyectoEditando(sub);
+    setFormEditarSubproyecto({
+      nombre_proyecto: sub.nombre || sub.nombre_proyecto || '',
+      descripcion: sub.descripcion || '',
+      responsable: sub.id_responsable || '',
+      fecha_registro: sub.fecha_registro ? sub.fecha_registro.split('T')[0] : ''
+    });
+    setEditandoSubproyecto(true);
+  };
+
+  // Función para manejar cambios en el formulario de edición
+  const handleEditarSubproyectoChange = (e) => {
+    const { name, value } = e.target;
+    setFormEditarSubproyecto(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Función para guardar edición
+  const handleSubmitEditarSubproyecto = async (e) => {
+    e.preventDefault();
+    
+    if (!formEditarSubproyecto.nombre_proyecto || !formEditarSubproyecto.responsable) {
+      mostrarNotificacion(
+        'warning',
+        'Datos Incompletos',
+        'Debe completar todos los campos obligatorios.',
+        [
+          { label: '⚠️ Campos requeridos', valor: 'Nombre del Subproyecto y Responsable' }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await proyectosAPI.actualizarSubproyecto(
+        proyectoSeleccionado.id_proyecto_almacen,
+        subproyectoEditando.id_proyecto_almacen || subproyectoEditando.id,
+        formEditarSubproyecto
+      );
+
+      mostrarNotificacion(
+        'success',
+        'Subproyecto Actualizado',
+        'El subproyecto se ha actualizado correctamente.',
+        [
+          { label: '📋 Subproyecto', valor: formEditarSubproyecto.nombre_proyecto },
+          { label: '✅ Estado', valor: 'Actualizado' }
+        ]
+      );
+
+      // Cerrar formulario de edición
+      setEditandoSubproyecto(false);
+      setSubproyectoEditando(null);
+
+      // Recargar subproyectos
+      const subs = await proyectosAPI.obtenerSubproyectos(proyectoSeleccionado.id_proyecto_almacen);
+      setSubproyectos(subs);
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al actualizar subproyecto:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Actualizar',
+        'Ocurrió un error al intentar actualizar el subproyecto.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para cancelar edición
+  const cancelarEdicionSubproyecto = () => {
+    setEditandoSubproyecto(false);
+    setSubproyectoEditando(null);
+    setFormEditarSubproyecto({
+      nombre_proyecto: '',
+      descripcion: '',
+      responsable: '',
+      fecha_registro: ''
+    });
+  };
+
+  // Función para eliminar (desactivar) subproyecto
+  const eliminarSubproyectoHandler = async (sub) => {
+    const confirmar = window.confirm(
+      `¿Está seguro de eliminar el subproyecto "${sub.nombre || sub.nombre_proyecto}"?\n\n` +
+      `Código: ${sub.codigo_proyecto || 'N/A'}\n` +
+      `Esta acción desactivará el subproyecto y no se podrá revertir.`
+    );
+
+    if (!confirmar) return;
+
+    setLoading(true);
+    try {
+      await proyectosAPI.eliminarSubproyecto(
+        proyectoSeleccionado.id_proyecto_almacen,
+        sub.id_proyecto_almacen || sub.id
+      );
+
+      mostrarNotificacion(
+        'success',
+        'Subproyecto Eliminado',
+        'El subproyecto ha sido desactivado exitosamente.',
+        [
+          { label: '📋 Subproyecto', valor: sub.nombre || sub.nombre_proyecto },
+          { label: '🗑️ Acción', valor: 'Desactivado' }
+        ]
+      );
+
+      // Recargar subproyectos
+      const subs = await proyectosAPI.obtenerSubproyectos(proyectoSeleccionado.id_proyecto_almacen);
+      setSubproyectos(subs);
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al eliminar subproyecto:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Eliminar',
+        'Ocurrió un error al intentar eliminar el subproyecto.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========================================
+  // FUNCIONES PARA MÓVILES SIN PROYECTO (PERSONA)
+  // ========================================
+
+  // Función para iniciar edición de persona
+  const iniciarEdicionPersona = (persona) => {
+    setPersonaEditando(persona);
+    setFormEditarPersona({
+      nombre_proyecto: persona.nombre_proyecto || '',
+      responsable: persona.id_responsable || '',
+      fecha_registro: persona.fecha_registro ? persona.fecha_registro.split('T')[0] : ''
+    });
+    setEditandoPersona(true);
+  };
+
+  // Función para manejar cambios en el formulario de edición de persona
+  const handleEditarPersonaChange = (e) => {
+    const { name, value } = e.target;
+    setFormEditarPersona(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Función para guardar edición de persona
+  const handleSubmitEditarPersona = async (e) => {
+    e.preventDefault();
+    
+    if (!formEditarPersona.nombre_proyecto || !formEditarPersona.responsable) {
+      mostrarNotificacion(
+        'warning',
+        'Datos Incompletos',
+        'Debe completar todos los campos obligatorios.',
+        [
+          { label: '⚠️ Campos requeridos', valor: 'Nombre y Responsable' }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await proyectosAPI.actualizarProyecto(
+        personaEditando.id_proyecto_almacen,
+        formEditarPersona
+      );
+
+      mostrarNotificacion(
+        'success',
+        'Móvil sin Proyecto Actualizado',
+        'Los datos se han actualizado correctamente.',
+        [
+          { label: '👤 Persona', valor: formEditarPersona.nombre_proyecto },
+          { label: '✅ Estado', valor: 'Actualizado' }
+        ]
+      );
+
+      // Cerrar formulario de edición
+      setEditandoPersona(false);
+      setPersonaEditando(null);
+
+      // Recargar proyectos
+      await cargarProyectos();
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al actualizar persona:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Actualizar',
+        'Ocurrió un error al intentar actualizar los datos.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para cancelar edición de persona
+  const cancelarEdicionPersona = () => {
+    setEditandoPersona(false);
+    setPersonaEditando(null);
+    setFormEditarPersona({
+      nombre_proyecto: '',
+      responsable: '',
+      fecha_registro: ''
+    });
+  };
+
+  // Función para eliminar (desactivar) móvil sin proyecto
+  const eliminarPersonaHandler = async (persona) => {
+    const confirmar = window.confirm(
+      `¿Está seguro de eliminar el móvil sin proyecto "${persona.nombre_proyecto}"?\n\n` +
+      `Código: ${persona.codigo_proyecto || 'N/A'}\n` +
+      `Esta acción desactivará el registro y no se podrá revertir.`
+    );
+
+    if (!confirmar) return;
+
+    setLoading(true);
+    try {
+      await proyectosAPI.eliminarProyecto(persona.id_proyecto_almacen);
+
+      mostrarNotificacion(
+        'success',
+        'Móvil sin Proyecto Eliminado',
+        'El registro ha sido desactivado exitosamente.',
+        [
+          { label: '👤 Persona', valor: persona.nombre_proyecto },
+          { label: '🗑️ Acción', valor: 'Desactivado' }
+        ]
+      );
+
+      // Recargar proyectos
+      await cargarProyectos();
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al eliminar persona:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Eliminar',
+        'Ocurrió un error al intentar eliminar el registro.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ========================================
+  // FUNCIONES PARA PROYECTOS CON SUBPROYECTOS
+  // ========================================
+
+  // Función para iniciar edición de proyecto
+  const iniciarEdicionProyecto = (proyecto) => {
+    setProyectoEditando(proyecto);
+    setFormEditarProyecto({
+      nombre_proyecto: proyecto.nombre_proyecto || '',
+      descripcion: proyecto.descripcion || '',
+      responsable: proyecto.id_responsable || '',
+      fecha_registro: proyecto.fecha_registro ? proyecto.fecha_registro.split('T')[0] : ''
+    });
+    setEditandoProyecto(true);
+  };
+
+  // Función para manejar cambios en el formulario de edición de proyecto
+  const handleEditarProyectoChange = (e) => {
+    const { name, value } = e.target;
+    setFormEditarProyecto(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Función para guardar edición de proyecto
+  const handleSubmitEditarProyecto = async (e) => {
+    e.preventDefault();
+    
+    if (!formEditarProyecto.nombre_proyecto || !formEditarProyecto.responsable) {
+      mostrarNotificacion(
+        'warning',
+        'Datos Incompletos',
+        'Debe completar todos los campos obligatorios.',
+        [
+          { label: '⚠️ Campos requeridos', valor: 'Nombre del Proyecto y Responsable' }
+        ]
+      );
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await proyectosAPI.actualizarProyecto(
+        proyectoEditando.id_proyecto_almacen,
+        formEditarProyecto
+      );
+
+      mostrarNotificacion(
+        'success',
+        'Proyecto Actualizado',
+        'El proyecto se ha actualizado correctamente.',
+        [
+          { label: '📋 Proyecto', valor: formEditarProyecto.nombre_proyecto },
+          { label: '✅ Estado', valor: 'Actualizado' }
+        ]
+      );
+
+      // Cerrar formulario de edición
+      setEditandoProyecto(false);
+      setProyectoEditando(null);
+
+      // Recargar proyectos
+      await cargarProyectos();
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al actualizar proyecto:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Actualizar',
+        'Ocurrió un error al intentar actualizar el proyecto.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Función para cancelar edición de proyecto
+  const cancelarEdicionProyecto = () => {
+    setEditandoProyecto(false);
+    setProyectoEditando(null);
+    setFormEditarProyecto({
+      nombre_proyecto: '',
+      descripcion: '',
+      responsable: '',
+      fecha_registro: ''
+    });
+  };
+
+  // Función para eliminar (desactivar) proyecto con subproyectos
+  const eliminarProyectoHandler = async (proyecto) => {
+    // Verificar si tiene subproyectos activos
+    if (proyecto.cantidad_subproyectos > 0) {
+      mostrarNotificacion(
+        'warning',
+        'No se puede Eliminar',
+        'Este proyecto tiene subproyectos activos.',
+        [
+          { label: '⚠️ Proyecto', valor: proyecto.nombre_proyecto },
+          { label: '📋 Subproyectos', valor: `${proyecto.cantidad_subproyectos} activos` },
+          { label: '💡 Sugerencia', valor: 'Elimine primero los subproyectos' }
+        ]
+      );
+      return;
+    }
+
+    const confirmar = window.confirm(
+      `¿Está seguro de eliminar el proyecto "${proyecto.nombre_proyecto}"?\n\n` +
+      `Código: ${proyecto.codigo_proyecto || 'N/A'}\n` +
+      `Esta acción desactivará el proyecto y no se podrá revertir.`
+    );
+
+    if (!confirmar) return;
+
+    setLoading(true);
+    try {
+      await proyectosAPI.eliminarProyecto(proyecto.id_proyecto_almacen);
+
+      mostrarNotificacion(
+        'success',
+        'Proyecto Eliminado',
+        'El proyecto ha sido desactivado exitosamente.',
+        [
+          { label: '📋 Proyecto', valor: proyecto.nombre_proyecto },
+          { label: '🗑️ Acción', valor: 'Desactivado' }
+        ]
+      );
+
+      // Recargar proyectos
+      await cargarProyectos();
+
+      setTimeout(() => {
+        cerrarNotificacion();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error al eliminar proyecto:', error);
+      mostrarNotificacion(
+        'error',
+        'Error al Eliminar',
+        'Ocurrió un error al intentar eliminar el proyecto.',
+        [
+          { label: '❌ Error', valor: error.message || 'Error desconocido' }
+        ]
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Renderizado condicional según la vista
@@ -613,6 +1093,81 @@ const RegistroProyecto = () => {
           </div>
         )}
 
+        {/* Formulario para editar subproyecto */}
+        {editandoSubproyecto && (
+          <div className="subproyecto-form-container modal-overlay">
+            <div className="modal-content">
+              <form onSubmit={handleSubmitEditarSubproyecto} className="subproyecto-form">
+                <h3>Editar Subproyecto</h3>
+                <p className="form-description">
+                  Código: {subproyectoEditando?.codigo_proyecto || 'N/A'}
+                </p>
+
+                <div className="form-grid">
+                  <div className="form-group full-width">
+                    <label>Nombre del Subproyecto *</label>
+                    <input
+                      type="text"
+                      name="nombre_proyecto"
+                      value={formEditarSubproyecto.nombre_proyecto}
+                      onChange={handleEditarSubproyectoChange}
+                      placeholder="Ej: Subproyecto - Fase 1"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Responsable del Subproyecto *</label>
+                    <select
+                      name="responsable"
+                      value={formEditarSubproyecto.responsable}
+                      onChange={handleEditarSubproyectoChange}
+                      required
+                    >
+                      <option value="">Seleccione una persona</option>
+                      {personas.map(persona => (
+                        <option key={persona.id} value={persona.id}>
+                          {persona.nombre_completo || persona.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Descripción (Opcional)</label>
+                    <textarea
+                      name="descripcion"
+                      value={formEditarSubproyecto.descripcion}
+                      onChange={handleEditarSubproyectoChange}
+                      rows="3"
+                      placeholder="Descripción del subproyecto..."
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Fecha de Registro</label>
+                    <input
+                      type="date"
+                      name="fecha_registro"
+                      value={formEditarSubproyecto.fecha_registro}
+                      onChange={handleEditarSubproyectoChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" className="btn-secondary" onClick={cancelarEdicionSubproyecto}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-success" disabled={loading}>
+                    {loading ? 'Guardando...' : '✓ Guardar Cambios'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         <div className="subproyectos-container">
           <div className="subproyectos-header">
             <h3>Lista de Subproyectos</h3>
@@ -632,29 +1187,119 @@ const RegistroProyecto = () => {
               <div className="empty-state">
                 <div className="empty-icon">📋</div>
                 <p>No hay subproyectos registrados</p>
-                {!mostrarFormSubproyecto && (
-                  <button className="btn-primary" onClick={crearSubproyecto}>
-                    Crear el Primer Subproyecto
-                  </button>
-                )}
               </div>
             ) : (
               subproyectos.map(sub => (
                 <div key={sub.id || sub.id_proyecto_almacen} className="subproyecto-card">
-                  <div className="subproyecto-icon">📋</div>
-                  <h4>{sub.nombre || sub.nombre_proyecto}</h4>
-                  {sub.codigo_proyecto && (
-                    <p className="subproyecto-codigo">Código: {sub.codigo_proyecto}</p>
-                  )}
+                  <div className="subproyecto-header-card">
+                    <div className="subproyecto-icon">📋</div>
+                    <h4>{sub.nombre || sub.nombre_proyecto}</h4>
+                  </div>
+                  
+                  <div className="subproyecto-body">
+                    {sub.codigo_proyecto && (
+                      <div className="subproyecto-info-item codigo">
+                        <strong>Código:</strong> {sub.codigo_proyecto}
+                      </div>
+                    )}
+                    
+                    {sub.responsable && (
+                      <div className="subproyecto-info-item">
+                        <span className="info-label">👤 Responsable:</span>
+                        <span className="info-value">{sub.responsable}</span>
+                      </div>
+                    )}
+                    
+                    {sub.dni_responsable && (
+                      <div className="subproyecto-info-item">
+                        <span className="info-label">📄 DNI:</span>
+                        <span className="info-value">{sub.dni_responsable}</span>
+                      </div>
+                    )}
+                    
+                    {sub.fecha_registro && (
+                      <div className="subproyecto-info-item">
+                        <span className="info-label">📅 Fecha:</span>
+                        <span className="info-value">{new Date(sub.fecha_registro).toLocaleDateString('es-PE')}</span>
+                      </div>
+                    )}
+                    
+                    {sub.descripcion && (
+                      <div className="subproyecto-descripcion">
+                        <em>{sub.descripcion}</em>
+                      </div>
+                    )}
+                    
+                    <div className="subproyecto-estado">
+                      <span className={`badge ${sub.estado === 'ACTIVO' ? 'badge-activo' : 'badge-inactivo'}`}>
+                        {sub.estado}
+                      </span>
+                    </div>
+                  </div>
+                  
                   <div className="subproyecto-actions">
-                    <button className="btn-secondary">Ver Detalles</button>
-                    <button className="btn-secondary">Editar</button>
+                    <button 
+                      type="button"
+                      className="btn-icon btn-info" 
+                      title="Ver Detalles"
+                      onClick={() => {
+                        mostrarNotificacion(
+                          'info',
+                          'Detalles del Subproyecto',
+                          `Información completa de: ${sub.nombre || sub.nombre_proyecto}`,
+                          [
+                            { label: '📋 Código', valor: sub.codigo_proyecto || 'N/A' },
+                            { label: '📦 Proyecto Padre', valor: proyectoSeleccionado?.nombre_proyecto || proyectoSeleccionado?.codigo_proyecto },
+                            { label: '👤 Responsable', valor: sub.responsable || 'N/A' },
+                            { label: '📄 DNI', valor: sub.dni_responsable || 'N/A' },
+                            { label: '🏢 Empresa', valor: sub.empresa || 'N/A' },
+                            { label: '🏪 Bodega', valor: sub.bodega || 'N/A' },
+                            { label: '📍 Ubicación', valor: sub.ubicacion || 'N/A' },
+                            { label: '📦 Tipo Reserva', valor: sub.tipo_reserva || 'N/A' },
+                            { label: '📅 Fecha Registro', valor: sub.fecha_registro ? new Date(sub.fecha_registro).toLocaleDateString('es-PE') : 'N/A' },
+                            { label: '✅ Estado', valor: sub.estado || 'N/A' },
+                            { label: '📝 Descripción', valor: sub.descripcion || 'Sin descripción' }
+                          ]
+                        );
+                      }}
+                    >
+                      📄 Ver Detalles
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      className="btn-icon btn-warning"
+                      title="Editar Subproyecto"
+                      onClick={() => iniciarEdicionSubproyecto(sub)}
+                    >
+                      ✏️ Editar
+                    </button>
+                    
+                    <button 
+                      type="button"
+                      className="btn-icon btn-danger"
+                      title="Eliminar Subproyecto"
+                      onClick={() => eliminarSubproyectoHandler(sub)}
+                    >
+                      🗑️ Eliminar
+                    </button>
                   </div>
                 </div>
               ))
             )}
           </div>
         </div>
+
+        {/* Componente de Notificación para la vista de subproyectos */}
+        {notificacion && (
+          <Notificacion
+            tipo={notificacion.tipo}
+            titulo={notificacion.titulo}
+            mensaje={notificacion.mensaje}
+            detalles={notificacion.detalles}
+            onClose={cerrarNotificacion}
+          />
+        )}
       </div>
     );
   }
@@ -1066,6 +1711,7 @@ const RegistroProyecto = () => {
                       <h4>{proyecto.nombre_proyecto || proyecto.codigo_proyecto}</h4>
                       <p className="proyecto-codigo">Código: {proyecto.codigo_proyecto}</p>
                       <p className="proyecto-tipo">Proyecto con Subproyectos</p>
+                      
                       <button 
                         className="btn-secondary"
                         onClick={() => verSubproyectos(proyecto)}
@@ -1073,6 +1719,50 @@ const RegistroProyecto = () => {
                       >
                         Ver Subproyectos ({proyecto.cantidad_subproyectos || 0})
                       </button>
+
+                      {/* Botones de acción */}
+                      <div className="proyecto-actions">
+                        <button 
+                          className="btn-action btn-info-action" 
+                          title="Ver Detalles"
+                          onClick={() => {
+                            mostrarNotificacion(
+                              'info',
+                              'Detalles del Proyecto',
+                              `Información completa de: ${proyecto.nombre_proyecto || proyecto.codigo_proyecto}`,
+                              [
+                                { label: '📋 Código', valor: proyecto.codigo_proyecto || 'N/A' },
+                                { label: '📊 Nombre', valor: proyecto.nombre_proyecto || 'N/A' },
+                                { label: '🏢 Empresa', valor: proyecto.empresa_nombre || 'N/A' },
+                                { label: '🏪 Bodega', valor: proyecto.bodega_nombre || 'N/A' },
+                                { label: '📍 Ubicación', valor: proyecto.bodega_ubicacion || 'N/A' },
+                                { label: '📦 Tipo Reserva', valor: proyecto.reserva_tipo || 'N/A' },
+                                { label: '📁 Subproyectos', valor: `${proyecto.cantidad_subproyectos || 0} activos` },
+                                { label: '📅 Fecha Registro', valor: proyecto.fecha_registro ? new Date(proyecto.fecha_registro).toLocaleDateString('es-PE') : 'N/A' },
+                                { label: '✅ Estado', valor: proyecto.estado || 'N/A' }
+                              ]
+                            );
+                          }}
+                        >
+                          📄 Ver Detalles
+                        </button>
+                        
+                        <button 
+                          className="btn-action btn-warning-action"
+                          title="Editar Proyecto"
+                          onClick={() => iniciarEdicionProyecto(proyecto)}
+                        >
+                          ✏️ Editar
+                        </button>
+                        
+                        <button 
+                          className="btn-action btn-danger-action"
+                          title="Eliminar Proyecto"
+                          onClick={() => eliminarProyectoHandler(proyecto)}
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </div>
                     </div>
                   ))
               )}
@@ -1113,11 +1803,193 @@ const RegistroProyecto = () => {
                           <p className="info-item">🏢 {proyecto.empresa_nombre}</p>
                         </div>
                       )}
+                      
+                      {/* Botones de acción */}
+                      <div className="proyecto-actions">
+                        <button 
+                          className="btn-action btn-info-action" 
+                          title="Ver Detalles"
+                          onClick={() => {
+                            mostrarNotificacion(
+                              'info',
+                              'Detalles del Móvil sin Proyecto',
+                              `Información completa de: ${proyecto.nombre_proyecto || proyecto.codigo_proyecto}`,
+                              [
+                                { label: '📋 Código', valor: proyecto.codigo_proyecto || 'N/A' },
+                                { label: '👤 Nombre', valor: proyecto.nombre_proyecto || 'N/A' },
+                                { label: '🏢 Empresa', valor: proyecto.empresa_nombre || 'N/A' },
+                                { label: '🏪 Bodega', valor: proyecto.bodega_nombre || 'N/A' },
+                                { label: '📍 Ubicación', valor: proyecto.bodega_ubicacion || 'N/A' },
+                                { label: '📦 Tipo Reserva', valor: proyecto.reserva_tipo || 'N/A' },
+                                { label: '📅 Fecha Registro', valor: proyecto.fecha_registro ? new Date(proyecto.fecha_registro).toLocaleDateString('es-PE') : 'N/A' },
+                                { label: '✅ Estado', valor: proyecto.estado || 'N/A' }
+                              ]
+                            );
+                          }}
+                        >
+                          📄 Ver Detalles
+                        </button>
+                        
+                        <button 
+                          className="btn-action btn-warning-action"
+                          title="Editar Móvil"
+                          onClick={() => iniciarEdicionPersona(proyecto)}
+                        >
+                          ✏️ Editar
+                        </button>
+                        
+                        <button 
+                          className="btn-action btn-danger-action"
+                          title="Eliminar Móvil"
+                          onClick={() => eliminarPersonaHandler(proyecto)}
+                        >
+                          🗑️ Eliminar
+                        </button>
+                      </div>
                     </div>
                   ))
               )}
             </div>
           </>
+        )}
+
+        {/* Modal para editar móvil sin proyecto (persona) */}
+        {editandoPersona && (
+          <div className="subproyecto-form-container modal-overlay">
+            <div className="modal-content">
+              <form onSubmit={handleSubmitEditarPersona} className="subproyecto-form">
+                <h3>Editar Móvil sin Proyecto</h3>
+                <p className="form-description">
+                  Código: {personaEditando?.codigo_proyecto || 'N/A'}
+                </p>
+
+                <div className="form-grid">
+                  <div className="form-group full-width">
+                    <label>Nombre de la Persona *</label>
+                    <input
+                      type="text"
+                      name="nombre_proyecto"
+                      value={formEditarPersona.nombre_proyecto}
+                      onChange={handleEditarPersonaChange}
+                      placeholder="Ej: Juan Pérez"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Responsable *</label>
+                    <select
+                      name="responsable"
+                      value={formEditarPersona.responsable}
+                      onChange={handleEditarPersonaChange}
+                      required
+                    >
+                      <option value="">Seleccione una persona</option>
+                      {personas.map(persona => (
+                        <option key={persona.id} value={persona.id}>
+                          {persona.nombre_completo || persona.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Fecha de Registro</label>
+                    <input
+                      type="date"
+                      name="fecha_registro"
+                      value={formEditarPersona.fecha_registro}
+                      onChange={handleEditarPersonaChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" className="btn-secondary" onClick={cancelarEdicionPersona}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-success" disabled={loading}>
+                    {loading ? 'Guardando...' : '✓ Guardar Cambios'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para editar proyecto con subproyectos */}
+        {editandoProyecto && (
+          <div className="subproyecto-form-container modal-overlay">
+            <div className="modal-content">
+              <form onSubmit={handleSubmitEditarProyecto} className="subproyecto-form">
+                <h3>Editar Proyecto</h3>
+                <p className="form-description">
+                  Código: {proyectoEditando?.codigo_proyecto || 'N/A'}
+                </p>
+
+                <div className="form-grid">
+                  <div className="form-group full-width">
+                    <label>Nombre del Proyecto *</label>
+                    <input
+                      type="text"
+                      name="nombre_proyecto"
+                      value={formEditarProyecto.nombre_proyecto}
+                      onChange={handleEditarProyectoChange}
+                      placeholder="Ej: Proyecto Principal"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Responsable del Proyecto *</label>
+                    <select
+                      name="responsable"
+                      value={formEditarProyecto.responsable}
+                      onChange={handleEditarProyectoChange}
+                      required
+                    >
+                      <option value="">Seleccione una persona</option>
+                      {personas.map(persona => (
+                        <option key={persona.id} value={persona.id}>
+                          {persona.nombre_completo || persona.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Descripción (Opcional)</label>
+                    <textarea
+                      name="descripcion"
+                      value={formEditarProyecto.descripcion}
+                      onChange={handleEditarProyectoChange}
+                      rows="3"
+                      placeholder="Descripción del proyecto..."
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Fecha de Registro</label>
+                    <input
+                      type="date"
+                      name="fecha_registro"
+                      value={formEditarProyecto.fecha_registro}
+                      onChange={handleEditarProyectoChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-actions">
+                  <button type="button" className="btn-secondary" onClick={cancelarEdicionProyecto}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-success" disabled={loading}>
+                    {loading ? 'Guardando...' : '✓ Guardar Cambios'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
 

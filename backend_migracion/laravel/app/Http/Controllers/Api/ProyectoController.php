@@ -193,8 +193,8 @@ class ProyectoController extends Controller
             // Enriquecer con información de subproyectos
             $proyectos = collect($proyectos)->map(function ($proyecto) {
                 if ($proyecto->tipo_movil === 'CON_PROYECTO') {
-                    // Contar subproyectos
-                    $cantidadSubproyectos = MovilProyecto::where('proyecto_padre_id', $proyecto->id_proyecto_almacen)
+                    // ✅ Contar subproyectos correctamente usando id_referencia
+                    $cantidadSubproyectos = MovilProyecto::where('proyecto_padre_id', $proyecto->id_referencia)
                         ->where('estado', 'ACTIVO')
                         ->count();
                     
@@ -329,7 +329,7 @@ class ProyectoController extends Controller
                         'empresa:id_empresa,razon_social',
                         'bodega:id_bodega,nombre',
                         'reserva:id_reserva,tipo_reserva',
-                        'responsable:id,nombre,usuario'
+                        'responsable:id_personal,nom_ape,dni' // ✅ Corregido: usar campos de tabla 'personal'
                     ])
                     ->where('proyecto_padre_id', $movilProyecto->id_movil_proyecto)
                     ->where('estado', 'ACTIVO')
@@ -361,6 +361,8 @@ class ProyectoController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre_proyecto' => 'sometimes|required|max:200',
             'descripcion' => 'nullable|string',
+            'responsable' => 'sometimes|required|exists:personal,id_personal',
+            'fecha_registro' => 'sometimes|required|date',
             'estado' => 'sometimes|in:ACTIVO,INACTIVO'
         ]);
 
@@ -382,6 +384,9 @@ class ProyectoController extends Controller
             if ($request->has('descripcion')) {
                 $proyectoAlmacen->descripcion = $request->descripcion;
             }
+            if ($request->has('fecha_registro')) {
+                $proyectoAlmacen->fecha_registro = $request->fecha_registro;
+            }
             if ($request->has('estado')) {
                 $proyectoAlmacen->estado = $request->estado;
             }
@@ -398,10 +403,34 @@ class ProyectoController extends Controller
                     if ($request->has('descripcion')) {
                         $movilProyecto->descripcion = $request->descripcion;
                     }
+                    if ($request->has('responsable')) {
+                        $movilProyecto->id_responsable = $request->responsable;
+                    }
+                    if ($request->has('fecha_registro')) {
+                        $movilProyecto->fecha_registro = $request->fecha_registro;
+                    }
                     if ($request->has('estado')) {
                         $movilProyecto->estado = $request->estado;
                     }
                     $movilProyecto->save();
+                }
+            } else {
+                // Para móviles sin proyecto (SIN_PROYECTO)
+                $movilPersona = MovilPersona::find($proyectoAlmacen->id_referencia);
+                if ($movilPersona) {
+                    if ($request->has('nombre_proyecto')) {
+                        $movilPersona->nombre = $request->nombre_proyecto;
+                    }
+                    if ($request->has('responsable')) {
+                        $movilPersona->id_responsable = $request->responsable;
+                    }
+                    if ($request->has('fecha_registro')) {
+                        $movilPersona->fecha_registro = $request->fecha_registro;
+                    }
+                    if ($request->has('estado')) {
+                        $movilPersona->estado = $request->estado;
+                    }
+                    $movilPersona->save();
                 }
             }
 
@@ -513,7 +542,7 @@ class ProyectoController extends Controller
                 'empresa:id_empresa,razon_social',
                 'bodega:id_bodega,nombre,ubicacion',
                 'reserva:id_reserva,tipo_reserva',
-                'responsable:id,nombre,usuario',
+                'responsable:id_personal,nom_ape,dni', // ✅ Corregido: usar campos de tabla 'personal'
                 'proyectoAlmacen'
             ])
             ->where('proyecto_padre_id', $movilProyecto->id_movil_proyecto)
@@ -531,7 +560,8 @@ class ProyectoController extends Controller
                     'bodega' => $sub->bodega->nombre ?? null,
                     'ubicacion' => $sub->bodega->ubicacion ?? null,
                     'tipo_reserva' => $sub->reserva->tipo_reserva ?? null,
-                    'responsable' => ($sub->responsable->nombre ?? '') . ' ' . ($sub->responsable->usuario ?? ''),
+                    'responsable' => $sub->responsable->nom_ape ?? 'Sin responsable', // ✅ Corregido: usar nom_ape
+                    'dni_responsable' => $sub->responsable->dni ?? null,
                     'fecha_registro' => $sub->fecha_registro,
                     'estado' => $sub->estado
                 ];
@@ -559,8 +589,9 @@ class ProyectoController extends Controller
     $validator = Validator::make($request->all(), [
         'nombre_proyecto' => 'required|max:100',
         'descripcion' => 'nullable|string',
-        'responsable' => 'required|exists:personal,id_personal', // ✅ Ahora valida contra personal
-        'fecha_registro' => 'required|date'
+        'responsable' => 'required|integer', // ✅ ID del personal responsable
+        'fecha_registro' => 'required|date',
+        'id_usuario_logueado' => 'nullable|integer' // ✅ Usuario que registra (opcional con default)
     ]);
 
     if ($validator->fails()) {
@@ -584,13 +615,17 @@ class ProyectoController extends Controller
 
         $movilProyectoPadre = MovilProyecto::find($proyectoAlmacen->id_referencia);
 
-        // Crear subproyecto usando la nueva columna
+        // ✅ Obtener usuario logueado del localStorage (enviado desde frontend)
+        $idUsuarioLogueado = $request->input('id_usuario_logueado', 1); // Por defecto ID 1
+
+        // Crear subproyecto
         $subproyecto = MovilProyecto::create([
+            'id_persona' => $idUsuarioLogueado, // ✅ Usuario que registra
             'nombre_proyecto' => $request->nombre_proyecto,
             'id_empresa' => $proyectoAlmacen->id_empresa,
             'id_bodega' => $proyectoAlmacen->id_bodega,
             'id_reserva' => $proyectoAlmacen->id_reserva,
-            'id_responsable_personal' => $request->responsable, // ✅ Nueva columna
+            'id_responsable' => $request->responsable, // ✅ Responsable del subproyecto
             'descripcion' => $request->descripcion,
             'fecha_registro' => $request->fecha_registro,
             'puede_subproyectos' => 0,
@@ -598,13 +633,44 @@ class ProyectoController extends Controller
             'estado' => 'ACTIVO'
         ]);
 
-        // ... resto del código igual
+        // ✅ Crear entrada en PROYECTO_ALMACEN para el subproyecto
+        $proyectoAlmacenSub = ProyectoAlmacen::create([
+            'tipo_movil' => 'CON_PROYECTO',
+            'id_referencia' => $subproyecto->id_movil_proyecto,
+            'id_empresa' => $proyectoAlmacen->id_empresa,
+            'id_bodega' => $proyectoAlmacen->id_bodega,
+            'id_reserva' => $proyectoAlmacen->id_reserva,
+            'nombre_proyecto' => $request->nombre_proyecto,
+            'fecha_registro' => $request->fecha_registro,
+            'estado' => 'ACTIVO'
+        ]);
+
+        // ✅ Generar código del proyecto (similar al padre)
+        $empresa = Empresa::find($proyectoAlmacen->id_empresa);
+        $bodega = Bodega::find($proyectoAlmacen->id_bodega);
+        $reserva = Reserva::find($proyectoAlmacen->id_reserva);
+        
+        $prefijoEmpresa = substr($empresa->razon_social, 0, 3);
+        $prefijoBodega = substr($bodega->nombre, 0, 3);
+        $prefijoReserva = substr($reserva->tipo_reserva, 0, 3);
+        
+        $codigoGenerado = strtoupper($prefijoEmpresa . '-' . $prefijoBodega . '-' . $prefijoReserva) 
+                        . '-SUB-' . str_pad($proyectoAlmacenSub->id_proyecto_almacen, 4, '0', STR_PAD_LEFT);
+        
+        // Actualizar código
+        $proyectoAlmacenSub->codigo_proyecto = $codigoGenerado;
+        $proyectoAlmacenSub->save();
+
         DB::commit();
 
         return response()->json([
             'success' => true,
             'message' => 'Subproyecto creado exitosamente',
-            'data' => $subproyecto
+            'data' => [
+                'subproyecto' => $subproyecto,
+                'codigo_proyecto' => $codigoGenerado,
+                'id_proyecto_almacen' => $proyectoAlmacenSub->id_proyecto_almacen
+            ]
         ], 201);
 
     } catch (\Exception $e) {
@@ -617,5 +683,144 @@ class ProyectoController extends Controller
     }
 }
 
+    /**
+     * Actualizar subproyecto
+     */
+    public function actualizarSubproyecto(Request $request, $idProyecto, $idSubproyecto)
+    {
+        $validator = Validator::make($request->all(), [
+            'nombre_proyecto' => 'sometimes|required|max:100',
+            'descripcion' => 'nullable|string',
+            'responsable' => 'sometimes|required|integer',
+            'fecha_registro' => 'sometimes|required|date'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Buscar el subproyecto en proyecto_almacen
+            $proyectoAlmacen = ProyectoAlmacen::findOrFail($idSubproyecto);
+            
+            if ($proyectoAlmacen->tipo_movil !== 'CON_PROYECTO') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este registro no es un proyecto válido'
+                ], 400);
+            }
+
+            // Obtener el registro en movil_proyecto
+            $subproyecto = MovilProyecto::findOrFail($proyectoAlmacen->id_referencia);
+            
+            // Verificar que sea un subproyecto
+            if (!$subproyecto->proyecto_padre_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este no es un subproyecto'
+                ], 400);
+            }
+
+            // Actualizar datos en movil_proyecto
+            if ($request->has('nombre_proyecto')) {
+                $subproyecto->nombre_proyecto = $request->nombre_proyecto;
+                $proyectoAlmacen->nombre_proyecto = $request->nombre_proyecto;
+            }
+            
+            if ($request->has('descripcion')) {
+                $subproyecto->descripcion = $request->descripcion;
+            }
+            
+            if ($request->has('responsable')) {
+                $subproyecto->id_responsable = $request->responsable;
+            }
+            
+            if ($request->has('fecha_registro')) {
+                $subproyecto->fecha_registro = $request->fecha_registro;
+                $proyectoAlmacen->fecha_registro = $request->fecha_registro;
+            }
+
+            $subproyecto->save();
+            $proyectoAlmacen->save();
+
+            DB::commit();
+
+            // Recargar con relaciones
+            $subproyecto->load(['responsable:id_personal,nom_ape,dni']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subproyecto actualizado exitosamente',
+                'data' => [
+                    'subproyecto' => $subproyecto,
+                    'codigo_proyecto' => $proyectoAlmacen->codigo_proyecto
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar subproyecto: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar subproyecto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar (desactivar) subproyecto
+     */
+    public function eliminarSubproyecto($idProyecto, $idSubproyecto)
+    {
+        DB::beginTransaction();
+        try {
+            // Buscar el subproyecto en proyecto_almacen
+            $proyectoAlmacen = ProyectoAlmacen::findOrFail($idSubproyecto);
+            
+            if ($proyectoAlmacen->tipo_movil !== 'CON_PROYECTO') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este registro no es un proyecto válido'
+                ], 400);
+            }
+
+            // Obtener el registro en movil_proyecto
+            $subproyecto = MovilProyecto::findOrFail($proyectoAlmacen->id_referencia);
+            
+            // Verificar que sea un subproyecto
+            if (!$subproyecto->proyecto_padre_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este no es un subproyecto'
+                ], 400);
+            }
+
+            // Cambiar estado a INACTIVO en lugar de eliminar
+            $subproyecto->estado = 'INACTIVO';
+            $subproyecto->save();
+
+            $proyectoAlmacen->estado = 'INACTIVO';
+            $proyectoAlmacen->save();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subproyecto eliminado (desactivado) exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al eliminar subproyecto: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al eliminar subproyecto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }

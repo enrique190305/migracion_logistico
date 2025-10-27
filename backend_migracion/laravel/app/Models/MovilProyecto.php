@@ -11,6 +11,7 @@ class MovilProyecto extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'id_persona',
         'nombre_proyecto',
         'id_empresa',
         'id_bodega',
@@ -44,9 +45,14 @@ class MovilProyecto extends Model
         return $this->belongsTo(Reserva::class, 'id_reserva', 'id_reserva');
     }
 
+    public function usuarioRegistra()
+    {
+        return $this->belongsTo(User::class, 'id_persona', 'id');
+    }
+
     public function responsable()
     {
-        return $this->belongsTo(User::class, 'id_responsable', 'id');
+        return $this->belongsTo(Personal::class, 'id_responsable', 'id_personal');
     }
 
     public function proyectoPadre()
