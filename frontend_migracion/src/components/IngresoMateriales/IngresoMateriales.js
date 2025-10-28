@@ -63,6 +63,11 @@ const IngresoMateriales = () => {
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
 
+  // Estados para combobox de búsqueda de productos
+  const [busquedaProducto, setBusquedaProducto] = useState('');
+  const [dropdownAbiertoProducto, setDropdownAbiertoProducto] = useState(false);
+  const [dropdownPositionProducto, setDropdownPositionProducto] = useState({});
+
   // ============================================
   // EFECTOS INICIALES
   // ============================================
@@ -384,6 +389,8 @@ const IngresoMateriales = () => {
     setObservacionProducto('');
     setProductosAgregados([]);
     setFechaIngreso(new Date().toISOString().split('T')[0]);
+    setBusquedaProducto('');
+    setDropdownAbiertoProducto(false);
   };
 
   const handleLimpiarFiltros = () => {
@@ -396,6 +403,74 @@ const IngresoMateriales = () => {
     setMensaje({ tipo, texto });
     setTimeout(() => setMensaje({ tipo: '', texto: '' }), 5000);
   };
+
+  // ============================================
+  // FUNCIONES PARA COMBOBOX DE BÚSQUEDA
+  // ============================================
+
+  const handleBusquedaProductoChange = (valor) => {
+    setBusquedaProducto(valor);
+    setDropdownAbiertoProducto(true);
+
+    if (!valor) {
+      setProductoSeleccionado('');
+    }
+  };
+
+  const handleProductoSelect = (codigoProducto) => {
+    const producto = productos.find(p => p.codigo_producto === codigoProducto);
+    if (producto) {
+      setProductoSeleccionado(codigoProducto);
+      setBusquedaProducto(producto.descripcion);
+      setDropdownAbiertoProducto(false);
+    }
+  };
+
+  const filtrarProductos = () => {
+    const busqueda = (busquedaProducto || '').toLowerCase();
+    if (!busqueda) return productos;
+    
+    return productos.filter(prod => 
+      prod.descripcion.toLowerCase().includes(busqueda) ||
+      prod.codigo_producto.toLowerCase().includes(busqueda)
+    );
+  };
+
+  const handleBusquedaFocus = (event) => {
+    const rect = event.target.getBoundingClientRect();
+    setDropdownPositionProducto({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    });
+    setDropdownAbiertoProducto(true);
+  };
+
+  const toggleDropdownProducto = (event) => {
+    const input = event.target.closest('.combobox-input-wrapper').querySelector('.input-busqueda-producto');
+    const rect = input.getBoundingClientRect();
+    
+    setDropdownPositionProducto({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    });
+    
+    setDropdownAbiertoProducto(!dropdownAbiertoProducto);
+  };
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.producto-combobox') && 
+          !event.target.closest('.dropdown-productos-fixed')) {
+        setDropdownAbiertoProducto(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ============================================
   // FUNCIÓN RENDER: NUEVO INGRESO (OC/OS)
@@ -608,18 +683,27 @@ const IngresoMateriales = () => {
                 <label className="ingreso-form-label">
                   🔍 Producto
                 </label>
-                <select
-                  className="ingreso-form-select"
-                  value={productoSeleccionado}
-                  onChange={(e) => setProductoSeleccionado(e.target.value)}
-                >
-                  <option value="">-- Seleccione producto --</option>
-                  {productos.map((producto, index) => (
-                    <option key={index} value={producto.codigo_producto}>
-                      {producto.codigo_producto} - {producto.descripcion}
-                    </option>
-                  ))}
-                </select>
+                <div className="producto-combobox">
+                  <div className="combobox-input-wrapper">
+                    <input
+                      type="text"
+                      value={busquedaProducto}
+                      onChange={(e) => handleBusquedaProductoChange(e.target.value)}
+                      onFocus={(e) => handleBusquedaFocus(e)}
+                      placeholder="Seleccione o busque un producto..."
+                      className="input-busqueda-producto ingreso-form-input"
+                      autoComplete="off"
+                    />
+                    <button
+                      type="button"
+                      className="btn-dropdown-toggle"
+                      onClick={(e) => toggleDropdownProducto(e)}
+                      tabIndex="-1"
+                    >
+                      <span className={`dropdown-arrow ${dropdownAbiertoProducto ? 'open' : ''}`}>▼</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="ingreso-form-group">
@@ -1343,6 +1427,35 @@ const IngresoMateriales = () => {
         <div className="ingreso-loader">
           <div className="spinner"></div>
           <p>Cargando...</p>
+        </div>
+      )}
+
+      {/* Dropdown de productos (renderizado fuera con position fixed) */}
+      {dropdownAbiertoProducto && dropdownPositionProducto.top && (
+        <div 
+          className="dropdown-productos-fixed"
+          style={{
+            top: `${dropdownPositionProducto.top}px`,
+            left: `${dropdownPositionProducto.left}px`,
+            width: `${dropdownPositionProducto.width}px`
+          }}
+        >
+          {filtrarProductos().length > 0 ? (
+            filtrarProductos().map(prod => (
+              <div
+                key={prod.codigo_producto}
+                className="dropdown-item"
+                onClick={() => handleProductoSelect(prod.codigo_producto)}
+              >
+                <div className="dropdown-item-desc">{prod.descripcion}</div>
+                <div className="dropdown-item-codigo">Código: {prod.codigo_producto}</div>
+              </div>
+            ))
+          ) : (
+            <div className="dropdown-item-vacio">
+              {busquedaProducto ? '🔍 No se encontraron productos' : '📦 Comience a escribir para buscar'}
+            </div>
+          )}
         </div>
       )}
     </div>

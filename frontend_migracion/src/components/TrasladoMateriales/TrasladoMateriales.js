@@ -34,6 +34,11 @@ const TrasladoMateriales = () => {
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
 
+  // Estados para combobox de búsqueda de productos
+  const [busquedaProducto, setBusquedaProducto] = useState('');
+  const [dropdownAbiertoProducto, setDropdownAbiertoProducto] = useState(false);
+  const [dropdownPositionProducto, setDropdownPositionProducto] = useState({});
+
   // ============================================
   // EFECTOS INICIALES
   // ============================================
@@ -181,6 +186,8 @@ const TrasladoMateriales = () => {
     // Limpiar campos
     limpiarDetalleProducto();
     setDescripcionSeleccionada('');
+    setBusquedaProducto('');
+    setDropdownAbiertoProducto(false);
     
     mostrarMensaje('success', '✅ Producto agregado correctamente');
   };
@@ -224,6 +231,8 @@ const TrasladoMateriales = () => {
       setProductosATraslador([]);
       limpiarDetalleProducto();
       setDescripcionSeleccionada('');
+      setBusquedaProducto('');
+      setDropdownAbiertoProducto(false);
       mostrarMensaje('info', 'ℹ️ Formulario limpiado');
     }
   };
@@ -327,6 +336,71 @@ const TrasladoMateriales = () => {
     setMensaje({ tipo, texto });
     setTimeout(() => setMensaje({ tipo: '', texto: '' }), 5000);
   };
+
+  // ============================================
+  // FUNCIONES PARA COMBOBOX DE BÚSQUEDA
+  // ============================================
+
+  const handleBusquedaProductoChange = (valor) => {
+    setBusquedaProducto(valor);
+    setDropdownAbiertoProducto(true);
+
+    if (!valor) {
+      setDescripcionSeleccionada('');
+      limpiarDetalleProducto();
+    }
+  };
+
+  const handleProductoSelect = (descripcion) => {
+    setDescripcionSeleccionada(descripcion);
+    setBusquedaProducto(descripcion);
+    setDropdownAbiertoProducto(false);
+  };
+
+  const filtrarProductos = () => {
+    const busqueda = (busquedaProducto || '').toLowerCase();
+    if (!busqueda) return descripcionesProductos;
+    
+    return descripcionesProductos.filter(desc => 
+      desc.toLowerCase().includes(busqueda)
+    );
+  };
+
+  const handleBusquedaFocus = (event) => {
+    const rect = event.target.getBoundingClientRect();
+    setDropdownPositionProducto({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    });
+    setDropdownAbiertoProducto(true);
+  };
+
+  const toggleDropdownProducto = (event) => {
+    const input = event.target.closest('.combobox-input-wrapper').querySelector('.input-busqueda-producto');
+    const rect = input.getBoundingClientRect();
+    
+    setDropdownPositionProducto({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      width: rect.width
+    });
+    
+    setDropdownAbiertoProducto(!dropdownAbiertoProducto);
+  };
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.producto-combobox') && 
+          !event.target.closest('.dropdown-productos-fixed')) {
+        setDropdownAbiertoProducto(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ============================================
   // RENDERIZADO
@@ -456,18 +530,27 @@ const TrasladoMateriales = () => {
                   <label className="traslado-form-label">
                     📝 Descripción *
                   </label>
-                  <select
-                    className="traslado-form-select"
-                    value={descripcionSeleccionada}
-                    onChange={(e) => setDescripcionSeleccionada(e.target.value)}
-                  >
-                    <option value="">-- Seleccione un producto --</option>
-                    {descripcionesProductos.map((desc, index) => (
-                      <option key={index} value={desc}>
-                        {desc}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="producto-combobox">
+                    <div className="combobox-input-wrapper">
+                      <input
+                        type="text"
+                        value={busquedaProducto}
+                        onChange={(e) => handleBusquedaProductoChange(e.target.value)}
+                        onFocus={(e) => handleBusquedaFocus(e)}
+                        placeholder="Seleccione o busque un producto..."
+                        className="input-busqueda-producto traslado-form-input"
+                        autoComplete="off"
+                      />
+                      <button
+                        type="button"
+                        className="btn-dropdown-toggle"
+                        onClick={(e) => toggleDropdownProducto(e)}
+                        tabIndex="-1"
+                      >
+                        <span className={`dropdown-arrow ${dropdownAbiertoProducto ? 'open' : ''}`}>▼</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -705,6 +788,34 @@ const TrasladoMateriales = () => {
         <div className="traslado-loader">
           <div className="spinner"></div>
           <p>Procesando...</p>
+        </div>
+      )}
+
+      {/* Dropdown de productos (renderizado fuera con position fixed) */}
+      {dropdownAbiertoProducto && dropdownPositionProducto.top && (
+        <div 
+          className="dropdown-productos-fixed"
+          style={{
+            top: `${dropdownPositionProducto.top}px`,
+            left: `${dropdownPositionProducto.left}px`,
+            width: `${dropdownPositionProducto.width}px`
+          }}
+        >
+          {filtrarProductos().length > 0 ? (
+            filtrarProductos().map((desc, index) => (
+              <div
+                key={index}
+                className="dropdown-item"
+                onClick={() => handleProductoSelect(desc)}
+              >
+                <div className="dropdown-item-desc">{desc}</div>
+              </div>
+            ))
+          ) : (
+            <div className="dropdown-item-vacio">
+              {busquedaProducto ? '🔍 No se encontraron productos' : '📦 Comience a escribir para buscar'}
+            </div>
+          )}
         </div>
       )}
     </div>

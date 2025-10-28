@@ -114,15 +114,18 @@
 
 /* Tabla de productos */
 .tabla-container {
-  overflow-x: auto;
+  overflow: visible;
   border-radius: 8px;
   border: 1px solid #e0e0e0;
+  position: relative;
 }
 
 .tabla-productos {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   background: white;
+  position: relative;
 }
 
 .tabla-productos thead {
@@ -140,14 +143,23 @@
 .tabla-productos tbody tr {
   border-bottom: 1px solid #e0e0e0;
   transition: background-color 0.2s ease;
+  position: relative;
 }
 
 .tabla-productos tbody tr:hover {
   background-color: #f8f9fa;
+  z-index: 1;
 }
 
 .tabla-productos td {
   padding: 10px;
+  position: relative;
+  overflow: visible;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tabla-productos tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .tabla-productos td input,
@@ -366,3 +378,168 @@
     width: 100%;
   }
 }
+
+/* Estilos para el combobox de búsqueda de productos */
+.producto-combobox {
+  position: relative;
+  width: 100%;
+  z-index: 100;
+}
+
+/* Incrementar z-index cuando el dropdown está abierto */
+.tabla-productos tbody tr:has(.dropdown-productos) {
+  z-index: 1000;
+  position: relative;
+}
+
+.combobox-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-busqueda-producto {
+  flex: 1;
+  padding: 8px 35px 8px 12px !important;
+  border: 2px solid #ddd !important;
+  border-radius: 4px !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s ease !important;
+  background-color: white !important;
+}
+
+.input-busqueda-producto:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+}
+
+.btn-dropdown-toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 32px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.btn-dropdown-toggle:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+}
+
+.btn-dropdown-toggle:active {
+  transform: scale(0.95);
+}
+
+.dropdown-arrow {
+  color: white;
+  font-size: 0.7rem;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-productos-fixed {
+  position: fixed;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 99999;
+}
+
+.dropdown-productos {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: -2px;
+  right: -2px;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  min-width: calc(100% + 4px);
+}
+
+.dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f4ff;
+  border-left: 3px solid #667eea;
+  padding-left: 9px;
+}
+
+.dropdown-item:active {
+  background-color: #e0e9ff;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item-desc {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.dropdown-item-codigo {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+.dropdown-item-vacio {
+  padding: 20px 15px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Scrollbar personalizado para el dropdown */
+.dropdown-productos::-webkit-scrollbar,
+.dropdown-productos-fixed::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-productos::-webkit-scrollbar-track,
+.dropdown-productos-fixed::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 6px 6px 0;
+}
+
+.dropdown-productos::-webkit-scrollbar-thumb,
+.dropdown-productos-fixed::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.dropdown-productos::-webkit-scrollbar-thumb:hover,
+.dropdown-productos-fixed::-webkit-scrollbar-thumb:hover {
+  background: #764ba2;
+}
+

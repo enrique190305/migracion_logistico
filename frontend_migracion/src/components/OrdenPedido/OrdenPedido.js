@@ -38,6 +38,11 @@ const OrdenPedido = () => {
   // Estado para notificaciones personalizadas
   const [notificacion, setNotificacion] = useState(null);
 
+  // Estados para búsqueda de productos
+  const [busquedaProducto, setBusquedaProducto] = useState({});
+  const [dropdownAbierto, setDropdownAbierto] = useState({});
+  const [dropdownPosition, setDropdownPosition] = useState({});
+
   /**
    * Mostrar notificación personalizada
    */
@@ -131,7 +136,106 @@ const OrdenPedido = () => {
       unidadMedida: producto ? producto.unidad : ''
     };
     setDetalles(nuevosDetalles);
+
+    // Actualizar búsqueda con la descripción del producto seleccionado
+    setBusquedaProducto({
+      ...busquedaProducto,
+      [index]: producto ? producto.descripcion : ''
+    });
+
+    // Cerrar el dropdown
+    setDropdownAbierto({
+      ...dropdownAbierto,
+      [index]: false
+    });
   };
+
+  // Manejar búsqueda de productos
+  const handleBusquedaChange = (index, valor) => {
+    setBusquedaProducto({
+      ...busquedaProducto,
+      [index]: valor
+    });
+
+    // Abrir dropdown siempre que haya cambio
+    setDropdownAbierto({
+      ...dropdownAbierto,
+      [index]: true
+    });
+
+    // Si se borra el texto, limpiar la selección
+    if (!valor) {
+      const nuevosDetalles = [...detalles];
+      nuevosDetalles[index] = {
+        ...nuevosDetalles[index],
+        codigoProducto: '',
+        descripcion: '',
+        unidadMedida: ''
+      };
+      setDetalles(nuevosDetalles);
+    }
+  };
+
+  // Filtrar productos según búsqueda
+  const filtrarProductos = (index) => {
+    const busqueda = (busquedaProducto[index] || '').toLowerCase();
+    if (!busqueda) return productos;
+    
+    return productos.filter(prod => 
+      prod.descripcion.toLowerCase().includes(busqueda) ||
+      prod.codigo_producto.toLowerCase().includes(busqueda)
+    );
+  };
+
+  // Manejar foco en búsqueda
+  const handleBusquedaFocus = (index, event) => {
+    const rect = event.target.getBoundingClientRect();
+    setDropdownPosition({
+      ...dropdownPosition,
+      [index]: {
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      }
+    });
+    setDropdownAbierto({
+      ...dropdownAbierto,
+      [index]: true
+    });
+  };
+
+  // Toggle dropdown (abrir/cerrar al hacer clic en el botón)
+  const toggleDropdown = (index, event) => {
+    const input = event.target.closest('.combobox-input-wrapper').querySelector('.input-busqueda-producto');
+    const rect = input.getBoundingClientRect();
+    
+    setDropdownPosition({
+      ...dropdownPosition,
+      [index]: {
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      }
+    });
+    
+    setDropdownAbierto({
+      ...dropdownAbierto,
+      [index]: !dropdownAbierto[index]
+    });
+  };
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.producto-combobox') && 
+          !event.target.closest('.dropdown-productos-fixed')) {
+        setDropdownAbierto({});
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Actualizar campo de detalle
   const handleDetalleChange = (index, field, value) => {
@@ -142,20 +246,34 @@ const OrdenPedido = () => {
 
   // Agregar nueva línea de detalle
   const agregarDetalle = () => {
+    const nuevoId = detalles.length + 1;
     setDetalles([...detalles, {
-      id: detalles.length + 1,
+      id: nuevoId,
       codigoProducto: '',
       descripcion: '',
       unidadMedida: '',
       cantidadSolicitada: '',
       observacion: ''
     }]);
+    // Inicializar búsqueda vacía para la nueva fila
+    setBusquedaProducto({
+      ...busquedaProducto,
+      [detalles.length]: ''
+    });
   };
 
   // Eliminar línea de detalle
   const eliminarDetalle = (index) => {
     if (detalles.length > 1) {
       setDetalles(detalles.filter((_, i) => i !== index));
+      
+      // Limpiar búsqueda y dropdown de la fila eliminada
+      const nuevaBusqueda = { ...busquedaProducto };
+      const nuevoDropdown = { ...dropdownAbierto };
+      delete nuevaBusqueda[index];
+      delete nuevoDropdown[index];
+      setBusquedaProducto(nuevaBusqueda);
+      setDropdownAbierto(nuevoDropdown);
     }
   };
 
@@ -173,6 +291,10 @@ const OrdenPedido = () => {
       cantidadSolicitada: '',
       observacion: ''
     }]);
+    
+    // Limpiar búsquedas y dropdowns
+    setBusquedaProducto({});
+    setDropdownAbierto({});
 
     const hoy = new Date().toISOString().split('T')[0];
     setFechaPedido(hoy);
@@ -412,18 +534,27 @@ const OrdenPedido = () => {
                   <tr key={detalle.id}>
                     {/* Producto */}
                     <td>
-                      <select
-                        value={detalle.codigoProducto}
-                        onChange={(e) => handleProductoChange(index, e.target.value)}
-                        className="select-producto"
-                      >
-                        <option value="">-- Seleccione --</option>
-                        {productos.map(prod => (
-                          <option key={prod.codigo_producto} value={prod.codigo_producto}>
-                            {prod.descripcion}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="producto-combobox">
+                        <div className="combobox-input-wrapper">
+                          <input
+                            type="text"
+                            value={busquedaProducto[index] || ''}
+                            onChange={(e) => handleBusquedaChange(index, e.target.value)}
+                            onFocus={(e) => handleBusquedaFocus(index, e)}
+                            placeholder="Seleccione o busque un producto..."
+                            className="input-busqueda-producto"
+                            autoComplete="off"
+                          />
+                          <button
+                            type="button"
+                            className="btn-dropdown-toggle"
+                            onClick={(e) => toggleDropdown(index, e)}
+                            tabIndex="-1"
+                          >
+                            <span className={`dropdown-arrow ${dropdownAbierto[index] ? 'open' : ''}`}>▼</span>
+                          </button>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Código (autocompleta) */}
@@ -526,6 +657,38 @@ const OrdenPedido = () => {
           detalles={notificacion.detalles}
           onClose={cerrarNotificacion}
         />
+      )}
+
+      {/* Dropdown de productos (renderizado fuera de la tabla) */}
+      {Object.keys(dropdownAbierto).map(index => 
+        dropdownAbierto[index] && dropdownPosition[index] && (
+          <div 
+            key={`dropdown-${index}`}
+            className="dropdown-productos-fixed"
+            style={{
+              top: `${dropdownPosition[index].top}px`,
+              left: `${dropdownPosition[index].left}px`,
+              width: `${dropdownPosition[index].width}px`
+            }}
+          >
+            {filtrarProductos(parseInt(index)).length > 0 ? (
+              filtrarProductos(parseInt(index)).map(prod => (
+                <div
+                  key={prod.codigo_producto}
+                  className="dropdown-item"
+                  onClick={() => handleProductoChange(parseInt(index), prod.codigo_producto)}
+                >
+                  <div className="dropdown-item-desc">{prod.descripcion}</div>
+                  <div className="dropdown-item-codigo">Código: {prod.codigo_producto}</div>
+                </div>
+              ))
+            ) : (
+              <div className="dropdown-item-vacio">
+                {busquedaProducto[index] ? '🔍 No se encontraron productos' : '📦 Comience a escribir para buscar'}
+              </div>
+            )}
+          </div>
+        )
       )}
     </div>
   );

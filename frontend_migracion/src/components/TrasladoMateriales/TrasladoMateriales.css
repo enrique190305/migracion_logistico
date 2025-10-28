@@ -442,6 +442,8 @@
   .traslado-table tbody td {
     padding: 10px;
   }
+}
+
 @media (max-width: 480px) {
   .traslado-icon {
     font-size: 32px;
@@ -460,4 +462,133 @@
     font-size: 14px;
   }
 }
+
+/* ============================================
+   ESTILOS PARA COMBOBOX DE BÚSQUEDA DE PRODUCTOS
+   ============================================ */
+.producto-combobox {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.combobox-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-busqueda-producto {
+  flex: 1;
+  padding-right: 40px !important;
+}
+
+.btn-dropdown-toggle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 35px;
+  background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+  border: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.btn-dropdown-toggle:hover {
+  background: linear-gradient(135deg, #1976d2 0%, #0d47a1 100%);
+}
+
+.btn-dropdown-toggle:active {
+  transform: scale(0.95);
+}
+
+.dropdown-arrow {
+  color: white;
+  font-size: 0.7rem;
+  transition: transform 0.3s ease;
+  display: inline-block;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-productos-fixed {
+  position: fixed;
+  max-height: 300px;
+  overflow-y: auto;
+  background: white;
+  border: 2px solid #1e88e5;
+  border-radius: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 99999;
+}
+
+.dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.dropdown-item:hover {
+  background-color: #e3f2fd;
+  border-left: 3px solid #1e88e5;
+  padding-left: 9px;
+}
+
+.dropdown-item:active {
+  background-color: #bbdefb;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item-desc {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.dropdown-item-codigo {
+  font-size: 0.8rem;
+  color: #666;
+  font-style: italic;
+}
+
+.dropdown-item-vacio {
+  padding: 20px 15px;
+  text-align: center;
+  color: #999;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* Scrollbar personalizado para el dropdown */
+.dropdown-productos-fixed::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-productos-fixed::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 6px 6px 0;
+}
+
+.dropdown-productos-fixed::-webkit-scrollbar-thumb {
+  background: #1e88e5;
+  border-radius: 4px;
+}
+
+.dropdown-productos-fixed::-webkit-scrollbar-thumb:hover {
+  background: #1565c0;
 }
