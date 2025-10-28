@@ -59,30 +59,31 @@ const EliminarOCS = () => {
   };
 
   /**
-   * Obtener razones sociales únicas de las órdenes
+   * Obtener razones sociales únicas de las órdenes (EMPRESAS)
    */
   const getRazonesSociales = () => {
     if (!ordenes || ordenes.length === 0) return [];
     
-    // Extraer proveedores únicos
-    const proveedoresUnicos = [...new Map(
-      ordenes.map(orden => [
-        orden.proveedor?.id, 
-        orden.proveedor?.nombre
-      ])
-    ).values()];
+    // Extraer empresas únicas usando Map con ID como clave
+    const empresasMap = new Map();
+    ordenes.forEach(orden => {
+      if (orden.empresa?.id && orden.empresa?.razon_social) {
+        empresasMap.set(orden.empresa.id, orden.empresa.razon_social);
+      }
+    });
     
-    return proveedoresUnicos.filter(nombre => nombre);
+    // Convertir a array de razones sociales
+    return Array.from(empresasMap.values());
   };
 
   /**
-   * Obtener correlativos por razón social
+   * Obtener correlativos por razón social (empresa)
    */
   const getCorrelativos = (razonSocial) => {
     if (!razonSocial || !ordenes) return [];
     
     return ordenes
-      .filter(orden => orden.proveedor?.nombre === razonSocial)
+      .filter(orden => orden.empresa?.razon_social === razonSocial)
       .map(orden => ({
         id: orden.id,
         correlativo: orden.correlativo
@@ -344,7 +345,7 @@ const EliminarOCS = () => {
               ) : detallesOrden.length > 0 ? (
                 detallesOrden.map((detalle, index) => (
                   <tr key={index}>
-                    <td><strong>{detalle.codigo}</strong></td>
+                    <td><strong>{correlativoSeleccionado || 'N/A'}</strong></td>
                     <td>{detalle.descripcion}</td>
                     <td className="text-center">{detalle.cantidad}</td>
                     <td>{detalle.unidad}</td>

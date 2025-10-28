@@ -30,24 +30,24 @@ class OrdenPedidoController extends Controller
     }
 
     /**
-     * Obtener proyectos por empresa (usando tabla intermedia N:N)
+     * Obtener proyectos por empresa (directamente desde proyecto_almacen)
      */
     public function getProyectosByEmpresa($id_empresa)
     {
         try {
-            // Obtener proyectos de la empresa a través de la tabla intermedia
+            // Obtener proyectos de la empresa directamente desde proyecto_almacen
             $proyectos = DB::table('proyecto_almacen')
                 ->select(
-                    'proyecto_almacen.id_proyecto_almacen',
-                    'proyecto_almacen.nombre_proyecto',
-                    'proyecto_almacen.codigo_proyecto',
-                    'proyecto_almacen.tipo_movil',
-                    'proyecto_almacen.estado'
+                    'id_proyecto_almacen',
+                    'nombre_proyecto',
+                    'codigo_proyecto',
+                    'tipo_movil',
+                    'estado',
+                    'id_empresa'
                 )
-                ->join('empresa_proyecto', 'proyecto_almacen.id_proyecto_almacen', '=', 'empresa_proyecto.id_proyecto')
-                ->where('empresa_proyecto.id_empresa', $id_empresa)
-                ->where('proyecto_almacen.estado', 'ACTIVO')
-                ->orderBy('proyecto_almacen.nombre_proyecto', 'ASC')
+                ->where('id_empresa', $id_empresa)
+                ->where('estado', 'ACTIVO')
+                ->orderBy('nombre_proyecto', 'ASC')
                 ->get();
 
             return response()->json($proyectos);

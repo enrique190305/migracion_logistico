@@ -8,7 +8,8 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     materiales: false,
     proveedores: false,
     personal: false,
-    aprobacion: false
+    aprobacion: false,
+    reporteria: false
   });
 
   console.log('🔍 Sidebar: Usuario es admin?', isAdmin);
@@ -77,6 +78,15 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
       adminOnly: true,
       items: [
         { id: 'aprobacion-ordenes', title: 'Aprobación de Órdenes', icon: '✅' }
+      ]
+    },
+    {
+      id: 'reporteria',
+      title: 'Reportería',
+      icon: '📊',
+      color: '#16a085',
+      items: [
+        { id: 'reporteria', title: 'Reportería', icon: '📊' }
       ]
     }
   ];

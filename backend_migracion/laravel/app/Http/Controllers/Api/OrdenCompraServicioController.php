@@ -290,15 +290,25 @@ class OrdenCompraServicioController extends Controller
                 ], 404);
             }
 
+            // Obtener el proyecto almacen y su bodega
+            $proyectoAlmacen = $orden->proyectoAlmacen;
+            $bodega = null;
+            if ($proyectoAlmacen && $proyectoAlmacen->id_bodega) {
+                $bodega = DB::table('bodega')
+                    ->where('id_bodega', $proyectoAlmacen->id_bodega)
+                    ->first();
+            }
+
             return response()->json([
                 'id_orden_pedido' => $orden->id_orden_pedido,
                 'correlativo' => $orden->correlativo,
                 'id_empresa' => $orden->id_empresa,
                 'razon_social' => $orden->empresa ? $orden->empresa->razon_social : null,
-                'id_proyecto_almacen' => $orden->id_proyecto_almacen,
-                'proyecto_nombre' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->nombre_proyecto : null,
-                'codigo_proyecto' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->codigo_proyecto : null,
-                'tipo_movil' => $orden->proyectoAlmacen ? $orden->proyectoAlmacen->tipo_movil : null,
+                'id_proyecto_almacen' => $orden->id_proyecto, // Campo correcto
+                'proyecto_nombre' => $proyectoAlmacen ? $proyectoAlmacen->nombre_proyecto : null,
+                'proyecto_bodega' => $bodega ? $bodega->nombre : null, // Agregar nombre de bodega
+                'codigo_proyecto' => $proyectoAlmacen ? $proyectoAlmacen->codigo_proyecto : null,
+                'tipo_movil' => $proyectoAlmacen ? $proyectoAlmacen->tipo_movil : null,
                 'fecha_pedido' => $orden->fecha_pedido,
                 'observacion' => $orden->observacion,
                 'estado' => $orden->estado,
@@ -785,8 +795,8 @@ class OrdenCompraServicioController extends Controller
 
             $detalles = $ordenCompra->detalles->map(function($detalle) {
                 return [
-                    'id' => $detalle->id_doc,
-                    'codigo' => $detalle->producto->codigo ?? 'N/A',
+                    'id' => $detalle->id_detalle,
+                    'codigo' => $detalle->codigo_producto ?? 'N/A', // Usar codigo_producto del detalle
                     'descripcion' => $detalle->producto->descripcion ?? 'N/A',
                     'cantidad' => $detalle->cantidad,
                     'unidad' => $detalle->producto->unidad ?? 'UND',
@@ -844,16 +854,16 @@ class OrdenCompraServicioController extends Controller
                 'proveedor:id_proveedor,nombre,ruc,direccion,celular',
                 'empresa:id_empresa,razon_social',
                 'moneda:id_moneda,tipo_moneda',
-                'detalles.producto'
+                'detalles' // Sin producto porque OS no tiene esa relación
             ])->findOrFail($id);
 
             $detalles = $ordenServicio->detalles->map(function($detalle) {
                 return [
-                    'id' => $detalle->id_dos,
-                    'codigo' => $detalle->producto->codigo ?? 'N/A',
-                    'descripcion' => $detalle->producto->descripcion ?? 'N/A',
+                    'id' => $detalle->id_detalle_os,
+                    'codigo' => $detalle->codigo_servicio ?? 'N/A', // Usar codigo_servicio del detalle
+                    'descripcion' => $detalle->descripcion ?? 'N/A',
                     'cantidad' => $detalle->cantidad,
-                    'unidad' => $detalle->producto->unidad ?? 'UND',
+                    'unidad' => $detalle->unidad ?? 'UND',
                     'precio' => $detalle->precio_unitario,
                     'subtotal' => $detalle->subtotal,
                     'total' => $detalle->total

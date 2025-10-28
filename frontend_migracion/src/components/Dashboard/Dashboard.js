@@ -17,6 +17,7 @@ import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
+import Reporteria from '../Reporteria/Reporteria';
 
 
 
@@ -132,6 +133,14 @@ const Dashboard = ({ onLogout }) => {
       icon: '✅', 
       color: '#8e44ad',
       category: 'aprobacion'
+    },
+    
+    // Reportería
+    { 
+      title: 'Reportería', 
+      icon: '📊', 
+      color: '#16a085',
+      category: 'reporteria'
     }
   ];
 
@@ -196,6 +205,7 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'kardex' && <Kardex />}
           {moduloActivo === 'familia' && <RegistroFamilia />}
           {moduloActivo === 'aprobacion' && <Aprobacion />}
+          {moduloActivo === 'reporteria' && <Reporteria />}
         </main>
       </div>
     );

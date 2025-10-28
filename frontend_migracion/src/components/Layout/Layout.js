@@ -17,6 +17,7 @@ import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
 import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
+import Reporteria from '../Reporteria/Reporteria';
 
 
 
@@ -75,6 +76,8 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <RegistroFamilia />;
       case 'aprobacion-ordenes':
         return <Aprobacion />;
+      case 'reporteria':
+        return <Reporteria />;
       default:
         return <DashboardContent />;
     }
@@ -383,7 +386,8 @@ const getModuleTitle = (moduleId) => {
     'registro-personal': 'Registro de Personal',
     'kardex': 'Kardex',
     'registro-familia': 'Registro de Familia',
-    'aprobacion-ordenes': 'Aprobación de Órdenes'
+    'aprobacion-ordenes': 'Aprobación de Órdenes',
+    'reporteria': 'Reportería'
   };
   return titles[moduleId] || 'Módulo';
 };
