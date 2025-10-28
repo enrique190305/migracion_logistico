@@ -390,6 +390,31 @@
 }
 
 /* Responsive */
+/* Pantallas de escritorio pequeñas - 1366px y menos */
+@media (max-width: 1366px) {
+  .main-content {
+    margin-left: 240px;
+  }
+
+  .content-header {
+    padding: 16px 20px;
+  }
+
+  .content-header h1 {
+    font-size: 22px;
+  }
+
+  .content-main {
+    padding: 20px;
+  }
+
+  .stats-cards {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 15px;
+  }
+}
+
+/* Tablets y laptops pequeñas - 1024px */
 @media (max-width: 1024px) {
   .main-content {
     margin-left: 60px;
@@ -400,46 +425,136 @@
   }
   
   .content-header {
-    padding: 15px 20px;
+    padding: 15px 18px;
+  }
+
+  .content-header h1 {
+    font-size: 20px;
   }
   
   .content-main {
-    padding: 20px;
+    padding: 18px;
   }
   
   .stats-cards {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 15px;
   }
 }
 
+/* Tablets - 768px */
 @media (max-width: 768px) {
   .main-content {
     margin-left: 0;
+    padding-top: 60px;
   }
-  
+
   .content-header {
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     text-align: center;
+    padding: 12px 15px;
+  }
+
+  .content-header h1 {
+    font-size: 18px;
+  }
+
+  .content-header .breadcrumb {
+    font-size: 12px;
   }
   
   .header-right {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .content-main {
+    padding: 15px;
   }
   
   .content-footer {
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     text-align: center;
+    padding: 12px 15px;
+    font-size: 11px;
   }
   
   .stats-container {
     flex-direction: column;
     gap: 5px;
   }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+}
+
+/* Móviles - 480px */
+@media (max-width: 480px) {
+  .main-content {
+    padding-top: 55px;
+  }
+
+  .content-header {
+    padding: 10px 12px;
+  }
+
+  .content-header h1 {
+    font-size: 16px;
+  }
+
+  .content-header .breadcrumb {
+    font-size: 11px;
+  }
+
+  .content-main {
+    padding: 12px;
+  }
+
+  .content-footer {
+    padding: 10px 12px;
+    font-size: 10px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-card h3 {
+    font-size: 12px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 20px;
+  }
+}
+
+/* Móviles pequeños - 320px */
+@media (max-width: 320px) {
+  .content-header h1 {
+    font-size: 14px;
+  }
+
+  .content-main {
+    padding: 10px;
+  }
+
+  .stat-card {
+    padding: 8px;
+  }
+}
   
   .logout-text {
     display: none;
   }
-}

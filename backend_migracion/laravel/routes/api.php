@@ -58,11 +58,17 @@ Route::prefix('ordenes')->group(function () {
     Route::post('/compra', [OrdenCompraServicioController::class, 'guardarOrdenCompra']);
     Route::delete('/compra/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenCompra']);
     
+    // PDF Orden de Compra
+    Route::get('/compra/{id}/pdf', [OrdenCompraServicioController::class, 'generarPDFOrdenCompra']);
+    
     // CRUD Órdenes de Servicio
     Route::get('/servicio', [OrdenCompraServicioController::class, 'listarOrdenesServicio']);
     Route::get('/servicio/{id}', [OrdenCompraServicioController::class, 'obtenerDetalleOrdenServicio']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);
     Route::delete('/servicio/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenServicio']);
+    
+    // PDF Orden de Servicio
+    Route::get('/servicio/{id}/pdf', [OrdenCompraServicioController::class, 'generarPDFOrdenServicio']);
 });
 
 /*
@@ -85,6 +91,9 @@ Route::prefix('ingreso-materiales')->group(function () {
     
     // Guardar ingreso
     Route::post('/guardar', [IngresoMaterialController::class, 'guardarIngreso']);
+    
+    // PDF
+    Route::get('/{idIngreso}/pdf', [IngresoMaterialController::class, 'generarPDF']);
     
     // Historial
     Route::get('/historial-ingresos', [IngresoMaterialController::class, 'obtenerHistorialIngresos']);
@@ -231,6 +240,7 @@ Route::prefix('proyectos')->group(function () {
     Route::get('/bodegas/{id_empresa}', [ProyectoController::class, 'obtenerBodegasPorEmpresa']);
     Route::get('/reservas', [ProyectoController::class, 'obtenerReservas']);
     Route::get('/personas', [ProyectoController::class, 'obtenerPersonas']);
+    Route::get('/lista', [ProyectoController::class, 'listaSimplificada']); // ✅ NUEVO: para dropdowns
     
     // CRUD PROYECTOS
     Route::get('/', [ProyectoController::class, 'index']);

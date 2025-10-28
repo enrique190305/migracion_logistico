@@ -611,6 +611,20 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
           ]
         );
       } else {
+        // Descargar PDF automáticamente cuando se guarda OC/OS
+        try {
+          if (tipoOrden === 'compra' && response.id) {
+            console.log('📄 Descargando PDF de Orden de Compra...');
+            await API.descargarPDFOrdenCompra(response.id);
+          } else if (tipoOrden === 'servicio' && response.id) {
+            console.log('📄 Descargando PDF de Orden de Servicio...');
+            await API.descargarPDFOrdenServicio(response.id);
+          }
+        } catch (pdfError) {
+          console.error('Error al descargar PDF:', pdfError);
+          // No interrumpir el flujo si falla el PDF
+        }
+        
         mostrarNotificacion(
           'success',
           '✓ Orden Guardada Exitosamente',
@@ -619,6 +633,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             { label: '📋 Correlativo', valor: response.correlativo },
             { label: '💵 Total', valor: `${simboloMoneda} ${response.total}` },
             { label: '📦 Tipo', valor: tipoOrden === 'compra' ? 'Orden de Compra' : 'Orden de Servicio' },
+            { label: '📄 PDF', valor: 'Descargado automáticamente' },
             ...(response.estado_compra ? [{ label: '🔄 Estado OP', valor: response.estado_compra }] : [])
           ]
         );

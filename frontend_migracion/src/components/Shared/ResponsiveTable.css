@@ -1,0 +1,232 @@
+/* ============================================
+   TABLAS RESPONSIVE COMPARTIDAS
+   Importar este archivo en componentes que usen tablas
+   ============================================ */
+
+/* Contenedor con scroll horizontal para tablas grandes */
+.responsive-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 15px 0;
+}
+
+/* Estilos base de tabla responsive */
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.responsive-table thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.responsive-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.responsive-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.responsive-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Botones de acciones en tablas */
+.table-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.table-action-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.table-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Escritorio pequeño y resoluciones bajas - 1366px */
+@media (max-width: 1366px) {
+  .responsive-table th,
+  .responsive-table td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .table-action-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* Tablets y laptops pequeñas - 1024px */
+@media (max-width: 1024px) {
+  .responsive-table {
+    font-size: 12px;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .table-action-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .table-actions {
+    gap: 4px;
+  }
+}
+
+/* Tablets - 768px */
+@media (max-width: 768px) {
+  .responsive-table-wrapper {
+    margin: 10px 0;
+  }
+
+  .responsive-table {
+    min-width: 700px;
+    font-size: 11px;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+
+  .table-action-btn {
+    padding: 4px 6px;
+    font-size: 9px;
+    gap: 2px;
+  }
+
+  /* Ocultar texto en botones, solo íconos */
+  .table-action-btn .btn-text {
+    display: none;
+  }
+
+  .table-action-btn .btn-icon {
+    margin-right: 0;
+  }
+}
+
+/* Móviles - 480px */
+@media (max-width: 480px) {
+  .responsive-table {
+    min-width: 650px;
+    font-size: 10px;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  .table-action-btn {
+    padding: 3px 5px;
+    font-size: 8px;
+  }
+
+  .table-actions {
+    gap: 3px;
+  }
+}
+
+/* Móviles pequeños - 320px */
+@media (max-width: 320px) {
+  .responsive-table {
+    min-width: 600px;
+    font-size: 9px;
+  }
+
+  .responsive-table th,
+  .responsive-table td {
+    padding: 5px 3px;
+  }
+
+  .table-action-btn {
+    padding: 2px 4px;
+    font-size: 7px;
+  }
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+/* Alineación de texto */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Badge de estados */
+.table-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .table-badge {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+}
+
+/* Scroll hint para indicar que hay más contenido */
+.responsive-table-wrapper::after {
+  content: '← Desliza para ver más →';
+  display: none;
+  text-align: center;
+  padding: 8px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-size: 11px;
+  border-radius: 0 0 8px 8px;
+}
+
+@media (max-width: 768px) {
+  .responsive-table-wrapper::after {
+    display: block;
+  }
+}

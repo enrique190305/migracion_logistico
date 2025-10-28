@@ -186,18 +186,36 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 1366px) {
+  /* Pantallas pequeñas de escritorio */
+  .historial-tabla {
+    font-size: 13px;
+  }
+  
+  .historial-tabla th,
+  .historial-tabla td {
+    padding: 12px 10px;
+  }
+  
+  .filtro-grupo select,
+  .filtro-grupo input {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Tablets y laptops pequeñas */
   .historial-filtros {
-    flex-direction: column;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
   .filtro-grupo {
     width: 100%;
-    min-width: unset;
   }
 
   .btn-recargar {
-    width: 100%;
+    grid-column: span 2;
   }
 
   .historial-tabla {
@@ -207,5 +225,118 @@
   .historial-tabla th,
   .historial-tabla td {
     padding: 10px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tablets en vertical */
+  .historial-filtros {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .filtro-grupo {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .btn-recargar {
+    width: 100%;
+    grid-column: 1;
+  }
+
+  .historial-tabla-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .historial-tabla {
+    font-size: 11px;
+    min-width: 800px;
+  }
+
+  .historial-tabla th,
+  .historial-tabla td {
+    padding: 8px 6px;
+    white-space: nowrap;
+  }
+
+  /* Botones de acción más compactos */
+  .historial-tabla button {
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Móviles */
+  .historial-header {
+    padding: 15px;
+  }
+
+  .historial-header h2 {
+    font-size: 18px;
+  }
+
+  .historial-header p {
+    font-size: 12px;
+  }
+
+  .historial-filtros {
+    padding: 12px;
+  }
+
+  .filtro-grupo label {
+    font-size: 12px;
+  }
+
+  .filtro-grupo select,
+  .filtro-grupo input {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .btn-recargar {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .historial-tabla {
+    font-size: 10px;
+    min-width: 700px;
+  }
+
+  .historial-tabla th,
+  .historial-tabla td {
+    padding: 6px 4px;
+  }
+
+  .historial-tabla button {
+    padding: 3px 6px !important;
+    font-size: 9px !important;
+    margin: 2px 0 !important;
+  }
+
+  /* Footer stats más pequeño */
+  .historial-stats {
+    font-size: 11px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 320px) {
+  /* Móviles muy pequeños */
+  .historial-tabla {
+    min-width: 600px;
+    font-size: 9px;
+  }
+
+  .historial-tabla button span {
+    display: none;
+  }
+
+  .historial-tabla button::before {
+    content: attr(title);
+    font-size: 12px;
   }
 }

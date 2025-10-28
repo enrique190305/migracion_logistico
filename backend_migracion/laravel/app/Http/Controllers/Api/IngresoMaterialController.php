@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Exception;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class IngresoMaterialController extends Controller
 {
@@ -266,29 +268,39 @@ class IngresoMaterialController extends Controller
     public function generarNumeroIngreso()
     {
         try {
-            // Obtener el máximo de INGRESO_MATERIAL
-            $maxIngreso = DB::table('ingreso_material')
+            // Obtener el máximo número de ingreso_material
+            $maxNumero = DB::table('ingreso_material')
                 ->where('id_ingreso', 'LIKE', 'NI-%')
-                ->selectRaw("IFNULL(MAX(CAST(SUBSTRING(id_ingreso, 4) AS UNSIGNED)), 0) as max_numero")
+                ->selectRaw("COALESCE(MAX(CAST(SUBSTRING(id_ingreso, 4) AS UNSIGNED)), 0) as max_numero")
                 ->value('max_numero');
 
-            // Obtener el máximo de INGRESO_DIRECTO
-            $maxDirecto = DB::table('ingreso_directo')
-                ->where('id_ingreso', 'LIKE', 'NI-%')
-                ->selectRaw("IFNULL(MAX(CAST(SUBSTRING(id_ingreso, 4) AS UNSIGNED)), 0) as max_numero")
-                ->value('max_numero');
-
-            $siguiente = max($maxIngreso, $maxDirecto) + 1;
+            // Asegurar que sea numérico
+            $maxNumero = $maxNumero ?? 0;
+            $siguiente = intval($maxNumero) + 1;
             $numeroIngreso = 'NI-' . str_pad($siguiente, 3, '0', STR_PAD_LEFT);
+
+            Log::info("Generando número de ingreso - MAX actual: {$maxNumero}, Siguiente: {$siguiente}, Número generado: {$numeroIngreso}");
 
             return response()->json([
                 'success' => true,
                 'data' => ['numero_ingreso' => $numeroIngreso]
             ]);
         } catch (Exception $e) {
+            Log::error('Error generando número de ingreso: ' . $e->getMessage());
+            // Si hay error, buscar manualmente el último número
+            $resultado = DB::select("
+                SELECT COALESCE(MAX(CAST(SUBSTRING(id_ingreso, 4) AS UNSIGNED)), 0) as max_num 
+                FROM ingreso_material 
+                WHERE id_ingreso LIKE 'NI-%'
+            ");
+            $siguiente = intval($resultado[0]->max_num ?? 0) + 1;
+            $numeroIngreso = 'NI-' . str_pad($siguiente, 3, '0', STR_PAD_LEFT);
+            
+            Log::info("Número de ingreso generado en catch: {$numeroIngreso}");
+            
             return response()->json([
                 'success' => true,
-                'data' => ['numero_ingreso' => 'NI-001']
+                'data' => ['numero_ingreso' => $numeroIngreso]
             ]);
         }
     }
@@ -299,6 +311,9 @@ class IngresoMaterialController extends Controller
     public function guardarIngreso(Request $request)
     {
         try {
+            Log::info('=== Iniciando guardar ingreso ===');
+            Log::info('Datos recibidos:', $request->all());
+            
             $validator = Validator::make($request->all(), [
                 'correlativo' => 'required|string',
                 'proyecto_almacen' => 'required|string',
@@ -314,6 +329,7 @@ class IngresoMaterialController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::error('Validación fallida:', $validator->errors()->toArray());
                 return response()->json([
                     'success' => false,
                     'message' => 'Validación fallida',
@@ -324,21 +340,26 @@ class IngresoMaterialController extends Controller
             $correlativo = $request->input('correlativo');
             $esOC = str_starts_with($correlativo, 'OC-');
             $esOS = str_starts_with($correlativo, 'OS-');
+            
+            Log::info("Tipo de orden detectado - OC: $esOC, OS: $esOS");
 
             DB::beginTransaction();
 
             try {
                 if ($esOC) {
                     // Guardar como Ingreso de Material
+                    Log::info('Guardando como Ingreso de Material (OC)');
                     $resultado = $this->guardarIngresoMaterial($request);
                 } else if ($esOS) {
                     // Guardar como Conformidad de Servicio
+                    Log::info('Guardando como Conformidad de Servicio (OS)');
                     $resultado = $this->guardarConformidadServicio($request);
                 } else {
                     throw new Exception('Tipo de orden no válido');
                 }
 
                 DB::commit();
+                Log::info('✅ Ingreso guardado exitosamente:', $resultado);
 
                 return response()->json([
                     'success' => true,
@@ -348,10 +369,12 @@ class IngresoMaterialController extends Controller
 
             } catch (Exception $e) {
                 DB::rollBack();
+                Log::error('Error en transacción:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
                 throw $e;
             }
 
         } catch (Exception $e) {
+            Log::error('Error general al guardar ingreso:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar el ingreso',
@@ -409,7 +432,7 @@ class IngresoMaterialController extends Controller
                 ->where('codigo_producto', $producto['codigo_producto'])
                 ->first();
 
-            // Insertar en kardex
+            // Insertar en kardex (sin id_movimiento, es auto-increment)
             DB::table('movimiento_kardex')->insert([
                 'fecha' => $request->input('fecha_ingreso'),
                 'tipo_movimiento' => 'INGRESO',
@@ -419,7 +442,7 @@ class IngresoMaterialController extends Controller
                 'cantidad' => $producto['cantidad_ingresar'],
                 'proyecto' => $request->input('proyecto_almacen'),
                 'documento' => $numeroIngreso,
-                'precio_unitario' => $detalleOC->precio_unitario ?? null,
+                'precio_unitario' => $detalleOC->precio_unitario ?? 0,
                 'observaciones' => $producto['observaciones'] ?? ''
             ]);
         }
@@ -537,11 +560,26 @@ class IngresoMaterialController extends Controller
             $query = DB::table('ingreso_material as im')
                 ->join('orden_compra as oc', 'im.id_oc', '=', 'oc.id_oc')
                 ->join('proveedor as p', 'oc.id_proveedor', '=', 'p.id_proveedor')
+                ->leftJoin('detalle_ingreso_material as dim', 'im.id_ingreso', '=', 'dim.id_ingreso')
                 ->select(
                     'im.id_ingreso',
                     'oc.correlativo',
                     'im.fecha_ingreso',
                     'p.nombre as proveedor',
+                    'im.proyecto_almacen as proyecto',
+                    DB::raw("'Almacén Principal' as bodega"),
+                    DB::raw("'COMPRA' as tipo_ingreso"),
+                    'oc.estado',
+                    'im.num_guia',
+                    'im.factura',
+                    'im.usuario',
+                    DB::raw('COUNT(DISTINCT dim.codigo_producto) as total_productos')
+                )
+                ->groupBy(
+                    'im.id_ingreso',
+                    'oc.correlativo',
+                    'im.fecha_ingreso',
+                    'p.nombre',
                     'im.proyecto_almacen',
                     'oc.estado',
                     'im.num_guia',
@@ -870,6 +908,75 @@ class IngresoMaterialController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener historial de ingresos directos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generar PDF de Ingreso de Material
+     */
+    public function generarPDF($idIngreso)
+    {
+        try {
+            // Obtener datos del ingreso
+            $ingreso = DB::table('ingreso_material as im')
+                ->leftJoin('orden_compra as oc', 'im.id_oc', '=', 'oc.id_oc')
+                ->leftJoin('proveedor as p', 'oc.id_proveedor', '=', 'p.id_proveedor')
+                ->select(
+                    'im.*',
+                    'oc.correlativo as correlativo_oc',
+                    'p.nombre as razon_social',
+                    'p.ruc'
+                )
+                ->where('im.id_ingreso', $idIngreso)
+                ->first();
+
+            if (!$ingreso) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ingreso no encontrado'
+                ], 404);
+            }
+
+            // Obtener detalles con información del producto
+            $detalles = DB::table('detalle_ingreso_material as dim')
+                ->join('producto as prod', 'dim.codigo_producto', '=', 'prod.codigo_producto')
+                ->leftJoin('detalle_oc as doc', function($join) use ($ingreso) {
+                    $join->on('dim.codigo_producto', '=', 'doc.codigo_producto')
+                         ->where('doc.id_oc', '=', $ingreso->id_oc);
+                })
+                ->select(
+                    'dim.*',
+                    'prod.descripcion',
+                    'prod.unidad',
+                    'doc.precio_unitario',
+                    DB::raw('dim.cantidad_recibida * COALESCE(doc.precio_unitario, 0) as total')
+                )
+                ->where('dim.id_ingreso', $idIngreso)
+                ->get();
+
+            // Calcular totales
+            $subtotal = $detalles->sum('total');
+            $igv = $subtotal * 0.18;
+            $total = $subtotal + $igv;
+
+            $data = [
+                'ingreso' => $ingreso,
+                'detalles' => $detalles,
+                'subtotal' => $subtotal,
+                'igv' => $igv,
+                'total' => $total
+            ];
+
+            $pdf = PDF::loadView('pdf.ingreso_material', $data);
+            return $pdf->stream("Ingreso_Material_{$idIngreso}.pdf");
+
+        } catch (Exception $e) {
+            Log::error('Error al generar PDF de ingreso:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar PDF',
                 'error' => $e->getMessage()
             ], 500);
         }

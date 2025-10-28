@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Exception;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -254,27 +255,27 @@ class SalidaMaterialController extends Controller
     {
         try {
             $query = DB::table('salidas_materiales as sm')
-                ->join('personal as p', 'sm.id_personal', '=', 'p.id_personal')
                 ->select(
                     'sm.numero_salida',
-                    'sm.proyecto_almacen',
-                    'sm.fecha_salida',
-                    'p.nom_ape as trabajador',
-                    'sm.observaciones',
-                    'sm.usuario_registro',
-                    'sm.fecha_registro'
+                    'sm.proyecto',
+                    'sm.fecha_registro as fecha_salida',
+                    'sm.nom_ape as trabajador',
+                    'sm.area',
+                    'sm.dni',
+                    'sm.id_personal',
+                    DB::raw('(SELECT COUNT(*) FROM detalle_salida WHERE numero_salida = sm.numero_salida) as total_productos')
                 )
-                ->orderBy('sm.fecha_salida', 'desc');
+                ->orderBy('sm.fecha_registro', 'desc');
 
             // Filtros opcionales
             if ($request->has('fecha_desde')) {
-                $query->where('sm.fecha_salida', '>=', $request->fecha_desde);
+                $query->where('sm.fecha_registro', '>=', $request->fecha_desde);
             }
             if ($request->has('fecha_hasta')) {
-                $query->where('sm.fecha_salida', '<=', $request->fecha_hasta);
+                $query->where('sm.fecha_registro', '<=', $request->fecha_hasta);
             }
             if ($request->has('proyecto')) {
-                $query->where('sm.proyecto_almacen', $request->proyecto);
+                $query->where('sm.proyecto', 'LIKE', '%' . $request->proyecto . '%');
             }
 
             $salidas = $query->get();
@@ -283,7 +284,8 @@ class SalidaMaterialController extends Controller
                 'success' => true,
                 'data' => $salidas
             ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            Log::error('Error al obtener historial de salidas: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener historial',
@@ -299,16 +301,15 @@ class SalidaMaterialController extends Controller
     {
         try {
             $salida = DB::table('salidas_materiales as sm')
-                ->join('personal as p', 'sm.id_personal', '=', 'p.id_personal')
                 ->where('sm.numero_salida', $numeroSalida)
                 ->select(
                     'sm.numero_salida',
-                    'sm.proyecto_almacen',
-                    'sm.fecha_salida',
-                    'p.nom_ape as trabajador',
-                    'p.dni',
-                    'p.area',
-                    'sm.observaciones'
+                    'sm.proyecto',
+                    'sm.fecha_registro as fecha_salida',
+                    'sm.nom_ape as trabajador',
+                    'sm.dni',
+                    'sm.area',
+                    'sm.id_personal'
                 )
                 ->first();
 
@@ -325,8 +326,7 @@ class SalidaMaterialController extends Controller
                     'codigo_producto',
                     'descripcion',
                     'cantidad',
-                    'unidad_medida',
-                    'observacion_general'
+                    'unidad_medida'
                 )
                 ->get();
 
@@ -337,7 +337,8 @@ class SalidaMaterialController extends Controller
                     'detalles' => $detalles
                 ]
             ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
+            Log::error('Error al obtener detalle de salida: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener detalle',
@@ -352,19 +353,16 @@ class SalidaMaterialController extends Controller
     public function generarPDF($numeroSalida)
     {
         try {
-            // Obtener datos de la salida
+            // Obtener datos de la salida (sin JOIN, campos ya están en la tabla)
             $salida = DB::table('salidas_materiales as sm')
-                ->join('personal as p', 'sm.id_personal', '=', 'p.id_personal')
                 ->select(
                     'sm.numero_salida',
-                    'sm.proyecto_almacen',
-                    'sm.fecha_salida',
-                    'sm.observaciones',
-                    'sm.usuario_registro',
-                    'sm.fecha_registro',
-                    'p.nom_ape as trabajador',
-                    'p.dni',
-                    'p.area'
+                    'sm.proyecto',
+                    'sm.fecha_registro as fecha_salida',
+                    'sm.nom_ape as trabajador',
+                    'sm.dni',
+                    'sm.area',
+                    'sm.id_personal'
                 )
                 ->where('sm.numero_salida', $numeroSalida)
                 ->first();

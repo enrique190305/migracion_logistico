@@ -17,6 +17,7 @@ use App\Models\ProyectoAlmacen;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Exception;
 
 class OrdenCompraServicioController extends Controller
@@ -544,6 +545,7 @@ class OrdenCompraServicioController extends Controller
                 return response()->json([
                     'mensaje' => 'Orden de compra creada exitosamente',
                     'tipo' => 'ORDEN_COMPRA',
+                    'id' => $ordenCompra->id_oc, // Para el frontend
                     'id_oc' => $ordenCompra->id_oc,
                     'correlativo' => $ordenCompra->correlativo,
                     'total' => $ordenCompra->total_general,
@@ -658,6 +660,7 @@ class OrdenCompraServicioController extends Controller
             return response()->json([
                 'mensaje' => 'Orden de servicio creada exitosamente',
                 'tipo' => 'ORDEN_SERVICIO',
+                'id' => $ordenServicio->id_os, // Para el frontend
                 'id_os' => $ordenServicio->id_os,
                 'correlativo' => $ordenServicio->correlativo,
                 'total' => $ordenServicio->total_general,
@@ -1029,6 +1032,82 @@ class OrdenCompraServicioController extends Controller
                 'success' => false,
                 'error' => 'Error al eliminar orden de servicio',
                 'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generar PDF de Orden de Compra
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function generarPDFOrdenCompra($id)
+    {
+        try {
+            // Obtener la orden con sus relaciones
+            $orden = OrdenCompra::with(['empresa', 'proveedor', 'moneda', 'detalles'])
+                ->findOrFail($id);
+
+            // Generar el PDF con la vista
+            $pdf = Pdf::loadView('pdf.orden_compra', [
+                'orden' => $orden
+            ]);
+
+            // Configurar orientación y tamaño de página
+            $pdf->setPaper('A4', 'portrait');
+
+            // Descargar el PDF
+            return $pdf->download("Orden_Compra_{$orden->numero_oc}.pdf");
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Orden de Compra no encontrada'
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Generar PDF de Orden de Servicio
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+    public function generarPDFOrdenServicio($id)
+    {
+        try {
+            // Obtener la orden con sus relaciones
+            $orden = OrdenServicio::with(['empresa', 'proveedor', 'moneda', 'detalles'])
+                ->findOrFail($id);
+
+            // Generar el PDF con la vista
+            $pdf = Pdf::loadView('pdf.orden_servicio', [
+                'orden' => $orden
+            ]);
+
+            // Configurar orientación y tamaño de página
+            $pdf->setPaper('A4', 'portrait');
+
+            // Descargar el PDF
+            return $pdf->download("Orden_Servicio_{$orden->numero_os}.pdf");
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Orden de Servicio no encontrada'
+            ], 404);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al generar el PDF: ' . $e->getMessage()
             ], 500);
         }
     }

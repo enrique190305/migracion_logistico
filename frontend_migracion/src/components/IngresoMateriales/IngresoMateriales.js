@@ -332,6 +332,29 @@ const IngresoMateriales = () => {
       
       if (response.success) {
         mostrarMensaje('success', '✅ Ingreso guardado correctamente');
+        
+        // Descargar PDF automáticamente
+        try {
+          const idIngreso = response.data?.id_ingreso;
+          if (idIngreso) {
+            const pdfResponse = await fetch(`http://localhost:8000/api/ingreso-materiales/${idIngreso}/pdf`);
+            if (pdfResponse.ok) {
+              const blob = await pdfResponse.blob();
+              const url = window.URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = `Ingreso_Material_${idIngreso}.pdf`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              window.URL.revokeObjectURL(url);
+            }
+          }
+        } catch (pdfError) {
+          console.error('Error al generar PDF:', pdfError);
+          // No mostrar error al usuario, el ingreso se guardó correctamente
+        }
+        
         limpiarFormulario();
         await cargarDatosIniciales();
       } else {

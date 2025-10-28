@@ -440,9 +440,46 @@
 /* ============================================
    RESPONSIVE
    ============================================ */
-@media (max-width: 768px) {
+
+/* Pantallas de escritorio pequeñas y resoluciones bajas */
+@media (max-width: 1366px) {
+  .ingreso-container {
+    padding: 15px;
+  }
+
   .ingreso-header {
     padding: 20px;
+  }
+
+  .ingreso-title {
+    font-size: 26px;
+  }
+
+  .ingreso-form-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+
+  .ingreso-table {
+    font-size: 13px;
+  }
+
+  .ingreso-table thead th,
+  .ingreso-table tbody td {
+    padding: 12px;
+  }
+
+  .ingreso-btn-primary,
+  .ingreso-btn-secondary {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+}
+
+/* Tablets y laptops pequeñas */
+@media (max-width: 1024px) {
+  .ingreso-header {
+    padding: 18px;
   }
 
   .ingreso-title {
@@ -450,19 +487,181 @@
   }
 
   .ingreso-form-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
-  .ingreso-tabs {
-    flex-direction: column;
+  .ingreso-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .ingreso-table {
     font-size: 12px;
+    min-width: 700px;
   }
 
   .ingreso-table thead th,
   .ingreso-table tbody td {
     padding: 10px;
+  }
+
+  .ingreso-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ingreso-btn-primary,
+  .ingreso-btn-secondary {
+    width: 100%;
+  }
+}
+
+/* Tablets en vertical y móviles grandes */
+@media (max-width: 768px) {
+  .ingreso-container {
+    padding: 10px;
+  }
+
+  .ingreso-header {
+    padding: 15px;
+  }
+
+  .ingreso-title {
+    font-size: 20px;
+  }
+
+  .ingreso-subtitle {
+    font-size: 12px;
+  }
+
+  .ingreso-form-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ingreso-form-group label {
+    font-size: 12px;
+  }
+
+  .ingreso-form-group input,
+  .ingreso-form-group select,
+  .ingreso-form-group textarea {
+    font-size: 13px;
+    padding: 10px;
+  }
+
+  .ingreso-tabs {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ingreso-tab {
+    width: 100%;
+    text-align: center;
+  }
+
+  .ingreso-table {
+    font-size: 11px;
+    min-width: 650px;
+  }
+
+  .ingreso-table thead th,
+  .ingreso-table tbody td {
+    padding: 8px;
+  }
+
+  .ingreso-table button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .ingreso-btn-primary,
+  .ingreso-btn-secondary {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .ingreso-info-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .ingreso-info-item {
+    width: 100%;
+  }
+}
+
+/* Móviles */
+@media (max-width: 480px) {
+  .ingreso-header {
+    padding: 12px;
+  }
+
+  .ingreso-title {
+    font-size: 18px;
+  }
+
+  .ingreso-subtitle {
+    font-size: 11px;
+  }
+
+  .ingreso-form-group label {
+    font-size: 11px;
+  }
+
+  .ingreso-form-group input,
+  .ingreso-form-group select,
+  .ingreso-form-group textarea {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .ingreso-tab {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .ingreso-table {
+    font-size: 10px;
+    min-width: 600px;
+  }
+
+  .ingreso-table thead th,
+  .ingreso-table tbody td {
+    padding: 6px 4px;
+  }
+
+  .ingreso-table button {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .ingreso-btn-primary,
+  .ingreso-btn-secondary {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .ingreso-stats {
+    font-size: 11px;
+    padding: 10px;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 320px) {
+  .ingreso-title {
+    font-size: 16px;
+  }
+
+  .ingreso-table {
+    font-size: 9px;
+    min-width: 550px;
+  }
+
+  .ingreso-table thead th,
+  .ingreso-table tbody td {
+    padding: 5px 3px;
   }
 }

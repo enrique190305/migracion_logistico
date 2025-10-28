@@ -159,6 +159,72 @@ export const guardarOrdenCompra = (ordenData) => postAPI('/compra', ordenData);
  */
 export const guardarOrdenServicio = (ordenData) => postAPI('/servicio', ordenData);
 
+/**
+ * Descargar PDF de Orden de Compra
+ * @param {number} id - ID de la orden de compra
+ * @returns {Promise<void>} Inicia la descarga del PDF
+ */
+export const descargarPDFOrdenCompra = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/compra/${id}/pdf`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/pdf',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al generar PDF: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Orden_Compra_${id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error al descargar PDF de Orden de Compra:', error);
+    throw error;
+  }
+};
+
+/**
+ * Descargar PDF de Orden de Servicio
+ * @param {number} id - ID de la orden de servicio
+ * @returns {Promise<void>} Inicia la descarga del PDF
+ */
+export const descargarPDFOrdenServicio = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/servicio/${id}/pdf`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/pdf',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al generar PDF: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Orden_Servicio_${id}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('Error al descargar PDF de Orden de Servicio:', error);
+    throw error;
+  }
+};
+
 // ============================================
 // EXPORT DEFAULT CON TODAS LAS FUNCIONES
 // ============================================
@@ -181,4 +247,8 @@ export default {
   // Creación
   guardarOrdenCompra,
   guardarOrdenServicio,
+  
+  // PDFs
+  descargarPDFOrdenCompra,
+  descargarPDFOrdenServicio,
 };

@@ -161,6 +161,38 @@ class ProyectoController extends Controller
 }
 
     /**
+     * ✅ NUEVO: Lista simplificada de proyectos para dropdowns/selectores
+     * Devuelve solo id_proyecto_almacen y nombre_proyecto
+     */
+    public function listaSimplificada()
+    {
+        try {
+            $proyectos = DB::table('vista_proyectos_almacen')
+                ->select('id_proyecto_almacen', 'nombre_proyecto', 'codigo_proyecto')
+                ->where('estado', 'ACTIVO')
+                ->orderBy('nombre_proyecto', 'asc')
+                ->get()
+                ->map(function ($proyecto) {
+                    return [
+                        'id_proyecto' => $proyecto->id_proyecto_almacen, // ✅ Alias para compatibilidad
+                        'id' => $proyecto->id_proyecto_almacen,
+                        'nombre_proyecto' => $proyecto->nombre_proyecto,
+                        'nombre' => $proyecto->nombre_proyecto, // ✅ Alias para compatibilidad
+                        'codigo' => $proyecto->codigo_proyecto
+                    ];
+                });
+
+            return response()->json($proyectos);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener lista de proyectos: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener proyectos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * ========================================
      * CRUD PROYECTOS
      * ========================================

@@ -1,0 +1,297 @@
+/* ============================================
+   FORMULARIOS RESPONSIVE COMPARTIDOS
+   Importar este archivo en componentes con formularios
+   ============================================ */
+
+/* Grid responsive para formularios */
+.form-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.form-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.form-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.form-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* Grupos de formulario */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Botones de formulario */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.form-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.form-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.form-btn-secondary {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.form-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.form-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================ */
+
+/* Escritorio pequeño - 1366px */
+@media (max-width: 1366px) {
+  .form-grid {
+    gap: 16px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  .form-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
+
+/* Tablets y laptops pequeñas - 1024px */
+@media (max-width: 1024px) {
+  .form-grid-4,
+  .form-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-grid {
+    gap: 14px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .form-actions {
+    gap: 10px;
+  }
+
+  .form-btn {
+    padding: 10px 18px;
+    font-size: 12px;
+  }
+}
+
+/* Tablets - 768px */
+@media (max-width: 768px) {
+  .form-grid-2,
+  .form-grid-3,
+  .form-grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    gap: 12px;
+  }
+
+  .form-group {
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px;
+    font-size: 12px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .form-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 13px;
+  }
+}
+
+/* Móviles - 480px */
+@media (max-width: 480px) {
+  .form-grid {
+    gap: 10px;
+  }
+
+  .form-group label {
+    font-size: 11px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .form-btn {
+    padding: 10px;
+    font-size: 12px;
+  }
+}
+
+/* Móviles pequeños - 320px */
+@media (max-width: 320px) {
+  .form-group label {
+    font-size: 10px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 7px;
+    font-size: 10px;
+  }
+
+  .form-btn {
+    padding: 8px;
+    font-size: 11px;
+  }
+}
+
+/* ============================================
+   UTILIDADES
+   ============================================ */
+
+/* Input con ícono */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon input {
+  padding-left: 40px;
+}
+
+.input-with-icon .icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+/* Input error */
+.form-group.error input,
+.form-group.error select,
+.form-group.error textarea {
+  border-color: #ef4444;
+}
+
+.form-group .error-message {
+  color: #ef4444;
+  font-size: 12px;
+  margin-top: -4px;
+}
+
+/* Input success */
+.form-group.success input,
+.form-group.success select,
+.form-group.success textarea {
+  border-color: #10b981;
+}
+
+/* Form section headers */
+.form-section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 24px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+@media (max-width: 768px) {
+  .form-section-title {
+    font-size: 16px;
+    margin: 20px 0 12px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-section-title {
+    font-size: 14px;
+    margin: 16px 0 10px 0;
+  }
+}
