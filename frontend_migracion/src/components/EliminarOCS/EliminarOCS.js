@@ -126,17 +126,23 @@ const EliminarOCS = () => {
   };
 
   /**
-   * Eliminar orden
+   * Eliminar orden (ahora anula en lugar de eliminar)
    */
   const handleEliminar = async () => {
     if (!ordenSeleccionada || detallesOrden.length === 0) {
-      alert('⚠️ No hay orden seleccionada para eliminar');
+      alert('⚠️ No hay orden seleccionada para anular');
+      return;
+    }
+
+    // Validar que la orden esté en estado PENDIENTE
+    if (ordenSeleccionada.estado !== 'PENDIENTE') {
+      alert(`⚠️ ADVERTENCIA\n\nNo se puede anular esta orden.\n\nSolo se pueden anular órdenes en estado PENDIENTE.\nEstado actual: ${ordenSeleccionada.estado}`);
       return;
     }
 
     const tipoTexto = tipoOrden === 'OC' ? 'Orden de Compra' : 'Orden de Servicio';
     const confirmacion = window.confirm(
-      `⚠️ ADVERTENCIA\n\n¿Está seguro de eliminar permanentemente la ${tipoTexto} ${correlativoSeleccionado}?\n\nEsta acción NO se puede deshacer.\n\nSe eliminarán ${detallesOrden.length} registro(s).`
+      `⚠️ ADVERTENCIA\n\n¿Está seguro de anular la ${tipoTexto} ${correlativoSeleccionado}?\n\nLa orden cambiará su estado a ANULADO y no se mostrará en las interfaces normales.\n\nPodrá visualizarla únicamente en el HISTORIAL.\n\nTotal de la orden: S/ ${calcularTotal()}`
     );
 
     if (!confirmacion) return;
@@ -149,17 +155,17 @@ const EliminarOCS = () => {
         ? await eliminarOrdenCompra(ordenSeleccionada.id)
         : await eliminarOrdenServicio(ordenSeleccionada.id);
 
-      console.log('✅ Eliminación exitosa:', result);
+      console.log('✅ Anulación exitosa:', result);
 
-      alert(`✅ ${tipoTexto} eliminada correctamente\n\nCorrelativo: ${correlativoSeleccionado}\nRegistros eliminados: ${result.detalles_eliminados || detallesOrden.length}`);
+      alert(`✅ ${tipoTexto} anulada correctamente\n\nCorrelativo: ${correlativoSeleccionado}\nEstado: ANULADO\n\nLa orden ya no aparecerá en listados normales.`);
       
       // Recargar lista y limpiar formulario
       handleLimpiar();
       await cargarOrdenes();
       
     } catch (err) {
-      console.error('Error al eliminar orden:', err);
-      const mensajeError = err.message || 'Error al eliminar la orden';
+      console.error('Error al anular orden:', err);
+      const mensajeError = err.message || 'Error al anular la orden';
       setError(mensajeError);
       alert(`❌ ${mensajeError}`);
     } finally {
@@ -191,7 +197,7 @@ const EliminarOCS = () => {
       <div className="eliminar-ocs-header">
         <div className="header-icon-title">
           <span className="header-icon">🗑️</span>
-          <h1>ELIMINAR ÓRDENES DE COMPRA Y SERVICIOS</h1>
+          <h1>ANULAR ÓRDENES DE COMPRA Y SERVICIOS</h1>
         </div>
       </div>
 
@@ -199,8 +205,10 @@ const EliminarOCS = () => {
       <div className="advertencia-box">
         <span className="advertencia-icon">⚠️</span>
         <p>
-          <strong>ADVERTENCIA:</strong> Esta acción eliminará permanentemente la orden y todos sus datos relacionados. 
-          Esta operación <strong>NO</strong> se puede deshacer.
+          <strong>INFORMACIÓN:</strong> Esta acción cambiará el estado de la orden a <strong>ANULADO</strong>. 
+          Las órdenes anuladas no se mostrarán en las interfaces normales, solo podrán visualizarse en el HISTORIAL.
+          <br/><br/>
+          <strong>Solo se pueden anular órdenes en estado PENDIENTE.</strong>
         </p>
       </div>
 
@@ -383,9 +391,10 @@ const EliminarOCS = () => {
         <button 
           className="btn-eliminar"
           onClick={handleEliminar}
-          disabled={detallesOrden.length === 0 || loading || loadingDetalle}
+          disabled={detallesOrden.length === 0 || loading || loadingDetalle || ordenSeleccionada?.estado !== 'PENDIENTE'}
+          title={ordenSeleccionada?.estado !== 'PENDIENTE' ? 'Solo se pueden anular órdenes en estado PENDIENTE' : 'Anular orden'}
         >
-          <span>🗑️</span> {loading ? 'ELIMINANDO...' : 'ELIMINAR'}
+          <span>🗑️</span> {loading ? 'ANULANDO...' : 'ANULAR ORDEN'}
         </button>
       </div>
     </div>

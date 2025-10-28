@@ -684,6 +684,7 @@ class OrdenCompraServicioController extends Controller
     {
         try {
             $ordenesCompra = OrdenCompra::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                ->where('estado', '!=', 'ANULADO') // Filtrar órdenes anuladas
                 ->select(
                     'id_oc',
                     'correlativo',
@@ -737,6 +738,7 @@ class OrdenCompraServicioController extends Controller
     {
         try {
             $ordenesServicio = OrdenServicio::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                ->where('estado', '!=', 'ANULADO') // Filtrar órdenes anuladas
                 ->select(
                     'id_os',
                     'correlativo',
@@ -777,6 +779,222 @@ class OrdenCompraServicioController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Error al listar órdenes de servicio',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar Órdenes de Compra PENDIENTES (para interfaz de Eliminar)
+     * GET /api/ordenes/compra/pendientes
+     */
+    public function listarOrdenesCompraPendientes()
+    {
+        try {
+            $ordenesCompra = OrdenCompra::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                ->where('estado', 'PENDIENTE') // Solo PENDIENTES
+                ->select(
+                    'id_oc',
+                    'correlativo',
+                    'id_proveedor',
+                    'id_empresa',
+                    'fecha_oc',
+                    'total_general',
+                    'estado'
+                )
+                ->orderBy('fecha_oc', 'desc')
+                ->get()
+                ->map(function($oc) {
+                    return [
+                        'id' => $oc->id_oc,
+                        'correlativo' => $oc->correlativo,
+                        'proveedor' => [
+                            'id' => $oc->proveedor->id_proveedor ?? null,
+                            'nombre' => $oc->proveedor->nombre ?? 'N/A',
+                            'ruc' => $oc->proveedor->ruc ?? 'N/A'
+                        ],
+                        'empresa' => [
+                            'id' => $oc->empresa->id_empresa ?? null,
+                            'razon_social' => $oc->empresa->razon_social ?? 'N/A'
+                        ],
+                        'fecha_emision' => $oc->fecha_oc,
+                        'total_general' => $oc->total_general,
+                        'estado' => $oc->estado
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $ordenesCompra,
+                'total' => $ordenesCompra->count()
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al listar órdenes de compra pendientes',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar Órdenes de Servicio PENDIENTES (para interfaz de Eliminar)
+     * GET /api/ordenes/servicio/pendientes
+     */
+    public function listarOrdenesServicioPendientes()
+    {
+        try {
+            $ordenesServicio = OrdenServicio::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                ->where('estado', 'PENDIENTE') // Solo PENDIENTES
+                ->select(
+                    'id_os',
+                    'correlativo',
+                    'id_proveedor',
+                    'id_empresa',
+                    'fecha_servicio',
+                    'total_general',
+                    'estado'
+                )
+                ->orderBy('fecha_servicio', 'desc')
+                ->get()
+                ->map(function($os) {
+                    return [
+                        'id' => $os->id_os,
+                        'correlativo' => $os->correlativo,
+                        'proveedor' => [
+                            'id' => $os->proveedor->id_proveedor ?? null,
+                            'nombre' => $os->proveedor->nombre ?? 'N/A',
+                            'ruc' => $os->proveedor->ruc ?? 'N/A'
+                        ],
+                        'empresa' => [
+                            'id' => $os->empresa->id_empresa ?? null,
+                            'razon_social' => $os->empresa->razon_social ?? 'N/A'
+                        ],
+                        'fecha_emision' => $os->fecha_servicio,
+                        'total_general' => $os->total_general,
+                        'estado' => $os->estado
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $ordenesServicio,
+                'total' => $ordenesServicio->count()
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al listar órdenes de servicio pendientes',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar Órdenes de Compra para HISTORIAL/REPORTERÍA (incluye ANULADO)
+     * GET /api/ordenes/compra/historial
+     */
+    public function listarOrdenesCompraHistorial()
+    {
+        try {
+            $ordenesCompra = OrdenCompra::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                // Sin filtro de estado - muestra TODOS incluyendo ANULADO
+                ->select(
+                    'id_oc',
+                    'correlativo',
+                    'id_proveedor',
+                    'id_empresa',
+                    'fecha_oc',
+                    'total_general',
+                    'estado'
+                )
+                ->orderBy('fecha_oc', 'desc')
+                ->get()
+                ->map(function($oc) {
+                    return [
+                        'id' => $oc->id_oc,
+                        'correlativo' => $oc->correlativo,
+                        'proveedor' => [
+                            'id' => $oc->proveedor->id_proveedor ?? null,
+                            'nombre' => $oc->proveedor->nombre ?? 'N/A',
+                            'ruc' => $oc->proveedor->ruc ?? 'N/A'
+                        ],
+                        'empresa' => [
+                            'id' => $oc->empresa->id_empresa ?? null,
+                            'razon_social' => $oc->empresa->razon_social ?? 'N/A'
+                        ],
+                        'fecha_emision' => $oc->fecha_oc,
+                        'total_general' => $oc->total_general,
+                        'estado' => $oc->estado
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $ordenesCompra,
+                'total' => $ordenesCompra->count()
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al listar historial de órdenes de compra',
+                'mensaje' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar Órdenes de Servicio para HISTORIAL/REPORTERÍA (incluye ANULADO)
+     * GET /api/ordenes/servicio/historial
+     */
+    public function listarOrdenesServicioHistorial()
+    {
+        try {
+            $ordenesServicio = OrdenServicio::with(['proveedor:id_proveedor,nombre,ruc', 'empresa:id_empresa,razon_social'])
+                // Sin filtro de estado - muestra TODOS incluyendo ANULADO
+                ->select(
+                    'id_os',
+                    'correlativo',
+                    'id_proveedor',
+                    'id_empresa',
+                    'fecha_servicio',
+                    'total_general',
+                    'estado'
+                )
+                ->orderBy('fecha_servicio', 'desc')
+                ->get()
+                ->map(function($os) {
+                    return [
+                        'id' => $os->id_os,
+                        'correlativo' => $os->correlativo,
+                        'proveedor' => [
+                            'id' => $os->proveedor->id_proveedor ?? null,
+                            'nombre' => $os->proveedor->nombre ?? 'N/A',
+                            'ruc' => $os->proveedor->ruc ?? 'N/A'
+                        ],
+                        'empresa' => [
+                            'id' => $os->empresa->id_empresa ?? null,
+                            'razon_social' => $os->empresa->razon_social ?? 'N/A'
+                        ],
+                        'fecha_emision' => $os->fecha_servicio,
+                        'total_general' => $os->total_general,
+                        'estado' => $os->estado
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => $ordenesServicio,
+                'total' => $ordenesServicio->count()
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Error al listar historial de órdenes de servicio',
                 'mensaje' => $e->getMessage()
             ], 500);
         }
@@ -922,36 +1140,36 @@ class OrdenCompraServicioController extends Controller
             // Buscar la orden de compra
             $ordenCompra = OrdenCompra::findOrFail($id);
             
-            // Validar que se pueda eliminar (solo si está en estado PENDIENTE)
+            // Validar que se pueda anular (solo si está en estado PENDIENTE)
             if ($ordenCompra->estado !== 'PENDIENTE') {
                 return response()->json([
                     'success' => false,
-                    'error' => 'No se puede eliminar',
-                    'mensaje' => 'Solo se pueden eliminar órdenes en estado PENDIENTE. Estado actual: ' . $ordenCompra->estado
+                    'error' => 'No se puede anular',
+                    'mensaje' => 'Solo se pueden anular órdenes en estado PENDIENTE. Estado actual: ' . $ordenCompra->estado
                 ], 400);
             }
 
-            // Obtener información antes de eliminar (para el log)
+            // Obtener información antes de anular
             $correlativo = $ordenCompra->correlativo;
             $cantidadDetalles = $ordenCompra->detalles()->count();
             $totalGeneral = $ordenCompra->total_general;
 
-            // Eliminar detalles primero (por la FK)
-            DetalleOrdenCompra::where('id_oc', $id)->delete();
-
-            // Eliminar la orden de compra
-            $ordenCompra->delete();
+            // Cambiar estado a ANULADO en lugar de eliminar
+            $ordenCompra->estado = 'ANULADO';
+            $ordenCompra->fecha_anulacion = now();
+            $ordenCompra->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'mensaje' => 'Orden de Compra eliminada correctamente',
+                'mensaje' => 'Orden de Compra anulada correctamente',
                 'data' => [
                     'id' => $id,
                     'correlativo' => $correlativo,
-                    'detalles_eliminados' => $cantidadDetalles,
-                    'total_general' => $totalGeneral
+                    'detalles' => $cantidadDetalles,
+                    'total_general' => $totalGeneral,
+                    'estado' => 'ANULADO'
                 ]
             ], 200);
 
@@ -967,7 +1185,7 @@ class OrdenCompraServicioController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'error' => 'Error al eliminar orden de compra',
+                'error' => 'Error al anular orden de compra',
                 'mensaje' => $e->getMessage()
             ], 500);
         }
@@ -985,36 +1203,36 @@ class OrdenCompraServicioController extends Controller
             // Buscar la orden de servicio
             $ordenServicio = OrdenServicio::findOrFail($id);
             
-            // Validar que se pueda eliminar (solo si está en estado PENDIENTE)
+            // Validar que se pueda anular (solo si está en estado PENDIENTE)
             if ($ordenServicio->estado !== 'PENDIENTE') {
                 return response()->json([
                     'success' => false,
-                    'error' => 'No se puede eliminar',
-                    'mensaje' => 'Solo se pueden eliminar órdenes en estado PENDIENTE. Estado actual: ' . $ordenServicio->estado
+                    'error' => 'No se puede anular',
+                    'mensaje' => 'Solo se pueden anular órdenes en estado PENDIENTE. Estado actual: ' . $ordenServicio->estado
                 ], 400);
             }
 
-            // Obtener información antes de eliminar (para el log)
+            // Obtener información antes de anular
             $correlativo = $ordenServicio->correlativo;
             $cantidadDetalles = $ordenServicio->detalles()->count();
             $totalGeneral = $ordenServicio->total_general;
 
-            // Eliminar detalles primero (por la FK)
-            DetalleOrdenServicio::where('id_os', $id)->delete();
-
-            // Eliminar la orden de servicio
-            $ordenServicio->delete();
+            // Cambiar estado a ANULADO en lugar de eliminar
+            $ordenServicio->estado = 'ANULADO';
+            $ordenServicio->fecha_anulacion = now();
+            $ordenServicio->save();
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'mensaje' => 'Orden de Servicio eliminada correctamente',
+                'mensaje' => 'Orden de Servicio anulada correctamente',
                 'data' => [
                     'id' => $id,
                     'correlativo' => $correlativo,
-                    'detalles_eliminados' => $cantidadDetalles,
-                    'total_general' => $totalGeneral
+                    'detalles' => $cantidadDetalles,
+                    'total_general' => $totalGeneral,
+                    'estado' => 'ANULADO'
                 ]
             ], 200);
 
@@ -1030,7 +1248,7 @@ class OrdenCompraServicioController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'error' => 'Error al eliminar orden de servicio',
+                'error' => 'Error al anular orden de servicio',
                 'mensaje' => $e->getMessage()
             ], 500);
         }

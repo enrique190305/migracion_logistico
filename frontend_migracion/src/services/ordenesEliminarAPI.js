@@ -64,12 +64,12 @@ const deleteAPI = async (endpoint) => {
 // ============================================
 
 /**
- * Listar todas las Órdenes de Compra
- * @returns {Promise<Array>} Lista de órdenes de compra
+ * Listar todas las Órdenes de Compra PENDIENTES (solo para eliminar)
+ * @returns {Promise<Array>} Lista de órdenes de compra pendientes
  */
 export const listarOrdenesCompra = async () => {
   try {
-    const result = await fetchAPI('/compra');
+    const result = await fetchAPI('/compra/pendientes');
     return result.data || [];
   } catch (error) {
     console.error('Error al listar órdenes de compra:', error);
@@ -112,12 +112,12 @@ export const eliminarOrdenCompra = async (id) => {
 // ============================================
 
 /**
- * Listar todas las Órdenes de Servicio
- * @returns {Promise<Array>} Lista de órdenes de servicio
+ * Listar todas las Órdenes de Servicio PENDIENTES (solo para eliminar)
+ * @returns {Promise<Array>} Lista de órdenes de servicio pendientes
  */
 export const listarOrdenesServicio = async () => {
   try {
-    const result = await fetchAPI('/servicio');
+    const result = await fetchAPI('/servicio/pendientes');
     return result.data || [];
   } catch (error) {
     console.error('Error al listar órdenes de servicio:', error);

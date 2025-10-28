@@ -54,6 +54,8 @@ Route::prefix('ordenes')->group(function () {
     
     // CRUD Órdenes de Compra
     Route::get('/compra', [OrdenCompraServicioController::class, 'listarOrdenesCompra']);
+    Route::get('/compra/pendientes', [OrdenCompraServicioController::class, 'listarOrdenesCompraPendientes']); // Para interfaz Eliminar
+    Route::get('/compra/historial', [OrdenCompraServicioController::class, 'listarOrdenesCompraHistorial']); // Para Reportería (incluye ANULADO)
     Route::get('/compra/{id}', [OrdenCompraServicioController::class, 'obtenerDetalleOrdenCompra']);
     Route::post('/compra', [OrdenCompraServicioController::class, 'guardarOrdenCompra']);
     Route::delete('/compra/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenCompra']);
@@ -63,6 +65,8 @@ Route::prefix('ordenes')->group(function () {
     
     // CRUD Órdenes de Servicio
     Route::get('/servicio', [OrdenCompraServicioController::class, 'listarOrdenesServicio']);
+    Route::get('/servicio/pendientes', [OrdenCompraServicioController::class, 'listarOrdenesServicioPendientes']); // Para interfaz Eliminar
+    Route::get('/servicio/historial', [OrdenCompraServicioController::class, 'listarOrdenesServicioHistorial']); // Para Reportería (incluye ANULADO)
     Route::get('/servicio/{id}', [OrdenCompraServicioController::class, 'obtenerDetalleOrdenServicio']);
     Route::post('/servicio', [OrdenCompraServicioController::class, 'guardarOrdenServicio']);
     Route::delete('/servicio/{id}', [OrdenCompraServicioController::class, 'eliminarOrdenServicio']);

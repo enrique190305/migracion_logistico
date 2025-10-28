@@ -21,9 +21,9 @@ const HistorialOrdenesCompra = () => {
     try {
       setLoading(true);
       
-      // Cargar datos en paralelo
+      // Cargar datos en paralelo - usando endpoint de historial que incluye ANULADO
       const [ordenesRes, provRes, empRes] = await Promise.all([
-        fetch('http://localhost:8000/api/ordenes/compra'),
+        fetch('http://localhost:8000/api/ordenes/compra/historial'),
         fetch('http://localhost:8000/api/ordenes/proveedores'),
         fetch('http://localhost:8000/api/ordenes/empresas')
       ]);
