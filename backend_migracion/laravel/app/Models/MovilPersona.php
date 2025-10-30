@@ -16,6 +16,11 @@ class MovilPersona extends Model
         'id_bodega',
         'id_reserva',
         'id_responsable',
+        'nom_ape',
+        'dni',
+        'ciudad',
+        'observaciones',
+        'firma',
         'fecha_registro',
         'estado'
     ];

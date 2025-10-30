@@ -255,16 +255,25 @@ class ProyectoController extends Controller
      */
     public function store(Request $request)
 {
-    // ✅ Validación directa contra personal (ahora la FK apunta a personal)
+    // ✅ Validación con nuevos campos para móvil sin proyecto
     $validator = Validator::make($request->all(), [
         'razon_social_id' => 'required|exists:empresa,id_empresa',
         'bodega_id' => 'required|exists:bodega,id_bodega',
         'tipo_reserva' => 'required|exists:reserva,id_reserva',
         'movil_tipo' => 'required|in:sin_proyecto,con_proyecto',
-        'responsable' => 'required|exists:personal,id_personal',
         'fecha_registro' => 'required|date',
+        
+        // Para móvil CON proyecto
         'movil_nombre' => 'required_if:movil_tipo,con_proyecto|max:100',
         'descripcion' => 'nullable|string',
+        'responsable' => 'required_if:movil_tipo,con_proyecto|exists:personal,id_personal',
+        
+        // Para móvil SIN proyecto (campos personales)
+        'nom_ape' => 'required_if:movil_tipo,sin_proyecto|max:100',
+        'dni' => 'required_if:movil_tipo,sin_proyecto|size:8',
+        'ciudad' => 'required_if:movil_tipo,sin_proyecto|max:100',
+        'observaciones' => 'nullable|string',
+        'firma' => 'nullable|string', // Base64 image
     ]);
 
     if ($validator->fails()) {
@@ -282,14 +291,30 @@ class ProyectoController extends Controller
         $resultado = null;
 
         if ($tipoMovil === 'sin_proyecto') {
-            // Usar stored procedure
-            $resultado = DB::select('CALL sp_crear_movil_persona(?, ?, ?, ?, ?, ?)', [
-                $idUsuarioLogueado,      // id_persona → FK a logeo (quien registra)
-                $request->razon_social_id,
-                $request->bodega_id,
-                $request->tipo_reserva,
-                $request->responsable,   // id_responsable → FK a personal (responsable físico)
-                $request->fecha_registro
+            // ✅ Procesar firma si viene en base64
+            $firmaBlob = null;
+            if ($request->has('firma') && !empty($request->firma)) {
+                // Remover el prefijo data:image si existe
+                $firmaData = $request->firma;
+                if (preg_match('/^data:image\/(\w+);base64,/', $firmaData, $type)) {
+                    $firmaData = substr($firmaData, strpos($firmaData, ',') + 1);
+                }
+                $firmaBlob = base64_decode($firmaData);
+            }
+
+            // Usar stored procedure con nuevos parámetros
+            $resultado = DB::select('CALL sp_crear_movil_persona(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+                $idUsuarioLogueado,          // id_persona → FK a logeo (quien registra)
+                $request->razon_social_id,   // id_empresa
+                $request->bodega_id,         // id_bodega
+                $request->tipo_reserva,      // id_reserva
+                null,                        // id_responsable (NULL para móvil sin proyecto)
+                $request->nom_ape,           // nom_ape (nombre de la persona)
+                $request->dni,               // dni
+                $request->ciudad,            // ciudad
+                $request->observaciones,     // observaciones
+                $firmaBlob,                  // firma (BLOB)
+                $request->fecha_registro     // fecha_registro
             ]);
         } else {
             // Usar stored procedure para proyecto con nombre
@@ -447,22 +472,47 @@ class ProyectoController extends Controller
                     $movilProyecto->save();
                 }
             } else {
-                // Para móviles sin proyecto (SIN_PROYECTO)
+                // ✅ Para móviles sin proyecto (SIN_PROYECTO) - Actualizar campos personales
                 $movilPersona = MovilPersona::find($proyectoAlmacen->id_referencia);
                 if ($movilPersona) {
-                    if ($request->has('nombre_proyecto')) {
-                        $movilPersona->nombre = $request->nombre_proyecto;
+                    // Campos personales
+                    if ($request->has('nom_ape')) {
+                        $movilPersona->nom_ape = $request->nom_ape;
+                        // Actualizar también el nombre en proyecto_almacen
+                        $proyectoAlmacen->nombre_proyecto = $request->nom_ape;
                     }
-                    if ($request->has('responsable')) {
-                        $movilPersona->id_responsable = $request->responsable;
+                    if ($request->has('dni')) {
+                        $movilPersona->dni = $request->dni;
                     }
+                    if ($request->has('ciudad')) {
+                        $movilPersona->ciudad = $request->ciudad;
+                    }
+                    if ($request->has('observaciones')) {
+                        $movilPersona->observaciones = $request->observaciones;
+                    }
+                    
+                    // Firma (si viene en base64)
+                    if ($request->has('firma') && !empty($request->firma)) {
+                        $firmaData = $request->firma;
+                        if (preg_match('/^data:image\/(\w+);base64,/', $firmaData, $type)) {
+                            $firmaData = substr($firmaData, strpos($firmaData, ',') + 1);
+                        }
+                        $movilPersona->firma = base64_decode($firmaData);
+                    }
+                    
                     if ($request->has('fecha_registro')) {
                         $movilPersona->fecha_registro = $request->fecha_registro;
                     }
                     if ($request->has('estado')) {
                         $movilPersona->estado = $request->estado;
+                        // ✅ Actualizar también el estado en proyecto_almacen
+                        $proyectoAlmacen->estado = $request->estado;
                     }
+                    
                     $movilPersona->save();
+                    
+                    // Asegurar que proyecto_almacen también se actualice
+                    $proyectoAlmacen->save();
                 }
             }
 

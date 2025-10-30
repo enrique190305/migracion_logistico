@@ -3,7 +3,7 @@
 -- 1. Eliminar la vista si existe
 DROP VIEW IF EXISTS vista_proyectos_almacen;
 
--- 2. Crear la vista unificada de proyectos
+-- 2. Crear la vista unificada de proyectos (con campos personales)
 CREATE VIEW vista_proyectos_almacen AS
 SELECT 
     pa.id_proyecto_almacen,
@@ -20,11 +20,18 @@ SELECT
     e.ruc AS empresa_ruc,
     b.nombre AS bodega_nombre,
     b.ubicacion AS bodega_ubicacion,
-    r.tipo_reserva AS reserva_tipo
+    r.tipo_reserva AS reserva_tipo,
+    -- ✅ Campos personales de movil_persona (para móviles SIN proyecto)
+    mp.nom_ape,
+    mp.dni,
+    mp.ciudad,
+    mp.observaciones,
+    mp.firma
 FROM proyecto_almacen pa
 INNER JOIN empresa e ON pa.id_empresa = e.id_empresa
 INNER JOIN bodega b ON pa.id_bodega = b.id_bodega
-INNER JOIN reserva r ON pa.id_reserva = r.id_reserva;
+INNER JOIN reserva r ON pa.id_reserva = r.id_reserva
+LEFT JOIN movil_persona mp ON pa.tipo_movil = 'SIN_PROYECTO' AND pa.id_referencia = mp.id_movil_persona;
 
 -- 3. Verificar que se creó correctamente
 SELECT COUNT(*) AS total_registros

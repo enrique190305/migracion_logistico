@@ -58,7 +58,14 @@ const RegistroProyecto = () => {
     descripcion: '',
     fecha_registro: new Date().toISOString().split('T')[0], // Fecha actual
     responsable: '',
-    estado: 'activo'
+    estado: 'activo',
+    
+    // ✅ NUEVOS CAMPOS: Para Móvil sin Proyecto (Datos Personales)
+    nom_ape: '',        // Nombre completo de la persona
+    dni: '',            // DNI de la persona
+    ciudad: '',         // Ciudad de residencia
+    observaciones: '',  // Observaciones adicionales
+    firma: null         // Archivo de firma (imagen)
   });
 
   // Estado para vista de subproyectos
@@ -93,7 +100,14 @@ const RegistroProyecto = () => {
   const [formEditarPersona, setFormEditarPersona] = useState({
     nombre_proyecto: '',
     responsable: '',
-    fecha_registro: ''
+    fecha_registro: '',
+    // ✅ Nuevos campos personales
+    nom_ape: '',
+    dni: '',
+    ciudad: '',
+    observaciones: '',
+    firma: null,
+    estado: 'ACTIVO' // ✅ Campo de estado
   });
 
   // Estados para editar proyecto con subproyectos
@@ -314,31 +328,66 @@ const RegistroProyecto = () => {
           );
           return false;
         }
-        if (!formData.responsable) {
-          mostrarNotificacion(
-            'warning',
-            'Responsable Requerido',
-            'Debe seleccionar un responsable para el proyecto.',
-            [
-              { label: '⚠️ Campo faltante', valor: 'Responsable' },
-              { label: '🔧 Acción', valor: 'Seleccione un responsable de la lista' }
-            ]
-          );
-          return false;
+
+        // ✅ Validación para MÓVIL CON PROYECTO
+        if (formData.movil_tipo === 'con_proyecto') {
+          if (!formData.movil_nombre) {
+            mostrarNotificacion(
+              'warning',
+              'Nombre de Proyecto Requerido',
+              'Debe ingresar el nombre del proyecto.',
+              [
+                { label: '⚠️ Campo faltante', valor: 'Nombre del Proyecto' },
+                { label: '📋 Tipo seleccionado', valor: 'Con Proyecto' },
+                { label: '🔧 Acción', valor: 'Ingrese un nombre para el proyecto' }
+              ]
+            );
+            return false;
+          }
+          if (!formData.responsable) {
+            mostrarNotificacion(
+              'warning',
+              'Responsable Requerido',
+              'Debe seleccionar un responsable para el proyecto.',
+              [
+                { label: '⚠️ Campo faltante', valor: 'Responsable' },
+                { label: '🔧 Acción', valor: 'Seleccione un responsable de la lista' }
+              ]
+            );
+            return false;
+          }
         }
-        if (formData.movil_tipo === 'con_proyecto' && !formData.movil_nombre) {
-          mostrarNotificacion(
-            'warning',
-            'Nombre de Proyecto Requerido',
-            'Debe ingresar el nombre del proyecto.',
-            [
-              { label: '⚠️ Campo faltante', valor: 'Nombre del Proyecto' },
-              { label: '📋 Tipo seleccionado', valor: 'Con Proyecto' },
-              { label: '🔧 Acción', valor: 'Ingrese un nombre para el proyecto' }
-            ]
-          );
-          return false;
+
+        // ✅ Validación para MÓVIL SIN PROYECTO (datos personales)
+        if (formData.movil_tipo === 'sin_proyecto') {
+          if (!formData.nom_ape || !formData.dni || !formData.ciudad) {
+            mostrarNotificacion(
+              'warning',
+              'Datos Personales Incompletos',
+              'Debe completar todos los datos de la persona.',
+              [
+                { label: '⚠️ Campos requeridos', valor: 'Nombre Completo, DNI y Ciudad' },
+                { label: '📋 Tipo seleccionado', valor: 'Móvil sin Proyecto' },
+                { label: '🔧 Acción', valor: 'Complete todos los campos obligatorios' }
+              ]
+            );
+            return false;
+          }
+          if (formData.dni.length !== 8) {
+            mostrarNotificacion(
+              'warning',
+              'DNI Inválido',
+              'El DNI debe tener exactamente 8 dígitos.',
+              [
+                { label: '⚠️ DNI ingresado', valor: formData.dni },
+                { label: '📋 Longitud esperada', valor: '8 dígitos' },
+                { label: '🔧 Acción', valor: 'Verifique el DNI ingresado' }
+              ]
+            );
+            return false;
+          }
         }
+        
         return true;
       default:
         return true;
@@ -361,17 +410,33 @@ const RegistroProyecto = () => {
         bodega_id: parseInt(formData.bodega_id),
         tipo_reserva: parseInt(formData.tipo_reserva), // ID de la reserva
         movil_tipo: formData.movil_tipo,
-        responsable: parseInt(formData.responsable),
         fecha_registro: formData.fecha_registro
       };
 
-      // Solo agregar campos opcionales si tienen valor
-      if (formData.movil_tipo === 'con_proyecto' && formData.movil_nombre) {
-        proyectoData.movil_nombre = formData.movil_nombre;
-      }
-      
-      if (formData.descripcion) {
-        proyectoData.descripcion = formData.descripcion;
+      // ✅ Campos según el tipo de móvil
+      if (formData.movil_tipo === 'con_proyecto') {
+        // Para proyectos CON subproyectos
+        if (formData.movil_nombre) {
+          proyectoData.movil_nombre = formData.movil_nombre;
+        }
+        proyectoData.responsable = parseInt(formData.responsable);
+        
+        if (formData.descripcion) {
+          proyectoData.descripcion = formData.descripcion;
+        }
+      } else if (formData.movil_tipo === 'sin_proyecto') {
+        // ✅ Para móviles SIN proyecto (datos personales)
+        proyectoData.nom_ape = formData.nom_ape;
+        proyectoData.dni = formData.dni;
+        proyectoData.ciudad = formData.ciudad;
+        
+        if (formData.observaciones) {
+          proyectoData.observaciones = formData.observaciones;
+        }
+        
+        if (formData.firma) {
+          proyectoData.firma = formData.firma; // Base64 de la firma
+        }
       }
 
       console.log('Enviando datos:', proyectoData);
@@ -437,7 +502,13 @@ const RegistroProyecto = () => {
       descripcion: '',
       fecha_registro: new Date().toISOString().split('T')[0], // Fecha actual
       responsable: '',
-      estado: 'activo'
+      estado: 'activo',
+      // ✅ Limpiar nuevos campos personales
+      nom_ape: '',
+      dni: '',
+      ciudad: '',
+      observaciones: '',
+      firma: null
     });
   };
 
@@ -717,9 +788,13 @@ const RegistroProyecto = () => {
   const iniciarEdicionPersona = (persona) => {
     setPersonaEditando(persona);
     setFormEditarPersona({
-      nombre_proyecto: persona.nombre_proyecto || '',
-      responsable: persona.id_responsable || '',
-      fecha_registro: persona.fecha_registro ? persona.fecha_registro.split('T')[0] : ''
+      nom_ape: persona.nombre_proyecto || '', // El nombre está en nombre_proyecto
+      dni: persona.dni || '',
+      ciudad: persona.ciudad || '',
+      observaciones: persona.observaciones || '',
+      firma: persona.firma || null,
+      fecha_registro: persona.fecha_registro ? persona.fecha_registro.split('T')[0] : '',
+      estado: persona.estado || 'ACTIVO' // ✅ Cargar estado actual
     });
     setEditandoPersona(true);
   };
@@ -737,13 +812,26 @@ const RegistroProyecto = () => {
   const handleSubmitEditarPersona = async (e) => {
     e.preventDefault();
     
-    if (!formEditarPersona.nombre_proyecto || !formEditarPersona.responsable) {
+    // ✅ Validar campos personales
+    if (!formEditarPersona.nom_ape || !formEditarPersona.dni || !formEditarPersona.ciudad) {
       mostrarNotificacion(
         'warning',
         'Datos Incompletos',
         'Debe completar todos los campos obligatorios.',
         [
-          { label: '⚠️ Campos requeridos', valor: 'Nombre y Responsable' }
+          { label: '⚠️ Campos requeridos', valor: 'Nombre Completo, DNI y Ciudad' }
+        ]
+      );
+      return;
+    }
+
+    if (formEditarPersona.dni.length !== 8) {
+      mostrarNotificacion(
+        'warning',
+        'DNI Inválido',
+        'El DNI debe tener exactamente 8 dígitos.',
+        [
+          { label: '⚠️ DNI ingresado', valor: formEditarPersona.dni }
         ]
       );
       return;
@@ -751,17 +839,34 @@ const RegistroProyecto = () => {
 
     setLoading(true);
     try {
+      // ✅ Enviar datos personales
+      const datosActualizados = {
+        nom_ape: formEditarPersona.nom_ape,
+        dni: formEditarPersona.dni,
+        ciudad: formEditarPersona.ciudad,
+        observaciones: formEditarPersona.observaciones,
+        fecha_registro: formEditarPersona.fecha_registro,
+        estado: formEditarPersona.estado // ✅ Incluir estado
+      };
+
+      // Agregar firma si fue modificada
+      if (formEditarPersona.firma) {
+        datosActualizados.firma = formEditarPersona.firma;
+      }
+
       const response = await proyectosAPI.actualizarProyecto(
         personaEditando.id_proyecto_almacen,
-        formEditarPersona
+        datosActualizados
       );
 
       mostrarNotificacion(
         'success',
         'Móvil sin Proyecto Actualizado',
-        'Los datos se han actualizado correctamente.',
+        'Los datos personales se han actualizado correctamente.',
         [
-          { label: '👤 Persona', valor: formEditarPersona.nombre_proyecto },
+          { label: '👤 Persona', valor: formEditarPersona.nom_ape },
+          { label: '📇 DNI', valor: formEditarPersona.dni },
+          { label: '🏙️ Ciudad', valor: formEditarPersona.ciudad },
           { label: '✅ Estado', valor: 'Actualizado' }
         ]
       );
@@ -797,9 +902,13 @@ const RegistroProyecto = () => {
     setEditandoPersona(false);
     setPersonaEditando(null);
     setFormEditarPersona({
-      nombre_proyecto: '',
-      responsable: '',
-      fecha_registro: ''
+      nom_ape: '',
+      dni: '',
+      ciudad: '',
+      observaciones: '',
+      firma: null,
+      fecha_registro: '',
+      estado: 'ACTIVO' // ✅ Resetear estado
     });
   };
 
@@ -827,7 +936,7 @@ const RegistroProyecto = () => {
         ]
       );
 
-      // Recargar proyectos
+      // Recargar proyectos para reflejar los cambios
       await cargarProyectos();
 
       setTimeout(() => {
@@ -1520,26 +1629,114 @@ const RegistroProyecto = () => {
                       <p>Después de crear el proyecto principal, podrá agregar subproyectos desde la vista de gestión.</p>
                     </div>
                   </div>
+
+                  {/* Responsable del Proyecto (solo para CON proyecto) */}
+                  <div className="form-group full-width">
+                    <label>Responsable del Proyecto *</label>
+                    <select
+                      name="responsable"
+                      value={formData.responsable}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      <option value="">Seleccione una persona</option>
+                      {personas.map(persona => (
+                        <option key={persona.id} value={persona.id}>
+                          {persona.nombre_completo || persona.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </>
               )}
 
-              {formData.movil_tipo && (
-                <div className="form-group full-width">
-                  <label>Responsable del Proyecto *</label>
-                  <select
-                    name="responsable"
-                    value={formData.responsable}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    <option value="">Seleccione una persona</option>
-                    {personas.map(persona => (
-                      <option key={persona.id} value={persona.id}>
-                        {persona.nombre_completo || persona.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              {/* ✅ FORMULARIO PARA MÓVIL SIN PROYECTO */}
+              {formData.movil_tipo === 'sin_proyecto' && (
+                <>
+                  <div className="info-box info">
+                    <div className="info-icon">ℹ️</div>
+                    <div className="info-content">
+                      <strong>Nuevo Personal sin Proyecto</strong>
+                      <p>Complete los datos de la persona que será asignada al móvil.</p>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Nombre Completo *</label>
+                    <input
+                      type="text"
+                      name="nom_ape"
+                      value={formData.nom_ape}
+                      onChange={handleInputChange}
+                      placeholder="Ej: Juan Pérez García"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>DNI *</label>
+                    <input
+                      type="text"
+                      name="dni"
+                      value={formData.dni}
+                      onChange={handleInputChange}
+                      placeholder="12345678"
+                      maxLength="8"
+                      pattern="[0-9]{8}"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Ciudad *</label>
+                    <input
+                      type="text"
+                      name="ciudad"
+                      value={formData.ciudad}
+                      onChange={handleInputChange}
+                      placeholder="Ej: Lima"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Observaciones</label>
+                    <textarea
+                      name="observaciones"
+                      value={formData.observaciones}
+                      onChange={handleInputChange}
+                      placeholder="Observaciones adicionales..."
+                      rows="3"
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Firma (Imagen)</label>
+                    <input
+                      type="file"
+                      name="firma"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormData(prev => ({
+                              ...prev,
+                              firma: reader.result
+                            }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    {formData.firma && (
+                      <div className="firma-preview">
+                        <img src={formData.firma} alt="Vista previa de firma" style={{maxWidth: '200px', marginTop: '10px'}} />
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
 
@@ -1601,24 +1798,60 @@ const RegistroProyecto = () => {
                       : '-'}
                   </span>
                 </div>
+
+                {/* ✅ Mostrar datos del PROYECTO */}
                 {formData.movil_tipo === 'con_proyecto' && (
-                  <div className="resumen-item">
-                    <span className="resumen-label">Nombre del Proyecto:</span>
-                    <span className="resumen-value">{formData.movil_nombre || '-'}</span>
-                  </div>
+                  <>
+                    <div className="resumen-item">
+                      <span className="resumen-label">Nombre del Proyecto:</span>
+                      <span className="resumen-value">{formData.movil_nombre || '-'}</span>
+                    </div>
+                    <div className="resumen-item">
+                      <span className="resumen-label">Responsable:</span>
+                      <span className="resumen-value">
+                        {formData.responsable 
+                          ? (() => {
+                              const persona = personas.find(p => p.id === parseInt(formData.responsable));
+                              return persona ? (persona.nombre_completo || persona.nombre) : '-';
+                            })()
+                          : '-'
+                        }
+                      </span>
+                    </div>
+                  </>
                 )}
-                <div className="resumen-item">
-                  <span className="resumen-label">Responsable:</span>
-                  <span className="resumen-value">
-                    {formData.responsable 
-                      ? (() => {
-                          const persona = personas.find(p => p.id === parseInt(formData.responsable));
-                          return persona ? (persona.nombre_completo || persona.nombre) : '-';
-                        })()
-                      : '-'
-                    }
-                  </span>
-                </div>
+
+                {/* ✅ Mostrar datos PERSONALES para móvil sin proyecto */}
+                {formData.movil_tipo === 'sin_proyecto' && (
+                  <>
+                    <div className="resumen-item">
+                      <span className="resumen-label">Nombre Completo:</span>
+                      <span className="resumen-value">{formData.nom_ape || '-'}</span>
+                    </div>
+                    <div className="resumen-item">
+                      <span className="resumen-label">DNI:</span>
+                      <span className="resumen-value">{formData.dni || '-'}</span>
+                    </div>
+                    <div className="resumen-item">
+                      <span className="resumen-label">Ciudad:</span>
+                      <span className="resumen-value">{formData.ciudad || '-'}</span>
+                    </div>
+                    {formData.observaciones && (
+                      <div className="resumen-item">
+                        <span className="resumen-label">Observaciones:</span>
+                        <span className="resumen-value">{formData.observaciones}</span>
+                      </div>
+                    )}
+                    {formData.firma && (
+                      <div className="resumen-item">
+                        <span className="resumen-label">Firma:</span>
+                        <div className="firma-preview-resumen">
+                          <img src={formData.firma} alt="Firma" style={{maxWidth: '150px', border: '1px solid #ddd', padding: '5px'}} />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="form-group full-width">
@@ -1667,7 +1900,7 @@ const RegistroProyecto = () => {
                 <h4>Móviles con Proyectos</h4>
                 <p>Ver todos los proyectos que se han creado y sus subproyectos</p>
                 <div className="menu-proyectos-badge">
-                  {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO').length} proyectos
+                  {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO' && p.estado === 'ACTIVO').length} proyectos
                 </div>
               </div>
 
@@ -1676,7 +1909,7 @@ const RegistroProyecto = () => {
                 <h4>Móviles sin Proyectos</h4>
                 <p>Ver todos los proyectos de personas sin proyecto</p>
                 <div className="menu-proyectos-badge">
-                  {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO').length} personas
+                  {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO' && p.estado === 'ACTIVO').length} personas
                 </div>
               </div>
             </div>
@@ -1693,18 +1926,18 @@ const RegistroProyecto = () => {
                 <h3 style={{marginTop: '10px'}}>Móviles con Proyectos</h3>
               </div>
               <p className="proyectos-count">
-                {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO').length} proyecto(s)
+                {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO' && p.estado === 'ACTIVO').length} proyecto(s)
               </p>
             </div>
             <div className="proyectos-grid">
-              {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO').length === 0 ? (
+              {proyectos.filter(p => p.tipo_movil === 'CON_PROYECTO' && p.estado === 'ACTIVO').length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">📊</div>
                   <p>No hay proyectos con subproyectos registrados</p>
                 </div>
               ) : (
                 proyectos
-                  .filter(p => p.tipo_movil === 'CON_PROYECTO')
+                  .filter(p => p.tipo_movil === 'CON_PROYECTO' && p.estado === 'ACTIVO')
                   .map(proyecto => (
                     <div key={proyecto.id_proyecto_almacen} className="proyecto-card">
                       <div className="proyecto-icon">📊</div>
@@ -1780,18 +2013,18 @@ const RegistroProyecto = () => {
                 <h3 style={{marginTop: '10px'}}>Móviles sin Proyectos</h3>
               </div>
               <p className="proyectos-count">
-                {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO').length} persona(s)
+                {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO' && p.estado === 'ACTIVO').length} persona(s)
               </p>
             </div>
             <div className="proyectos-grid">
-              {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO').length === 0 ? (
+              {proyectos.filter(p => p.tipo_movil === 'SIN_PROYECTO' && p.estado === 'ACTIVO').length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">👤</div>
                   <p>No hay personas sin proyecto registradas</p>
                 </div>
               ) : (
                 proyectos
-                  .filter(p => p.tipo_movil === 'SIN_PROYECTO')
+                  .filter(p => p.tipo_movil === 'SIN_PROYECTO' && p.estado === 'ACTIVO')
                   .map(proyecto => (
                     <div key={proyecto.id_proyecto_almacen} className="proyecto-card persona-card">
                       <div className="proyecto-icon">👤</div>
@@ -1864,33 +2097,42 @@ const RegistroProyecto = () => {
                 </p>
 
                 <div className="form-grid">
-                  <div className="form-group full-width">
-                    <label>Nombre de la Persona *</label>
+                  <div className="form-group">
+                    <label>Nombre Completo *</label>
                     <input
                       type="text"
-                      name="nombre_proyecto"
-                      value={formEditarPersona.nombre_proyecto}
+                      name="nom_ape"
+                      value={formEditarPersona.nom_ape}
                       onChange={handleEditarPersonaChange}
-                      placeholder="Ej: Juan Pérez"
+                      placeholder="Ej: Juan Pérez García"
                       required
                     />
                   </div>
 
-                  <div className="form-group full-width">
-                    <label>Responsable *</label>
-                    <select
-                      name="responsable"
-                      value={formEditarPersona.responsable}
+                  <div className="form-group">
+                    <label>DNI *</label>
+                    <input
+                      type="text"
+                      name="dni"
+                      value={formEditarPersona.dni}
                       onChange={handleEditarPersonaChange}
+                      placeholder="12345678"
+                      maxLength="8"
+                      pattern="[0-9]{8}"
                       required
-                    >
-                      <option value="">Seleccione una persona</option>
-                      {personas.map(persona => (
-                        <option key={persona.id} value={persona.id}>
-                          {persona.nombre_completo || persona.nombre}
-                        </option>
-                      ))}
-                    </select>
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Ciudad *</label>
+                    <input
+                      type="text"
+                      name="ciudad"
+                      value={formEditarPersona.ciudad}
+                      onChange={handleEditarPersonaChange}
+                      placeholder="Ej: Lima"
+                      required
+                    />
                   </div>
 
                   <div className="form-group">
@@ -1901,6 +2143,72 @@ const RegistroProyecto = () => {
                       value={formEditarPersona.fecha_registro}
                       onChange={handleEditarPersonaChange}
                     />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Estado</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <span style={{ 
+                        padding: '8px 16px', 
+                        borderRadius: '4px', 
+                        fontWeight: 'bold',
+                        backgroundColor: formEditarPersona.estado === 'ACTIVO' ? '#28a745' : '#dc3545',
+                        color: 'white'
+                      }}>
+                        {formEditarPersona.estado === 'ACTIVO' ? '✓ ACTIVO' : '✗ INACTIVO'}
+                      </span>
+                      <button 
+                        type="button"
+                        className={formEditarPersona.estado === 'ACTIVO' ? 'btn-danger' : 'btn-success'}
+                        onClick={() => {
+                          setFormEditarPersona(prev => ({
+                            ...prev,
+                            estado: prev.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO'
+                          }));
+                        }}
+                        style={{ padding: '8px 16px' }}
+                      >
+                        {formEditarPersona.estado === 'ACTIVO' ? '⏸ Desactivar' : '▶ Activar'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Observaciones</label>
+                    <textarea
+                      name="observaciones"
+                      value={formEditarPersona.observaciones}
+                      onChange={handleEditarPersonaChange}
+                      placeholder="Observaciones adicionales..."
+                      rows="3"
+                    />
+                  </div>
+
+                  <div className="form-group full-width">
+                    <label>Firma (Imagen)</label>
+                    <input
+                      type="file"
+                      name="firma"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setFormEditarPersona(prev => ({
+                              ...prev,
+                              firma: reader.result
+                            }));
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    {formEditarPersona.firma && (
+                      <div className="firma-preview">
+                        <img src={formEditarPersona.firma} alt="Vista previa de firma" style={{maxWidth: '200px', marginTop: '10px'}} />
+                      </div>
+                    )}
                   </div>
                 </div>
 
