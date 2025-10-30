@@ -63,12 +63,22 @@ const Login = ({ onLogin }) => {
       <div className="login-left-panel">
         <div className="logo-container">
           <div className="logo">
-            <span className="logo-text">ProcessMart</span>
+            <img 
+              src="/Processmart.png" 
+              alt="Process-One Logo" 
+              style={{
+                width: '100px',
+                height: '100px',
+                objectFit: 'contain',
+                borderRadius: '15px',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
+              }}
+            />
           </div>
         </div>
         
         <div className="system-info">
-          <h1 className="system-title">ProcessMart</h1>
+          <h1 className="system-title">Process-One</h1>
           <p className="system-subtitle">Sistema de Gestión Empresarial</p>
           
           <div className="system-description">
@@ -99,7 +109,16 @@ const Login = ({ onLogin }) => {
         <div className="login-form-container">
           <div className="login-header">
             <div className="logo-small">
-              <span className="logo-text-small">ProcessMart</span>
+              <img 
+                src="/Processmart.png" 
+                alt="Process-One Logo" 
+                style={{
+                  width: '60px',
+                  height: '60px',
+                  objectFit: 'contain',
+                  marginBottom: '10px'
+                }}
+              />
             </div>
             <h2>Iniciar Sesión</h2>
             <p className="login-subtitle">Acceda a su cuenta empresarial</p>

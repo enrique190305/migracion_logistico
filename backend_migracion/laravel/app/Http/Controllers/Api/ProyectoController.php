@@ -237,6 +237,30 @@ class ProyectoController extends Controller
                 return $proyecto;
             });
 
+            // Función para limpiar recursivamente datos UTF-8
+            $cleanUtf8 = function($data) use (&$cleanUtf8) {
+                if (is_string($data)) {
+                    // Si es string, asegurar que sea UTF-8 válido
+                    if (!mb_check_encoding($data, 'UTF-8')) {
+                        return mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1');
+                    }
+                    return $data;
+                } elseif (is_array($data) || is_object($data)) {
+                    // Si es array u objeto, limpiar recursivamente
+                    foreach ($data as $key => $value) {
+                        if (is_object($data)) {
+                            $data->$key = $cleanUtf8($value);
+                        } else {
+                            $data[$key] = $cleanUtf8($value);
+                        }
+                    }
+                }
+                return $data;
+            };
+
+            // Limpiar los datos antes de devolverlos
+            $proyectos = $cleanUtf8($proyectos);
+
             return response()->json([
                 'success' => true,
                 'data' => $proyectos
@@ -294,12 +318,45 @@ class ProyectoController extends Controller
             // ✅ Procesar firma si viene en base64
             $firmaBlob = null;
             if ($request->has('firma') && !empty($request->firma)) {
-                // Remover el prefijo data:image si existe
-                $firmaData = $request->firma;
-                if (preg_match('/^data:image\/(\w+);base64,/', $firmaData, $type)) {
-                    $firmaData = substr($firmaData, strpos($firmaData, ',') + 1);
+                try {
+                    // Remover el prefijo data:image si existe
+                    $firmaData = $request->firma;
+                    if (preg_match('/^data:image\/(\w+);base64,/', $firmaData, $type)) {
+                        $firmaData = substr($firmaData, strpos($firmaData, ',') + 1);
+                    }
+                    
+                    // Decodificar base64 y validar
+                    $firmaBlob = base64_decode($firmaData, true);
+                    
+                    // Si la decodificación falla, usar null
+                    if ($firmaBlob === false) {
+                        Log::warning('No se pudo decodificar la firma, se guardará NULL');
+                        $firmaBlob = null;
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Error al procesar firma: ' . $e->getMessage());
+                    $firmaBlob = null;
                 }
-                $firmaBlob = base64_decode($firmaData);
+            }
+
+            // Validar y limpiar parámetros de texto para evitar problemas de codificación
+            $nom_ape = $request->nom_ape ?? '';
+            $dni = $request->dni ?? '';
+            $ciudad = $request->ciudad ?? '';
+            $observaciones = $request->observaciones ?? '';
+            
+            // Asegurar que todos los strings estén en UTF-8 válido
+            if (!mb_check_encoding($nom_ape, 'UTF-8')) {
+                $nom_ape = mb_convert_encoding($nom_ape, 'UTF-8', 'UTF-8');
+            }
+            if (!mb_check_encoding($dni, 'UTF-8')) {
+                $dni = mb_convert_encoding($dni, 'UTF-8', 'UTF-8');
+            }
+            if (!mb_check_encoding($ciudad, 'UTF-8')) {
+                $ciudad = mb_convert_encoding($ciudad, 'UTF-8', 'UTF-8');
+            }
+            if (!mb_check_encoding($observaciones, 'UTF-8')) {
+                $observaciones = mb_convert_encoding($observaciones, 'UTF-8', 'UTF-8');
             }
 
             // Usar stored procedure con nuevos parámetros
@@ -309,10 +366,10 @@ class ProyectoController extends Controller
                 $request->bodega_id,         // id_bodega
                 $request->tipo_reserva,      // id_reserva
                 null,                        // id_responsable (NULL para móvil sin proyecto)
-                $request->nom_ape,           // nom_ape (nombre de la persona)
-                $request->dni,               // dni
-                $request->ciudad,            // ciudad
-                $request->observaciones,     // observaciones
+                $nom_ape,                    // nom_ape (nombre de la persona)
+                $dni,                        // dni
+                $ciudad,                     // ciudad
+                $observaciones,              // observaciones
                 $firmaBlob,                  // firma (BLOB)
                 $request->fecha_registro     // fecha_registro
             ]);
@@ -338,22 +395,57 @@ class ProyectoController extends Controller
             ->where('id_proyecto_almacen', $resultado[0]->id_proyecto_almacen)
             ->first();
 
+        // Función para limpiar recursivamente datos UTF-8
+        $cleanUtf8 = function($data) use (&$cleanUtf8) {
+            if (is_string($data)) {
+                // Si es string, asegurar que sea UTF-8 válido
+                if (!mb_check_encoding($data, 'UTF-8')) {
+                    return mb_convert_encoding($data, 'UTF-8', 'ISO-8859-1');
+                }
+                return $data;
+            } elseif (is_array($data) || is_object($data)) {
+                // Si es array u objeto, limpiar recursivamente
+                foreach ($data as $key => $value) {
+                    if (is_object($data)) {
+                        $data->$key = $cleanUtf8($value);
+                    } else {
+                        $data[$key] = $cleanUtf8($value);
+                    }
+                }
+            }
+            return $data;
+        };
+
+        // Limpiar los datos antes de devolverlos
+        $proyectoCreado = $cleanUtf8($proyectoCreado);
+        $resultadoLimpio = $cleanUtf8($resultado[0]);
+
         return response()->json([
             'success' => true,
             'message' => 'Proyecto registrado exitosamente',
             'data' => [
                 'proyecto' => $proyectoCreado,
-                'codigo_proyecto' => $resultado[0]->codigo_proyecto
+                'codigo_proyecto' => $resultadoLimpio->codigo_proyecto
             ]
         ], 201);
 
     } catch (\Exception $e) {
+        DB::rollBack();
         Log::error('Error al crear proyecto: ' . $e->getMessage());
         Log::error('Stack trace: ' . $e->getTraceAsString());
+        Log::error('Request data: ' . json_encode($request->except(['firma']))); // Sin firma para evitar logs enormes
+        
+        // Obtener mensaje más específico
+        $mensajeError = $e->getMessage();
+        
+        // Si es un error de JSON/UTF-8, dar mensaje más claro
+        if (strpos($mensajeError, 'Malformed UTF-8') !== false || strpos($mensajeError, 'incorrectly encoded') !== false) {
+            $mensajeError = 'Error al procesar los datos. Verifique que no haya caracteres especiales en los campos de texto.';
+        }
         
         return response()->json([
             'success' => false,
-            'message' => 'Error al registrar proyecto: ' . $e->getMessage()
+            'message' => 'Error al registrar proyecto: ' . $mensajeError
         ], 500);
     }
 }

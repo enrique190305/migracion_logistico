@@ -361,42 +361,54 @@ const Aprobacion = () => {
                   <p>Cargando detalles de la orden...</p>
                 </div>
               ) : detallesOrden.length > 0 ? (
-                <div className="detalle-items">
-                  <table className="detalle-table">
-                    <thead>
-                      <tr>
-                        <th>Código</th>
-                        <th>Descripción</th>
-                        <th>Unidad</th>
-                        <th>Cantidad</th>
-                        <th>Precio Unit.</th>
-                        <th>Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detallesOrden.map((item, idx) => (
-                        <tr key={idx}>
-                          <td>{item.codigo_producto || item.codigo_servicio}</td>
-                          <td>{item.descripcion}</td>
-                          <td>{item.unidad}</td>
-                          <td>{item.cantidad}</td>
-                          <td>{formatCurrency(item.precio_unitario, selectedOrden.moneda)}</td>
-                          <td>{formatCurrency(item.subtotal, selectedOrden.moneda)}</td>
+                <>
+                  <div className="detalle-info-header">
+                    <div className="info-badge">
+                      <span className="badge-icon">📦</span>
+                      <span className="badge-text">{detallesOrden.length} {detallesOrden.length === 1 ? 'Producto' : 'Productos'}</span>
+                    </div>
+                    <div className="info-badge">
+                      <span className="badge-icon">💰</span>
+                      <span className="badge-text">Moneda: {selectedOrden.moneda || 'PEN'}</span>
+                    </div>
+                  </div>
+                  <div className="detalle-items">
+                    <table className="detalle-table">
+                      <thead>
+                        <tr>
+                          <th style={{width: '12%', paddingLeft: '30px'}}>Código</th>
+                          <th style={{width: '42%'}}>Descripción</th>
+                          <th style={{width: '10%', textAlign: 'center'}}>Unidad</th>
+                          <th style={{width: '11%', textAlign: 'right'}}>Cantidad</th>
+                          <th style={{width: '12%', textAlign: 'right'}}>Precio Unit.</th>
+                          <th style={{width: '13%', textAlign: 'right', paddingRight: '30px'}}>Subtotal</th>
                         </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr className="detalle-total-row">
-                        <td colSpan="5" className="detalle-total-label">
-                          <strong>TOTAL GENERAL:</strong>
-                        </td>
-                        <td className="detalle-total-value">
-                          <strong>{formatCurrency(calcularTotalDetalles(), selectedOrden.moneda)}</strong>
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {detallesOrden.map((item, idx) => (
+                          <tr key={idx}>
+                            <td style={{fontWeight: '600', color: '#495057', paddingLeft: '30px'}}>{item.codigo_producto || item.codigo_servicio}</td>
+                            <td style={{color: '#2c3e50', paddingRight: '25px'}}>{item.descripcion}</td>
+                            <td style={{textAlign: 'center', color: '#6c757d'}}>{item.unidad}</td>
+                            <td style={{textAlign: 'right', fontWeight: '600'}}>{parseFloat(item.cantidad).toFixed(2)}</td>
+                            <td style={{textAlign: 'right'}}>{formatCurrency(item.precio_unitario, selectedOrden.moneda)}</td>
+                            <td style={{textAlign: 'right', fontWeight: '700', color: '#28a745', paddingRight: '30px'}}>{formatCurrency(item.subtotal, selectedOrden.moneda)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="detalle-total-row">
+                          <td colSpan="5" className="detalle-total-label">
+                            <strong>TOTAL GENERAL:</strong>
+                          </td>
+                          <td className="detalle-total-value" style={{paddingRight: '30px'}}>
+                            <strong>{formatCurrency(calcularTotalDetalles(), selectedOrden.moneda)}</strong>
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </>
               ) : (
                 <div className="modal-loading">
                   <p>No hay detalles disponibles para esta orden</p>

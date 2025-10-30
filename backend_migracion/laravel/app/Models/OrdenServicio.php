@@ -31,7 +31,6 @@ class OrdenServicio extends Model
         'igv',
         'total_general',
         'estado',
-        'fecha_anulacion',
         'usuario_creacion',
         'fecha_creacion',
         'usuario_modificacion',
@@ -43,7 +42,6 @@ class OrdenServicio extends Model
         'fecha_requerida' => 'date',
         'igv' => 'decimal:2',
         'total_general' => 'decimal:2',
-        'fecha_anulacion' => 'datetime',
         'fecha_creacion' => 'datetime',
         'fecha_modificacion' => 'datetime',
     ];

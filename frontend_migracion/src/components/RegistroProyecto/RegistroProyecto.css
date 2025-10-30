@@ -1140,3 +1140,444 @@
     font-size: 13px;
   }
 }
+
+/* Estilos para Modal de Firma Digital */
+.firma-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.firma-modal-content {
+  background: white;
+  border-radius: 15px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.firma-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px 30px;
+  border-radius: 15px 15px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.firma-modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.firma-modal-icon {
+  font-size: 32px;
+}
+
+/* Paso 1: Términos y Condiciones */
+.terminos-container {
+  padding: 30px;
+}
+
+.terminos-content {
+  background: #f8f9fa;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 25px;
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 25px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #2c3e50;
+}
+
+.terminos-content h4 {
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 20px 0 10px 0;
+}
+
+.terminos-content p {
+  margin: 12px 0;
+  text-align: justify;
+}
+
+.terminos-content ul {
+  margin: 10px 0;
+  padding-left: 25px;
+}
+
+.terminos-content li {
+  margin: 8px 0;
+}
+
+.terminos-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.terminos-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.terminos-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.terminos-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.terminos-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.btn-no-acepto {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  border: none;
+  padding: 14px 35px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-no-acepto:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+}
+
+.btn-acepto {
+  background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+  color: white;
+  border: none;
+  padding: 14px 35px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-acepto:hover {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
+/* Paso 2: Canvas de Firma */
+.firma-canvas-container {
+  padding: 30px;
+}
+
+.canvas-wrapper {
+  background: white;
+  border: 3px solid #27ae60;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2);
+}
+
+.firma-canvas {
+  width: 100%;
+  height: 250px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  cursor: crosshair;
+  background: #fafafa;
+  touch-action: none;
+}
+
+.firma-canvas:hover {
+  border-color: #27ae60;
+  background: white;
+}
+
+.canvas-info {
+  margin-top: 12px;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.canvas-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+}
+
+.btn-borrar-firma {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #000;
+  border: none;
+  padding: 14px 35px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-borrar-firma:hover {
+  background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+}
+
+.btn-guardar-firma {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  border: none;
+  padding: 14px 35px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+}
+
+.btn-guardar-firma:hover {
+  background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+}
+
+.btn-guardar-firma:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Botón de Insertar Firma */
+.btn-insertar-firma {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  width: auto;
+  max-width: 280px;
+}
+
+.btn-insertar-firma:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.firma-preview {
+  margin-top: 15px;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 25px;
+  padding: 18px 25px;
+  background: #f0f9f4;
+  border: 2px solid #27ae60;
+  border-radius: 10px;
+}
+
+.firma-preview p {
+  margin: 0 !important;
+  color: #27ae60 !important;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.firma-preview img {
+  max-width: 280px !important;
+  width: auto !important;
+  max-height: 100px !important;
+  height: auto !important;
+  border: 2px solid #27ae60 !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  background: white !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  display: block !important;
+  object-fit: contain !important;
+  flex-shrink: 1;
+  cursor: default !important;
+  transition: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.firma-preview img:hover,
+.firma-preview img:active,
+.firma-preview img:focus {
+  transform: none !important;
+  scale: 1 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+.firma-preview-resumen {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.firma-preview-resumen img {
+  max-width: 100% !important;
+  width: auto !important;
+  max-height: 120px !important;
+  height: auto !important;
+  border: 2px solid #27ae60 !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
+  background: white !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+  display: inline-block !important;
+  cursor: default !important;
+  transition: none !important;
+  transform: none !important;
+  animation: none !important;
+}
+
+.firma-preview-resumen img:hover,
+.firma-preview-resumen img:active,
+.firma-preview-resumen img:focus {
+  transform: none !important;
+  scale: 1 !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Responsive para Modal de Firma */
+@media (max-width: 768px) {
+  .firma-modal-content {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 10px;
+  }
+
+  .firma-modal-header {
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .firma-modal-header h3 {
+    font-size: 20px;
+  }
+
+  .terminos-container,
+  .firma-canvas-container {
+    padding: 20px;
+  }
+
+  .terminos-content {
+    max-height: 300px;
+    padding: 20px;
+    font-size: 12px;
+  }
+
+  .terminos-actions,
+  .canvas-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .btn-no-acepto,
+  .btn-acepto,
+  .btn-borrar-firma,
+  .btn-guardar-firma {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 25px;
+  }
+
+  .firma-canvas {
+    height: 200px;
+  }
+  
+  .firma-preview {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+  
+  .firma-preview img {
+    max-width: 100% !important;
+    max-height: 150px !important;
+  }
+}

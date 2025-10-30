@@ -118,14 +118,36 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         <div className="logo-container">
           {!isCollapsed && (
             <>
-              <div className="logo-icon">PM</div>
+              <img 
+                src="/Processmart.png" 
+                alt="Process-One Logo" 
+                className="logo-image"
+                style={{
+                  width: '45px',
+                  height: '45px',
+                  objectFit: 'contain',
+                  borderRadius: '8px'
+                }}
+              />
               <div className="logo-text">
-                <span className="logo-title">ProcessMart</span>
+                <span className="logo-title">Process-One</span>
                 <span className="logo-subtitle">Sistema de Gestión</span>
               </div>
             </>
           )}
-          {isCollapsed && <div className="logo-icon-small">PM</div>}
+          {isCollapsed && (
+            <img 
+              src="/Processmart.png" 
+              alt="Process-One Logo" 
+              className="logo-image-small"
+              style={{
+                width: '35px',
+                height: '35px',
+                objectFit: 'contain',
+                borderRadius: '6px'
+              }}
+            />
+          )}
         </div>
         <button className="toggle-btn" onClick={onToggle}>
           {isCollapsed ? '▶' : '◀'}

@@ -1156,7 +1156,8 @@ class OrdenCompraServicioController extends Controller
 
             // Cambiar estado a ANULADO en lugar de eliminar
             $ordenCompra->estado = 'ANULADO';
-            $ordenCompra->fecha_anulacion = now();
+            $ordenCompra->fecha_modificacion = now();
+            $ordenCompra->usuario_modificacion = 'admin'; // TODO: Obtener usuario autenticado
             $ordenCompra->save();
 
             DB::commit();
@@ -1219,7 +1220,8 @@ class OrdenCompraServicioController extends Controller
 
             // Cambiar estado a ANULADO en lugar de eliminar
             $ordenServicio->estado = 'ANULADO';
-            $ordenServicio->fecha_anulacion = now();
+            $ordenServicio->fecha_modificacion = now();
+            $ordenServicio->usuario_modificacion = 'admin'; // TODO: Obtener usuario autenticado
             $ordenServicio->save();
 
             DB::commit();

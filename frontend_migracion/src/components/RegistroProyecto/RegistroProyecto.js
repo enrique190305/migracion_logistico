@@ -120,6 +120,15 @@ const RegistroProyecto = () => {
     fecha_registro: ''
   });
 
+  // ✅ Estados para Modal de Firma Digital
+  const [modalFirmaAbierto, setModalFirmaAbierto] = useState(false);
+  const [pasoFirma, setPasoFirma] = useState(1); // 1: Términos, 2: Canvas
+  const [terminosAceptados, setTerminosAceptados] = useState(false);
+  const [canvasRef, setCanvasRef] = useState(null);
+  const [dibujando, setDibujando] = useState(false);
+  const [firmaGuardada, setFirmaGuardada] = useState(false);
+  const [modoEdicion, setModoEdicion] = useState(false); // Para distinguir si es creación o edición
+
   // Cargar datos iniciales
   useEffect(() => {
     cargarEmpresas();
@@ -270,6 +279,167 @@ const RegistroProyecto = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  // ✅ FUNCIONES PARA MODAL DE FIRMA DIGITAL
+
+  /**
+   * Abrir modal de firma (modo creación)
+   */
+  const abrirModalFirma = () => {
+    setModoEdicion(false);
+    setModalFirmaAbierto(true);
+    setPasoFirma(1);
+    setTerminosAceptados(false);
+    setFirmaGuardada(false);
+  };
+
+  /**
+   * Abrir modal de firma (modo edición)
+   */
+  const abrirModalFirmaEdicion = () => {
+    setModoEdicion(true);
+    setModalFirmaAbierto(true);
+    setPasoFirma(1);
+    setTerminosAceptados(false);
+    setFirmaGuardada(false);
+  };
+
+  /**
+   * Cerrar modal de firma
+   */
+  const cerrarModalFirma = () => {
+    setModalFirmaAbierto(false);
+    setPasoFirma(1);
+    setTerminosAceptados(false);
+    setModoEdicion(false);
+  };
+
+  /**
+   * Aceptar términos y avanzar al canvas
+   */
+  const aceptarTerminos = () => {
+    setTerminosAceptados(true);
+    setPasoFirma(2);
+  };
+
+  /**
+   * Rechazar términos y cerrar modal
+   */
+  const rechazarTerminos = () => {
+    cerrarModalFirma();
+  };
+
+  /**
+   * Inicializar canvas cuando se muestra
+   */
+  useEffect(() => {
+    if (pasoFirma === 2 && canvasRef) {
+      const canvas = canvasRef;
+      const ctx = canvas.getContext('2d');
+      
+      // Ajustar tamaño del canvas
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      
+      // Fondo blanco
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }, [pasoFirma, canvasRef]);
+
+  /**
+   * Iniciar dibujo en canvas
+   */
+  const iniciarDibujo = (e) => {
+    if (!canvasRef) return;
+    
+    setDibujando(true);
+    const canvas = canvasRef;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    
+    ctx.beginPath();
+    ctx.moveTo(
+      e.clientX - rect.left,
+      e.clientY - rect.top
+    );
+  };
+
+  /**
+   * Dibujar en canvas
+   */
+  const dibujar = (e) => {
+    if (!dibujando || !canvasRef) return;
+    
+    const canvas = canvasRef;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    
+    ctx.lineTo(
+      e.clientX - rect.left,
+      e.clientY - rect.top
+    );
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  };
+
+  /**
+   * Finalizar dibujo
+   */
+  const finalizarDibujo = () => {
+    setDibujando(false);
+  };
+
+  /**
+   * Borrar firma del canvas
+   */
+  const borrarFirma = () => {
+    if (!canvasRef) return;
+    
+    const canvas = canvasRef;
+    const ctx = canvas.getContext('2d');
+    
+    // Limpiar canvas
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    setFirmaGuardada(false);
+  };
+
+  /**
+   * Guardar firma del canvas
+   */
+  const guardarFirma = () => {
+    if (!canvasRef) return;
+    
+    const canvas = canvasRef;
+    
+    // Convertir canvas a imagen base64
+    const firmaBase64 = canvas.toDataURL('image/png');
+    
+    // Guardar en formData o formEditarPersona según el modo
+    if (modoEdicion) {
+      setFormEditarPersona(prev => ({
+        ...prev,
+        firma: firmaBase64
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        firma: firmaBase64
+      }));
+    }
+    
+    setFirmaGuardada(true);
+    
+    // Cerrar modal
+    setTimeout(() => {
+      cerrarModalFirma();
+    }, 500);
   };
 
   const siguientePaso = () => {
@@ -1712,27 +1882,95 @@ const RegistroProyecto = () => {
 
                   <div className="form-group full-width">
                     <label>Firma (Imagen)</label>
-                    <input
-                      type="file"
-                      name="firma"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setFormData(prev => ({
-                              ...prev,
-                              firma: reader.result
-                            }));
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
+                    <button
+                      type="button"
+                      className="btn-insertar-firma"
+                      onClick={abrirModalFirma}
+                    >
+                      ✍️ {formData.firma ? 'Cambiar Firma' : 'Insertar Firma Digital'}
+                    </button>
                     {formData.firma && (
-                      <div className="firma-preview">
-                        <img src={formData.firma} alt="Vista previa de firma" style={{maxWidth: '200px', marginTop: '10px'}} />
+                      <div className="firma-preview-proyecto" style={{
+                        marginTop: '15px',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '20px',
+                        padding: '20px 30px',
+                        background: 'linear-gradient(135deg, #f0f9f4 0%, #e8f5e9 100%)',
+                        border: '2px solid #27ae60',
+                        borderRadius: '12px',
+                        boxShadow: '0 4px 15px rgba(39, 174, 96, 0.15)'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          flex: '1 1 auto',
+                          minWidth: '200px'
+                        }}>
+                          <div style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #27ae60 0%, #229954 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: '20px',
+                            fontWeight: 'bold',
+                            boxShadow: '0 2px 8px rgba(39, 174, 96, 0.3)',
+                            flexShrink: 0
+                          }}>
+                            ✓
+                          </div>
+                          <div>
+                            <p style={{
+                              margin: 0,
+                              color: '#27ae60',
+                              fontWeight: 700,
+                              fontSize: '15px',
+                              lineHeight: 1.4
+                            }}>
+                              Firma Digital Guardada
+                            </p>
+                            <p style={{
+                              margin: '4px 0 0 0',
+                              color: '#666',
+                              fontSize: '12px',
+                              fontWeight: 500
+                            }}>
+                              Lista para usar en el proyecto
+                            </p>
+                          </div>
+                        </div>
+                        <div style={{
+                          flex: '0 0 auto',
+                          padding: '15px 20px',
+                          background: 'white',
+                          borderRadius: '10px',
+                          border: '2px solid #27ae60',
+                          boxShadow: '0 3px 12px rgba(0, 0, 0, 0.08)'
+                        }}>
+                          <img 
+                            src={formData.firma} 
+                            alt="Vista previa de firma"
+                            style={{
+                              maxWidth: '300px',
+                              width: 'auto',
+                              maxHeight: '90px',
+                              height: 'auto',
+                              display: 'block',
+                              objectFit: 'contain',
+                              cursor: 'default',
+                              transition: 'none',
+                              transform: 'none',
+                              pointerEvents: 'none'
+                            }}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
@@ -2186,27 +2424,19 @@ const RegistroProyecto = () => {
 
                   <div className="form-group full-width">
                     <label>Firma (Imagen)</label>
-                    <input
-                      type="file"
-                      name="firma"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => {
-                            setFormEditarPersona(prev => ({
-                              ...prev,
-                              firma: reader.result
-                            }));
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
-                    />
+                    <button
+                      type="button"
+                      className="btn-insertar-firma"
+                      onClick={abrirModalFirmaEdicion}
+                    >
+                      ✍️ {formEditarPersona.firma ? 'Cambiar Firma' : 'Insertar Firma Digital'}
+                    </button>
                     {formEditarPersona.firma && (
                       <div className="firma-preview">
-                        <img src={formEditarPersona.firma} alt="Vista previa de firma" style={{maxWidth: '200px', marginTop: '10px'}} />
+                        <p>
+                          <span style={{fontSize: '18px'}}>✓</span> Firma guardada correctamente
+                        </p>
+                        <img src={formEditarPersona.firma} alt="Vista previa de firma" />
                       </div>
                     )}
                   </div>
@@ -2310,6 +2540,134 @@ const RegistroProyecto = () => {
           detalles={notificacion.detalles}
           onClose={cerrarNotificacion}
         />
+      )}
+
+      {/* ✅ MODAL DE FIRMA DIGITAL */}
+      {modalFirmaAbierto && (
+        <div className="firma-modal-overlay" onClick={(e) => {
+          if (e.target.className === 'firma-modal-overlay') {
+            cerrarModalFirma();
+          }
+        }}>
+          <div className="firma-modal-content">
+            <div className="firma-modal-header">
+              <span className="firma-modal-icon">✍️</span>
+              <h3>Firma Digital - Protección de Datos</h3>
+            </div>
+
+            {/* PASO 1: Términos y Condiciones */}
+            {pasoFirma === 1 && (
+              <div className="terminos-container">
+                <div className="terminos-content">
+                  <h4>POLÍTICA DE PROTECCIÓN DE DATOS PERSONALES</h4>
+                  
+                  <p>
+                    <strong>Processmart S.A.C.</strong>, está dando cumplimiento estricto a lo establecido en la Ley 1581 de 2012 
+                    y en el Decreto 1377 de 2013. En consecuencia, Processmart S.A.C. proporciona esta política respecto a la 
+                    recolección, manejo, uso, tratamiento, almacenamiento e intercambio de todas aquellas actividades que 
+                    constituyan tratamiento de datos personales.
+                  </p>
+
+                  <p>
+                    Processmart S.A.C., identificado con Nit: 830.113.252-6, con sede principal en la Avenida Carrera 45 
+                    (Autopista Norte) N° 114-44 Oficina 605 en la ciudad de Bogotá, portal web https://processmart.net/. 
+                    Correo electrónico comercial@processmart.net, teléfono (+51) 923 926 675; como responsable del tratamiento 
+                    de sus datos personales, para el desarrollo de sus actividades propias (SICTE), así como para el 
+                    fortalecimiento de sus relaciones con terceros.
+                  </p>
+
+                  <h4>Definiciones</h4>
+                  <ul>
+                    <li><strong>Autorización:</strong> Consentimiento previo, expreso e informado del Titular para llevar a cabo el Tratamiento de datos personales.</li>
+                    <li><strong>Aviso de privacidad:</strong> Comunicación verbal o escrita generada por el Responsable, dirigida al Titular para el Tratamiento de sus Datos Personales.</li>
+                    <li><strong>Base de datos:</strong> Conjunto organizado de datos personales que sea objeto de Tratamiento.</li>
+                    <li><strong>Dato personal:</strong> Cualquier información vinculada o que pueda asociarse a una o varias personas naturales determinadas o determinables.</li>
+                    <li><strong>Dato sensible:</strong> Aquel dato que afecta la intimidad del titular o cuyo uso indebido puede generar su discriminación.</li>
+                    <li><strong>Titular:</strong> Persona natural cuyos datos personales sean objeto de Tratamiento.</li>
+                    <li><strong>Tratamiento:</strong> Cualquier operación o conjunto de operaciones sobre datos personales, tales como la recolección, almacenamiento, uso, circulación o supresión.</li>
+                  </ul>
+
+                  <h4>Principios</h4>
+                  <ul>
+                    <li><strong>Principio de legalidad:</strong> La captura, recolección y tratamiento de datos personales, se realizará bajo las disposiciones vigentes y aplicables.</li>
+                    <li><strong>Principio de libertad:</strong> La captura, recolección y tratamiento de datos personales sólo puede llevarse a cabo con el consentimiento, previo, expreso e informado del Titular.</li>
+                    <li><strong>Principio de finalidad:</strong> El tratamiento de datos personales estará subordinado y atenderá una finalidad legítima.</li>
+                    <li><strong>Principio de veracidad o calidad:</strong> La información debe ser veraz, completa, exacta, actualizada, comprobable y comprensible.</li>
+                    <li><strong>Principio de transparencia:</strong> Garantiza el derecho del Titular a obtener información acerca de la existencia de cualquier tipo de información o dato personal.</li>
+                    <li><strong>Principio de seguridad:</strong> Los datos personales serán objeto de protección mediante medidas tecnológicas y administrativas.</li>
+                    <li><strong>Principio de confidencialidad:</strong> Todas las personas que manejen datos se comprometen a mantenerlos de manera estrictamente confidencial.</li>
+                  </ul>
+
+                  <h4>Finalidad para el tratamiento</h4>
+                  <ul>
+                    <li>Envío de información y contacto eventual.</li>
+                    <li>Fortalecimiento de relaciones con proveedores, clientes, contratistas y partes interesadas.</li>
+                    <li>Registrar sus datos personales en los sistemas de información de Processmart S.A.C.</li>
+                    <li>Administración de la relación contractual, legal o comercial.</li>
+                    <li>Dar respuesta a consultas, peticiones, quejas y reclamos.</li>
+                    <li>Cumplimiento de mandatos judiciales o legales.</li>
+                  </ul>
+
+                  <h4>Derechos del titular</h4>
+                  <ul>
+                    <li>Conocer, actualizar y rectificar los datos personales.</li>
+                    <li>Solicitar prueba de la autorización otorgada.</li>
+                    <li>Presentar quejas ante la Superintendencia de Industria y Comercio.</li>
+                    <li>Solicitar la supresión de los datos cuando no se respeten los principios.</li>
+                    <li>Acceder de forma gratuita a sus Datos Personales objeto de Tratamiento.</li>
+                  </ul>
+
+                  <h4>Seguridad de datos personales</h4>
+                  <p>
+                    Processmart S.A.C., proporcionará las medidas técnicas, humanas y administrativas necesarias para otorgar 
+                    seguridad a los registros evitando su adulteración, pérdida, consulta, uso o acceso no autorizado o fraudulento.
+                  </p>
+
+                  <p style={{marginTop: '20px', fontWeight: 'bold', fontSize: '14px'}}>
+                    Al continuar y firmar digitalmente, usted acepta expresamente esta política de protección de datos personales.
+                  </p>
+                </div>
+
+                <div className="terminos-actions">
+                  <button type="button" className="btn-no-acepto" onClick={rechazarTerminos}>
+                    ⭕ No Acepto
+                  </button>
+                  <button type="button" className="btn-acepto" onClick={aceptarTerminos}>
+                    ✅ Acepto
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* PASO 2: Canvas de Firma Digital */}
+            {pasoFirma === 2 && (
+              <div className="firma-canvas-container">
+                <div className="canvas-wrapper">
+                  <canvas
+                    ref={setCanvasRef}
+                    className="firma-canvas"
+                    onMouseDown={iniciarDibujo}
+                    onMouseMove={dibujar}
+                    onMouseUp={finalizarDibujo}
+                    onMouseLeave={finalizarDibujo}
+                  />
+                  <p className="canvas-info">
+                    ✍️ Dibuje su firma con el mouse en el área de arriba
+                  </p>
+                </div>
+
+                <div className="canvas-actions">
+                  <button type="button" className="btn-borrar-firma" onClick={borrarFirma}>
+                    🗑️ Borrar
+                  </button>
+                  <button type="button" className="btn-guardar-firma" onClick={guardarFirma}>
+                    💾 Guardar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );
