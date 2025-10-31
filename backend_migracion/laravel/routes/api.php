@@ -19,6 +19,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\PersonalController;
+use App\Http\Controllers\EmpresaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -216,6 +217,29 @@ Route::prefix('proveedores')->group(function () {
 Route::prefix('bancos')->group(function () {
     Route::get('/', [BancoController::class, 'index']);
     Route::get('/{id}', [BancoController::class, 'show']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - EMPRESAS
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('empresas')->group(function () {
+    // Listar todas las empresas
+    Route::get('/', [EmpresaController::class, 'index']);
+    
+    // Ver una empresa específica
+    Route::get('/{id}', [EmpresaController::class, 'show']);
+    
+    // Crear nueva empresa
+    Route::post('/', [EmpresaController::class, 'store']);
+    
+    // Actualizar empresa
+    Route::put('/{id}', [EmpresaController::class, 'update']);
+    
+    // Eliminar empresa
+    Route::delete('/{id}', [EmpresaController::class, 'destroy']);
 });
 
 
