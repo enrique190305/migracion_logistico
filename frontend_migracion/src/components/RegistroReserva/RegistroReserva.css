@@ -1,15 +1,17 @@
 .registro-reserva-container {
-  padding: 30px;
+  padding: 15px;
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .registro-reserva-header {
   background: white;
-  padding: 25px 30px;
+  padding: 15px 20px;
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -18,11 +20,11 @@
 .registro-reserva-header .header-title-reserva {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .registro-reserva-header .header-icon-reserva {
-  font-size: 36px;
+  font-size: 32px;
   animation: bounce-reserva 2s infinite;
 }
 
@@ -32,7 +34,7 @@
 }
 
 .registro-reserva-header .header-title-reserva h1 {
-  font-size: 28px;
+  font-size: 20px;
   color: #000000 !important;
   margin: 0;
   font-weight: 700 !important;
@@ -43,8 +45,8 @@
 
 .registro-reserva-header .header-title-reserva p {
   color: #4a5568 !important;
-  margin: 5px 0 0 0;
-  font-size: 14px;
+  margin: 3px 0 0 0;
+  font-size: 12px;
   font-weight: 500;
   text-shadow: none !important;
 }
@@ -277,10 +279,8 @@
 
 .registro-reserva-container .reserva-table-unique {
   width: 100%;
-  min-width: 1200px;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
 }
 
 .registro-reserva-container .reserva-table-unique thead {
@@ -291,11 +291,11 @@
 }
 
 .registro-reserva-container .reserva-table-unique th {
-  padding: 15px;
+  padding: 10px 12px;
   text-align: left;
   color: white;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
@@ -326,9 +326,9 @@
 }
 
 .registro-reserva-container .reserva-table-unique td {
-  padding: 15px;
+  padding: 10px 12px;
   color: #2c3e50;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .registro-reserva-container .estado-badge-reserva {

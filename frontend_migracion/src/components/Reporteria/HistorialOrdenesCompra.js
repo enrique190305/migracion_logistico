@@ -93,197 +93,293 @@ const HistorialOrdenesCompra = () => {
     alert(`📋 DETALLES DE ORDEN DE COMPRA\n\nN° OC: ${orden.correlativo}\nEmpresa: ${orden.empresa?.razon_social}\nProveedor: ${orden.proveedor?.nombre}\nTotal: S/ ${parseFloat(orden.total_general).toFixed(2)}\nEstado: ${orden.estado}\n\n(Modal de detalles en desarrollo)`);
   };
 
-  const exportarExcel = () => {
-    // Crear un nuevo libro de Excel
-    const wb = XLSX.utils.book_new();
-    
-    // Preparar datos para la hoja
-    const datosExcel = ordenesFiltradas.map(orden => ({
-      'N° ORDEN': orden.correlativo,
-      'FECHA EMISIÓN': new Date(orden.fecha_emision).toLocaleDateString('es-PE', { 
+  const exportarExcel = async () => {
+    try {
+      // Crear un nuevo libro de Excel
+      const wb = XLSX.utils.book_new();
+
+      // Calcular total general (excluyendo anuladas)
+      const totalGeneral = ordenesFiltradas
+        .filter(o => o.estado !== 'ANULADO')
+        .reduce((sum, orden) => sum + parseFloat(orden.total_general || 0), 0);
+
+      // Crear array para la hoja con encabezado
+      const fechaActual = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const wsData = [
+        ['HISTORIAL DE ÓRDENES DE COMPRA'],
+        [`Fecha de generación: ${fechaActual}`],
+        [],
+        ['N° ORDEN', 'FECHA EMISIÓN', 'EMPRESA', 'PROVEEDOR', 'RUC PROVEEDOR', 'CÓDIGO PRODUCTO', 'DESCRIPCIÓN', 'CANTIDAD', 'PRECIO UNITARIO', 'SUBTOTAL', 'ESTADO']
+      ];
+
+      // Obtener detalles de cada orden y crear una fila por producto
+      for (const orden of ordenesFiltradas) {
+        // Obtener detalles de la orden
+        try {
+          const response = await fetch(`http://localhost:8000/api/ordenes/compra/${orden.id}`);
+          const result = await response.json();
+          
+          if (result.success && result.data.detalles && result.data.detalles.length > 0) {
+            // Crear una fila por cada producto
+            result.data.detalles.forEach((det, index) => {
+              wsData.push([
+                index === 0 ? orden.correlativo : '', // Solo mostrar N° orden en primera fila del producto
+                index === 0 ? new Date(orden.fecha_emision).toLocaleDateString('es-PE', { 
+                  day: '2-digit', 
+                  month: '2-digit', 
+                  year: 'numeric' 
+                }) : '',
+                index === 0 ? orden.empresa?.razon_social || 'N/A' : '',
+                index === 0 ? orden.proveedor?.nombre || 'N/A' : '',
+                index === 0 ? `'${orden.proveedor?.ruc || 'N/A'}` : '',
+                det.codigo || 'N/A',
+                det.descripcion || 'N/A',
+                det.cantidad || 0,
+                parseFloat(det.precio || 0),
+                parseFloat(det.subtotal || 0),
+                index === 0 ? orden.estado : '' // Solo mostrar estado en primera fila del producto
+              ]);
+            });
+          } else {
+            // Si no hay detalles, agregar una fila con la información básica
+            wsData.push([
+              orden.correlativo,
+              new Date(orden.fecha_emision).toLocaleDateString('es-PE', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+              }),
+              orden.empresa?.razon_social || 'N/A',
+              orden.proveedor?.nombre || 'N/A',
+              `'${orden.proveedor?.ruc || 'N/A'}`,
+              'Sin productos',
+              '',
+              0,
+              0,
+              0,
+              orden.estado
+            ]);
+          }
+        } catch (error) {
+          console.error(`Error al obtener detalles de orden ${orden.correlativo}:`, error);
+          wsData.push([
+            orden.correlativo,
+            new Date(orden.fecha_emision).toLocaleDateString('es-PE', { 
+              day: '2-digit', 
+              month: '2-digit', 
+              year: 'numeric' 
+            }),
+            orden.empresa?.razon_social || 'N/A',
+            orden.proveedor?.nombre || 'N/A',
+            `'${orden.proveedor?.ruc || 'N/A'}`,
+            'Error al cargar',
+            '',
+            0,
+            0,
+            0,
+            orden.estado
+          ]);
+        }
+      }
+
+      // Agregar totales
+      wsData.push([]);
+      wsData.push(['', '', '', '', '', '', '', '', 'TOTAL GENERAL (Excluye anuladas):', totalGeneral]);
+      wsData.push(['', '', '', '', '', '', '', '', 'TOTAL DE ÓRDENES:', ordenesFiltradas.length]);
+
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Configurar anchos de columna
+      ws['!cols'] = [
+        { wch: 12 },  // N° ORDEN
+        { wch: 15 },  // FECHA EMISIÓN
+        { wch: 30 },  // EMPRESA
+        { wch: 30 },  // PROVEEDOR
+        { wch: 15 },  // RUC PROVEEDOR
+        { wch: 15 },  // CÓDIGO PRODUCTO
+        { wch: 40 },  // DESCRIPCIÓN
+        { wch: 10 },  // CANTIDAD
+        { wch: 15 },  // PRECIO UNITARIO
+        { wch: 15 },  // SUBTOTAL
+        { wch: 12 }   // ESTADO
+      ];
+
+      // Aplicar formato de moneda a las columnas de PRECIO UNITARIO y SUBTOTAL
+      const dataStartRow = 4;
+      const dataEndRow = wsData.length - 3; // Excluir filas de totales
+      
+      for (let i = dataStartRow; i < dataEndRow; i++) {
+        // Precio Unitario (columna I)
+        const precioCell = XLSX.utils.encode_cell({ r: i, c: 8 });
+        if (ws[precioCell]) {
+          ws[precioCell].z = '"S/ "#,##0.00';
+        }
+        
+        // Subtotal (columna J)
+        const subtotalCell = XLSX.utils.encode_cell({ r: i, c: 9 });
+        if (ws[subtotalCell]) {
+          ws[subtotalCell].z = '"S/ "#,##0.00';
+        }
+      }
+
+      // Formato al total general
+      const totalRow = wsData.length - 2;
+      const totalCell = XLSX.utils.encode_cell({ r: totalRow, c: 9 });
+      if (ws[totalCell]) {
+        ws[totalCell].z = '"S/ "#,##0.00';
+      }
+
+      // Agregar la hoja al libro
+      XLSX.utils.book_append_sheet(wb, ws, 'Historial OC');
+
+      // Generar archivo y descargar
+      XLSX.writeFile(wb, `Historial_Ordenes_Compra_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error('Error al exportar Excel:', error);
+      alert('Error al exportar el archivo Excel');
+    }
+  };
+
+  const exportarOrdenIndividual = async (orden) => {
+    try {
+      // Obtener detalles de la orden
+      const response = await fetch(`http://localhost:8000/api/ordenes/compra/${orden.id}`);
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Error al obtener detalles');
+      }
+      
+      const data = result.data;
+      const detalles = data.detalles || [];
+
+      // Crear un nuevo libro de Excel
+      const wb = XLSX.utils.book_new();
+      
+      const fechaEmision = new Date(orden.fecha_emision).toLocaleDateString('es-PE', { 
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric' 
-      }),
-      'EMPRESA': orden.empresa?.razon_social || 'N/A',
-      'PROVEEDOR': orden.proveedor?.nombre || 'N/A',
-      'RUC PROVEEDOR': orden.proveedor?.ruc || 'N/A',
-      'MONTO TOTAL': parseFloat(orden.total_general || 0).toFixed(2),
-      'ESTADO': orden.estado
-    }));
+      });
+      
+      const fechaGeneracion = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
 
-    // Calcular total general (excluyendo anuladas)
-    const totalGeneral = ordenesFiltradas
-      .filter(o => o.estado !== 'ANULADO')
-      .reduce((sum, orden) => sum + parseFloat(orden.total_general || 0), 0);
+      // Crear datos para la hoja con una fila por producto
+      const wsData = [
+        [`ORDEN DE COMPRA - ${orden.correlativo}`],
+        [`Fecha de emisión: ${fechaEmision}`],
+        [`Generado: ${fechaGeneracion}`],
+        [],
+        ['N° ORDEN', 'FECHA EMISIÓN', 'EMPRESA', 'PROVEEDOR', 'RUC PROVEEDOR', 'CÓDIGO PRODUCTO', 'DESCRIPCIÓN', 'CANTIDAD', 'PRECIO UNITARIO', 'SUBTOTAL', 'ESTADO']
+      ];
 
-    // Crear array para la hoja con encabezado
-    const fechaActual = new Date().toLocaleDateString('es-PE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+      // Agregar una fila por cada producto
+      detalles.forEach((det, index) => {
+        wsData.push([
+          index === 0 ? orden.correlativo : '',
+          index === 0 ? fechaEmision : '',
+          index === 0 ? orden.empresa?.razon_social || 'N/A' : '',
+          index === 0 ? orden.proveedor?.nombre || 'N/A' : '',
+          index === 0 ? `'${orden.proveedor?.ruc || 'N/A'}` : '',
+          det.codigo || 'N/A',
+          det.descripcion || 'N/A',
+          det.cantidad || 0,
+          parseFloat(det.precio || 0),
+          parseFloat(det.subtotal || 0),
+          index === 0 ? orden.estado : ''
+        ]);
+      });
 
-    const wsData = [
-      ['HISTORIAL DE ÓRDENES DE COMPRA'],
-      [`Fecha de generación: ${fechaActual}`],
-      [],
-      ['N° ORDEN', 'FECHA EMISIÓN', 'EMPRESA', 'PROVEEDOR', 'RUC PROVEEDOR', 'MONTO TOTAL', 'ESTADO'],
-      ...datosExcel.map(orden => [
-        orden['N° ORDEN'],
-        orden['FECHA EMISIÓN'],
-        orden['EMPRESA'],
-        orden['PROVEEDOR'],
-        orden['RUC PROVEEDOR'],
-        parseFloat(orden['MONTO TOTAL']),
-        orden['ESTADO']
-      ]),
-      [],
-      ['', '', '', '', 'TOTAL GENERAL (Excluye anuladas):', totalGeneral.toFixed(2)],
-      ['', '', '', '', 'TOTAL DE ÓRDENES:', ordenesFiltradas.length]
-    ];
-
-    // Crear hoja de trabajo
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Configurar anchos de columna
-    ws['!cols'] = [
-      { wch: 12 },  // N° ORDEN
-      { wch: 15 },  // FECHA EMISIÓN
-      { wch: 30 },  // EMPRESA
-      { wch: 30 },  // PROVEEDOR
-      { wch: 15 },  // RUC PROVEEDOR
-      { wch: 15 },  // MONTO TOTAL
-      { wch: 12 }   // ESTADO
-    ];
-
-    // Aplicar formato de moneda a la columna de MONTO TOTAL
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let i = 4; i < wsData.length - 2; i++) {
-      const cellAddress = XLSX.utils.encode_cell({ r: i, c: 5 });
-      if (ws[cellAddress]) {
-        ws[cellAddress].z = '"S/ "#,##0.00';
+      // Si no hay detalles
+      if (detalles.length === 0) {
+        wsData.push([
+          orden.correlativo,
+          fechaEmision,
+          orden.empresa?.razon_social || 'N/A',
+          orden.proveedor?.nombre || 'N/A',
+          `'${orden.proveedor?.ruc || 'N/A'}`,
+          'Sin productos',
+          '',
+          0,
+          0,
+          0,
+          orden.estado
+        ]);
       }
-    }
 
-    // Agregar la hoja al libro
-    XLSX.utils.book_append_sheet(wb, ws, 'Historial OC');
+      // Agregar fila de total
+      wsData.push([]);
+      wsData.push(['', '', '', '', '', '', '', '', 'TOTAL ORDEN:', parseFloat(orden.total_general || 0)]);
 
-    // Generar archivo y descargar
-    XLSX.writeFile(wb, `Historial_Ordenes_Compra_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
 
-  const exportarOrdenIndividual = (orden) => {
-    // Crear un nuevo libro de Excel
-    const wb = XLSX.utils.book_new();
-    
-    const fechaEmision = new Date(orden.fecha_emision).toLocaleDateString('es-PE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric' 
-    });
-    
-    const fechaGeneracion = new Date().toLocaleDateString('es-PE', { 
-      day: '2-digit', 
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+      // Configurar anchos de columna
+      ws['!cols'] = [
+        { wch: 12 },  // N° ORDEN
+        { wch: 15 },  // FECHA EMISIÓN
+        { wch: 30 },  // EMPRESA
+        { wch: 30 },  // PROVEEDOR
+        { wch: 15 },  // RUC PROVEEDOR
+        { wch: 15 },  // CÓDIGO PRODUCTO
+        { wch: 40 },  // DESCRIPCIÓN
+        { wch: 10 },  // CANTIDAD
+        { wch: 15 },  // PRECIO UNITARIO
+        { wch: 15 },  // SUBTOTAL
+        { wch: 12 }   // ESTADO
+      ];
 
-    // Crear datos para la hoja en formato horizontal
-    const wsData = [
-      [`ORDEN DE COMPRA - ${orden.correlativo}`, '', '', '', '', '', ''],
-      [`Fecha de emisión: ${fechaEmision}`, '', '', '', '', '', ''],
-      [`Generado: ${fechaGeneracion}`, '', '', '', '', '', ''],
-      [],
-      ['N° Orden', 'Fecha Emisión', 'Estado', 'Empresa', 'RUC Empresa', 'Proveedor', 'RUC Proveedor', 'Total'],
-      [
-        orden.correlativo,
-        fechaEmision,
-        orden.estado,
-        orden.empresa?.razon_social || 'N/A',
-        orden.empresa?.ruc || 'N/A',
-        orden.proveedor?.nombre || 'N/A',
-        orden.proveedor?.ruc || 'N/A',
-        parseFloat(orden.total_general || 0)
-      ]
-    ];
-
-    // Crear hoja de trabajo
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Configurar anchos de columna
-    ws['!cols'] = [
-      { wch: 12 },  // N° Orden
-      { wch: 15 },  // Fecha Emisión
-      { wch: 12 },  // Estado
-      { wch: 30 },  // Empresa
-      { wch: 15 },  // RUC Empresa
-      { wch: 30 },  // Proveedor
-      { wch: 15 },  // RUC Proveedor
-      { wch: 15 }   // Total
-    ];
-
-    // Aplicar formato de moneda a la celda del total
-    const totalCell = 'H6';
-    if (ws[totalCell]) {
-      ws[totalCell].z = '"S/ "#,##0.00';
-    }
-
-    // Agregar la hoja al libro
-    XLSX.utils.book_append_sheet(wb, ws, `OC-${orden.correlativo}`);
-
-    // Generar archivo y descargar
-    XLSX.writeFile(wb, `OC_${orden.correlativo}_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
-
-  const importarExcel = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target.result;
-        const lines = text.split('\n');
-        
-        // Validar que tenga contenido
-        if (lines.length < 2) {
-          alert('❌ El archivo está vacío o no tiene el formato correcto');
-          return;
+      // Aplicar formato de moneda a las columnas de PRECIO UNITARIO y SUBTOTAL
+      const dataStartRow = 5;
+      const dataEndRow = 5 + detalles.length;
+      
+      for (let i = dataStartRow; i < dataEndRow; i++) {
+        // Precio Unitario (columna I)
+        const precioCell = XLSX.utils.encode_cell({ r: i, c: 8 });
+        if (ws[precioCell]) {
+          ws[precioCell].z = '"S/ "#,##0.00';
         }
-
-        // Parsear el CSV
-        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-        const data = [];
         
-        for (let i = 1; i < lines.length; i++) {
-          if (lines[i].trim()) {
-            const values = lines[i].split(',').map(v => v.trim().replace(/^"|"$/g, ''));
-            const row = {};
-            headers.forEach((header, index) => {
-              row[header] = values[index] || '';
-            });
-            data.push(row);
-          }
+        // Subtotal (columna J)
+        const subtotalCell = XLSX.utils.encode_cell({ r: i, c: 9 });
+        if (ws[subtotalCell]) {
+          ws[subtotalCell].z = '"S/ "#,##0.00';
         }
-
-        console.log('📊 Datos importados:', data);
-        alert(`✅ Se importaron ${data.length} registros correctamente\n\n(La integración con el backend está pendiente)`);
-        
-        // Limpiar el input
-        event.target.value = '';
-      } catch (error) {
-        console.error('Error al importar:', error);
-        alert('❌ Error al procesar el archivo. Verifique que sea un CSV válido');
       }
-    };
-    
-    reader.readAsText(file);
+
+      // Formato al total de la orden
+      const totalRow = dataEndRow + 1;
+      const totalCell = XLSX.utils.encode_cell({ r: totalRow, c: 9 });
+      if (ws[totalCell]) {
+        ws[totalCell].z = '"S/ "#,##0.00';
+      }
+
+      // Agregar la hoja al libro
+      XLSX.utils.book_append_sheet(wb, ws, `OC-${orden.correlativo}`);
+
+      // Generar archivo y descargar
+      XLSX.writeFile(wb, `OC_${orden.correlativo}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (error) {
+      console.error('Error al exportar orden:', error);
+      alert('Error al exportar la orden');
+    }
   };
+
+
 
   const obtenerColorEstado = (estado) => {
     switch(estado) {
@@ -398,23 +494,6 @@ const HistorialOrdenesCompra = () => {
         >
           📊 Exportar Excel
         </button>
-
-        <label 
-          className="btn-recargar" 
-          style={{ 
-            background: '#f39c12',
-            cursor: 'pointer',
-            display: 'inline-block'
-          }}
-        >
-          📥 Importar Excel
-          <input
-            type="file"
-            accept=".csv,.xlsx,.xls"
-            onChange={importarExcel}
-            style={{ display: 'none' }}
-          />
-        </label>
       </div>
 
       {/* Tabla */}

@@ -1,35 +1,37 @@
 .registro-bodega-container {
-  padding: 30px;
+  padding: 15px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* HEADER - FONDO BLANCO CON TEXTO OSCURO */
 .registro-bodega-header {
   background: white;
-  padding: 20px 30px;
+  padding: 15px 20px;
   border-radius: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-left: 5px solid #667eea;
+  border-left: 4px solid #667eea;
 }
 
 .registro-bodega-header .header-title-bodega {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .registro-bodega-header .header-icon-bodega {
-  font-size: 40px;
+  font-size: 32px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .registro-bodega-header .header-title-bodega h1 {
-  font-size: 28px;
+  font-size: 20px;
   color: #000000 !important;
   margin: 0;
   font-weight: 700;
@@ -40,8 +42,8 @@
 
 .registro-bodega-header .header-title-bodega p {
   color: #4a5568 !important;
-  margin: 5px 0 0 0;
-  font-size: 14px;
+  margin: 3px 0 0 0;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -288,10 +290,8 @@
 
 .registro-bodega-container .bodega-table-unique {
   width: 100%;
-  min-width: 1200px;
   border-collapse: separate;
   border-spacing: 0;
-  table-layout: fixed;
 }
 
 .registro-bodega-container .bodega-table-unique thead {
@@ -302,11 +302,11 @@
 }
 
 .registro-bodega-container .bodega-table-unique th {
-  padding: 12px 15px;
+  padding: 10px 12px;
   text-align: left;
   color: white;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -335,9 +335,9 @@
 }
 
 .registro-bodega-container .bodega-table-unique td {
-  padding: 12px 15px;
+  padding: 10px 12px;
   color: #2c3e50;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .registro-bodega-container .estado-badge-bodega {

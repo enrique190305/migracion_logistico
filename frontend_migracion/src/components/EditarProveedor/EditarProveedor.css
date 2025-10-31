@@ -1,106 +1,79 @@
 .editar-proveedor-container {
-  padding: 20px;
+  padding: 15px;
   background: #f5f7fa;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Header */
 .editar-proveedor-header {
   background: #2c3e50;
-  padding: 20px 30px;
+  padding: 15px 20px;
   border-radius: 0;
   box-shadow: none;
-  margin-bottom: 25px;
-  border-left: 6px solid #3498db;
+  margin-bottom: 15px;
+  border-left: 4px solid #3498db;
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 
 .header-icon-title-editar-prov {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .header-icon-editar-prov {
-  font-size: 32px;
+  font-size: 24px;
   background: #3498db;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .header-icon-title-editar-prov h1 {
-  font-size: 24px;
+  font-size: 18px;
   color: white;
   margin: 0;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 1.5px;
 }
 
 .header-icon-title-editar-prov p {
   color: #bdc3c7;
-  margin: 5px 0 0 0;
-  font-size: 13px;
+  margin: 3px 0 0 0;
+  font-size: 11px;
   text-transform: none;
   letter-spacing: normal;
 }
 
-/* Stats header */
-.header-stats-editar-prov {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-.stat-item-editar-prov {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 8px 16px;
-  border-radius: 8px;
-}
-
-.stat-icon-editar-prov {
-  font-size: 20px;
-}
-
-.stat-text-editar-prov {
-  color: white;
-  font-size: 14px;
-}
-
-.stat-text-editar-prov strong {
-  font-size: 18px;
-  font-weight: 700;
-}
+/* Stats header - Removido (ya no se usa en el header) */
 
 /* PANEL HORIZONTAL - DATOS DEL PROVEEDOR */
 .datos-proveedor-horizontal-editar-prov {
   background: white;
   border-radius: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   overflow: hidden;
   transition: all 0.3s ease;
-  border-left: 6px solid #27ae60;
+  border-left: 4px solid #27ae60;
 }
 
 .datos-proveedor-horizontal-editar-prov.minimizado {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
 }
 
 .datos-header-horizontal-editar-prov {
   background: #34495e;
-  padding: 18px 25px;
-  border-bottom: 3px solid #27ae60;
+  padding: 12px 20px;
+  border-bottom: 2px solid #27ae60;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -108,11 +81,11 @@
 
 .datos-header-horizontal-editar-prov h2 {
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   margin: 0;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
 }
 
 .btn-minimizar-editar-prov {
@@ -139,32 +112,50 @@
 .datos-grid-horizontal-editar-prov {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  padding: 25px;
+  gap: 15px;
+  padding: 20px;
   background: #fafafa;
+}
+
+@media (max-width: 1400px) {
+  .datos-grid-horizontal-editar-prov {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .datos-grid-horizontal-editar-prov {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .datos-grid-horizontal-editar-prov {
+    grid-template-columns: 1fr;
+  }
 }
 
 .dato-field-editar-prov {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .dato-field-editar-prov label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #2c3e50;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .dato-field-editar-prov input,
 .dato-field-editar-prov textarea,
 .dato-field-editar-prov select {
-  padding: 10px 12px;
+  padding: 8px 10px;
   border: 2px solid #d5d8dc;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   transition: border-color 0.2s;
   background: white;
   color: #2c3e50;
@@ -194,7 +185,7 @@
 
 .dato-field-editar-prov textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 50px;
 }
 
 .input-disabled-editar-prov {
@@ -204,30 +195,30 @@
 }
 
 .datos-footer-horizontal-editar-prov {
-  padding: 20px 25px;
+  padding: 15px 20px;
   background: white;
   border-top: 2px solid #ecf0f1;
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 10px;
 }
 
 .btn-actualizar-editar-prov,
 .btn-refrescar-editar-prov,
 .btn-limpiar-editar-prov,
 .btn-eliminar-editar-prov {
-  padding: 12px 25px;
+  padding: 10px 20px;
   border: none;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .btn-actualizar-editar-prov {
@@ -280,26 +271,26 @@
   border-radius: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border-left: 6px solid #e67e22;
+  border-left: 4px solid #e67e22;
 }
 
 .lista-header-editar-prov {
   background: #34495e;
-  padding: 18px 25px;
-  border-bottom: 3px solid #e67e22;
+  padding: 12px 20px;
+  border-bottom: 2px solid #e67e22;
 }
 
 .lista-header-editar-prov h2 {
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   margin: 0;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
 }
 
 .search-proveedor-editar-prov {
-  padding: 20px 25px;
+  padding: 15px 20px;
   background: #fafafa;
   border-bottom: 2px solid #ecf0f1;
   position: relative;
@@ -307,10 +298,10 @@
 
 .search-proveedor-editar-prov input {
   width: 100%;
-  padding: 10px 40px 10px 15px;
+  padding: 8px 35px 8px 12px;
   border: 2px solid #d5d8dc;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   transition: border-color 0.2s;
   background: white;
 }
@@ -338,33 +329,26 @@
 /* Tabla con Scroll Horizontal */
 .tabla-proveedores-wrapper-editar-prov {
   overflow-x: auto;
-  overflow-y: auto;
-  max-height: calc(100vh - 450px);
 }
 
 .tabla-proveedores-editar-prov {
   width: 100%;
-  min-width: 1400px;
   border-collapse: collapse;
 }
 
 .tabla-proveedores-editar-prov thead {
   background: #2c3e50;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 .tabla-proveedores-editar-prov th {
-  padding: 15px 20px;
+  padding: 10px 12px;
   text-align: left;
   color: white;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 3px solid #e67e22;
-  white-space: nowrap;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e67e22;
 }
 
 .tabla-proveedores-editar-prov tbody tr {
@@ -391,14 +375,23 @@
 }
 
 .tabla-proveedores-editar-prov td {
-  padding: 15px 20px;
+  padding: 10px 12px;
   color: #2c3e50;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .email-cell-editar-prov {
   color: #3498db;
   font-weight: 500;
+}
+
+/* Columnas con límite de ancho */
+.tabla-proveedores-editar-prov td:nth-child(4),
+.tabla-proveedores-editar-prov td:nth-child(9) {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Empty State */

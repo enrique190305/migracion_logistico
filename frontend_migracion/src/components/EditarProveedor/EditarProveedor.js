@@ -232,20 +232,6 @@ const EditarProveedor = () => {
             <p>Seleccione un proveedor para editar su información</p>
           </div>
         </div>
-        <div className="header-stats-editar-prov">
-          <div className="stat-item-editar-prov">
-            <span className="stat-icon-editar-prov">📊</span>
-            <span className="stat-text-editar-prov">
-              <strong>{proveedores.length}</strong> Proveedores
-            </span>
-          </div>
-          <div className="stat-item-editar-prov">
-            <span className="stat-icon-editar-prov">🔍</span>
-            <span className="stat-text-editar-prov">
-              <strong>{filteredProveedores.length}</strong> Filtrados
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* PANEL HORIZONTAL - DATOS DEL PROVEEDOR */}
