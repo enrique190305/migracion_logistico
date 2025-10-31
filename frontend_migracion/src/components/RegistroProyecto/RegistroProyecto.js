@@ -632,7 +632,17 @@ const RegistroProyecto = () => {
           { label: '✅ Estado', valor: 'ACTIVO' }
         ]
       );
-      
+
+      // Si se creó un móvil sin proyecto, refrescar la lista de personas
+      if (formData.movil_tipo === 'sin_proyecto') {
+        try {
+          // refrescar dropdown de responsables sin recargar la página
+          await cargarPersonas();
+        } catch (err) {
+          console.error('Error al refrescar personas después de crear movil sin proyecto:', err);
+        }
+      }
+
       // Limpiar formulario después de 3 segundos
       setTimeout(() => {
         limpiarFormulario();

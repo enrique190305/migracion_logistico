@@ -125,15 +125,19 @@ class ProyectoController extends Controller
    public function obtenerPersonas()
 {
     try {
-        // ✅ SOLO obtener de tabla personal (sin admin/usuario de logeo)
-        $personas = DB::table('personal')
+        // ✅ Obtener personas ÚNICAS de movil_persona (solo registros ACTIVOS, sin duplicados por DNI)
+        $personas = DB::table('movil_persona')
             ->select(
-                'id_personal as id',
+                DB::raw('MAX(id_movil_persona) as id'),
                 'nom_ape as nombre',
                 'dni',
-                'ciudad',
+                DB::raw('MAX(ciudad) as ciudad'),
                 DB::raw('CONCAT(nom_ape, " - DNI: ", dni) as nombre_completo')
             )
+            ->where('estado', 'ACTIVO')
+            ->whereNotNull('dni')
+            ->where('dni', '!=', '')
+            ->groupBy('dni', 'nom_ape')
             ->orderBy('nom_ape', 'asc')
             ->get()
             ->map(function ($persona) {
