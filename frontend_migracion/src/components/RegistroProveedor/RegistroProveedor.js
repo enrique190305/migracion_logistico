@@ -9,6 +9,7 @@ const RegistroProveedor = () => {
   const [filtroFormaPago, setFiltroFormaPago] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
   const [proveedores, setProveedores] = useState([]);
+  const [bancos, setBancos] = useState([]);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 10;
 
@@ -27,13 +28,30 @@ const RegistroProveedor = () => {
     contacto: '',
     telefono: '',
     email: '',
+    numeroCuenta: '',
+    idBanco: '',
     formaPago: '',
     servicios: ''
   });
 
   useEffect(() => {
     cargarProveedores();
+    cargarBancos();
   }, []);
+
+  // Función para cargar bancos
+  const cargarBancos = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/bancos');
+      const data = await response.json();
+      
+      if (data.success) {
+        setBancos(data.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar bancos:', error);
+    }
+  };
 
   // Función para mostrar modal de mensaje
   const mostrarModalMensaje = (tipo, titulo, mensaje) => {
@@ -106,6 +124,8 @@ const RegistroProveedor = () => {
         contacto: formulario.contacto,
         celular: formulario.telefono,
         correo: formulario.email,
+        numero_cuenta: formulario.numeroCuenta,
+        id_banco: formulario.idBanco || null,
         forma_pago: formulario.formaPago,
         servicio: formulario.servicios
       });
@@ -138,6 +158,8 @@ const RegistroProveedor = () => {
       contacto: '',
       telefono: '',
       email: '',
+      numeroCuenta: '',
+      idBanco: '',
       formaPago: '',
       servicios: ''
     });
@@ -446,6 +468,36 @@ const RegistroProveedor = () => {
                     onChange={handleInputChange}
                     placeholder="correo@ejemplo.com"
                   />
+                </div>
+              </div>
+
+              <div className="form-group-row-proveedor">
+                <div className="form-group-proveedor">
+                  <label>Número de Cuenta</label>
+                  <input
+                    type="text"
+                    name="numeroCuenta"
+                    value={formulario.numeroCuenta}
+                    onChange={handleInputChange}
+                    placeholder="Número de cuenta bancaria"
+                    maxLength="20"
+                  />
+                </div>
+
+                <div className="form-group-proveedor">
+                  <label>Banco</label>
+                  <select
+                    name="idBanco"
+                    value={formulario.idBanco}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">-- Seleccionar Banco --</option>
+                    {bancos.map((banco) => (
+                      <option key={banco.id} value={banco.id}>
+                        {banco.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

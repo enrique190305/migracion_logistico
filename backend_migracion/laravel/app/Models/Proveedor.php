@@ -20,9 +20,17 @@ class Proveedor extends Model
         'contacto',
         'celular',
         'correo',
+        'numero_cuenta',
+        'id_banco',
         'forma_pago',
         'servicio'
     ];
+
+    // Relaciones
+    public function banco()
+    {
+        return $this->belongsTo(Banco::class, 'id_banco', 'id_banco');
+    }
 
     // Relaciones
     public function ordenesCompra()

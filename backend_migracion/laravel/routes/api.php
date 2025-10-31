@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\IngresoMaterialController;
 use App\Http\Controllers\Api\TrasladoMaterialesController;
 use App\Http\Controllers\KardexController;
 use App\Http\Controllers\Api\ProveedorController;
+use App\Http\Controllers\Api\BancoController;
 use App\Http\Controllers\OrdenPedidoController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\AuthController;
@@ -204,6 +205,17 @@ Route::prefix('proveedores')->group(function () {
     Route::get('/{id}', [ProveedorController::class, 'show']);
     Route::put('/{id}', [ProveedorController::class, 'update']);
     Route::delete('/{id}', [ProveedorController::class, 'destroy']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - BANCOS
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('bancos')->group(function () {
+    Route::get('/', [BancoController::class, 'index']);
+    Route::get('/{id}', [BancoController::class, 'show']);
 });
 
 

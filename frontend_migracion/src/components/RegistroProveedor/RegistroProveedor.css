@@ -1,53 +1,55 @@
 .registro-proveedor-container {
-  padding: 20px;
+  padding: 15px;
   background: #f5f7fa;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
-/* Header con diseño tipo barra superior */
+/* Header con diseño tipo barra superior - MÁS COMPACTO */
 .registro-proveedor-header {
   background: #2c3e50;
-  padding: 20px 30px;
+  padding: 15px 20px;
   border-radius: 0;
   box-shadow: none;
-  margin-bottom: 25px;
+  margin-bottom: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-left: 6px solid #3498db;
+  border-left: 4px solid #3498db;
 }
 
 .registro-proveedor-container .header-title-proveedor {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .registro-proveedor-container .header-icon-proveedor {
-  font-size: 32px;
+  font-size: 24px;
   background: #3498db;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .registro-proveedor-container .header-title-proveedor h1 {
-  font-size: 24px;
+  font-size: 18px;
   color: white;
   margin: 0;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 1.5px;
 }
 
 .registro-proveedor-container .header-title-proveedor p {
   color: #bdc3c7;
-  margin: 5px 0 0 0;
-  font-size: 13px;
+  margin: 3px 0 0 0;
+  font-size: 11px;
   text-transform: none;
   letter-spacing: normal;
 }
@@ -227,7 +229,8 @@
 .registro-proveedor-container .btn-success-proveedor {
   background: #27ae60;
   color: white;
-  padding: 14px 30px;
+  padding: 10px 20px;
+  font-size: 12px;
 }
 
 .registro-proveedor-container .btn-success-proveedor:hover {
@@ -244,23 +247,23 @@
   background: #7f8c8d;
 }
 
-/* Estadísticas COMPACTAS - SIN ESPACIOS EXTRAS */
+/* Estadísticas ULTRA COMPACTAS */
 .registro-proveedor-container .estadisticas-grid-proveedor {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 25px;
+  gap: 10px;
+  margin-bottom: 15px;
 }
 
 .registro-proveedor-container .stat-card-proveedor {
   background: white;
-  padding: 15px 20px;
+  padding: 12px 15px;
   border-radius: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  gap: 15px;
-  border-left: 6px solid transparent;
+  gap: 12px;
+  border-left: 4px solid transparent;
 }
 
 .registro-proveedor-container .stat-card-proveedor:nth-child(1) {
@@ -280,13 +283,13 @@
 }
 
 .registro-proveedor-container .stat-icon-proveedor {
-  font-size: 32px;
-  width: 55px;
-  height: 55px;
+  font-size: 24px;
+  width: 45px;
+  height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
@@ -318,7 +321,7 @@
 }
 
 .registro-proveedor-container .stat-value-proveedor {
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 700;
   color: #2c3e50;
   margin: 0;
@@ -328,57 +331,57 @@
 .registro-proveedor-container .stat-label-proveedor {
   color: #7f8c8d;
   margin: 0;
-  font-size: 12px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   font-weight: 600;
 }
 
-/* Filtros en línea horizontal */
+/* Filtros COMPACTOS */
 .registro-proveedor-container .filtros-section-proveedor {
   background: white;
-  padding: 20px 25px;
+  padding: 12px 15px;
   border-radius: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 25px;
-  border-left: 6px solid #9b59b6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  border-left: 4px solid #9b59b6;
 }
 
 .registro-proveedor-container .filtros-section-proveedor h2 {
   color: #2c3e50;
-  font-size: 14px;
-  margin: 0 0 15px 0;
+  font-size: 12px;
+  margin: 0 0 10px 0;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .registro-proveedor-container .filtros-grid-proveedor {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+  gap: 10px;
 }
 
 .registro-proveedor-container .filtro-group-proveedor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .registro-proveedor-container .filtro-group-proveedor label {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: #2c3e50;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .registro-proveedor-container .filtro-group-proveedor input,
 .registro-proveedor-container .filtro-group-proveedor select {
-  padding: 10px 12px;
-  border: 2px solid #d5d8dc;
+  padding: 8px 10px;
+  border: 1px solid #d5d8dc;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   transition: border-color 0.2s;
   background: white;
 }
@@ -389,44 +392,44 @@
   border-color: #9b59b6;
 }
 
-/* Tabla estilo grid moderno */
+/* Tabla COMPACTA */
 .registro-proveedor-container .tabla-section-proveedor {
   background: white;
   padding: 0;
   border-radius: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-left: 6px solid #e67e22;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #e67e22;
 }
 
 .registro-proveedor-container .tabla-header-proveedor {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 25px;
+  padding: 12px 15px;
   background: #34495e;
   border-bottom: none;
 }
 
 .registro-proveedor-container .tabla-header-proveedor h2 {
   color: white;
-  font-size: 16px;
+  font-size: 12px;
   margin: 0;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
 }
 
 .registro-proveedor-container .search-box-proveedor {
   position: relative;
-  width: 300px;
+  width: 250px;
 }
 
 .registro-proveedor-container .search-box-proveedor input {
   width: 100%;
-  padding: 10px 40px 10px 15px;
-  border: 2px solid #d5d8dc;
+  padding: 8px 35px 8px 12px;
+  border: 1px solid #d5d8dc;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   background: white;
 }
 
@@ -459,14 +462,14 @@
 }
 
 .registro-proveedor-container .proveedores-table-proveedor th {
-  padding: 15px 20px;
+  padding: 10px 12px;
   text-align: left;
   color: white;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 3px solid #3498db;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #3498db;
 }
 
 .registro-proveedor-container .proveedores-table-proveedor tbody tr {
@@ -487,9 +490,9 @@
 }
 
 .registro-proveedor-container .proveedores-table-proveedor td {
-  padding: 15px 20px;
+  padding: 10px 12px;
   color: #2c3e50;
-  font-size: 14px;
+  font-size: 12px;
 }
 
 .registro-proveedor-container .direccion-cell-proveedor,
@@ -684,22 +687,40 @@
   font-weight: 600;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
+/* Responsive MEJORADO */
+@media (max-width: 1400px) {
   .registro-proveedor-container .estadisticas-grid-proveedor {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .registro-proveedor-container .search-box-proveedor {
+    width: 200px;
   }
 }
 
 @media (max-width: 768px) {
+  .registro-proveedor-container {
+    padding: 10px;
+  }
+
   .registro-proveedor-header {
     flex-direction: column;
-    gap: 15px;
-    padding: 20px;
+    gap: 10px;
+    padding: 12px 15px;
   }
 
   .registro-proveedor-container .header-title-proveedor h1 {
-    font-size: 18px;
+    font-size: 14px;
+  }
+  
+  .registro-proveedor-container .header-title-proveedor p {
+    font-size: 10px;
+  }
+  
+  .registro-proveedor-container .header-icon-proveedor {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
   }
 
   .registro-proveedor-container .header-actions-proveedor {
@@ -814,7 +835,7 @@
   letter-spacing: 1px;
 }
 
-/* Colores seg�n tipo */
+/* Colores seg�n tipo */
 .modal-mensaje-success .modal-mensaje-header {
   background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }

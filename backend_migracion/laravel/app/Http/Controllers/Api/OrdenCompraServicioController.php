@@ -1266,7 +1266,7 @@ class OrdenCompraServicioController extends Controller
     {
         try {
             // Obtener la orden con sus relaciones
-            $orden = OrdenCompra::with(['empresa', 'proveedor', 'moneda', 'detalles'])
+            $orden = OrdenCompra::with(['empresa', 'proveedor.banco', 'moneda', 'detalles'])
                 ->findOrFail($id);
 
             // Generar el PDF con la vista
@@ -1304,7 +1304,7 @@ class OrdenCompraServicioController extends Controller
     {
         try {
             // Obtener la orden con sus relaciones
-            $orden = OrdenServicio::with(['empresa', 'proveedor', 'moneda', 'detalles'])
+            $orden = OrdenServicio::with(['empresa', 'proveedor.banco', 'moneda', 'detalles'])
                 ->findOrFail($id);
 
             // Generar el PDF con la vista

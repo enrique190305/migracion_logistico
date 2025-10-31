@@ -273,6 +273,28 @@
                 <td>Dirección:</td>
                 <td>{{ $orden->proveedor->direccion ?? 'N/A' }}</td>
             </tr>
+            @if($orden->proveedor && $orden->proveedor->numero_cuenta)
+            <tr>
+                <td>Número de Cuenta:</td>
+                <td><strong>{{ $orden->proveedor->numero_cuenta }}</strong></td>
+            </tr>
+            @endif
+            @if($orden->proveedor && $orden->proveedor->banco)
+            <tr>
+                <td>Banco:</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        @if($orden->proveedor->banco->logo_banco)
+                            <img src="{{ public_path('storage/' . $orden->proveedor->banco->logo_banco) }}" 
+                                 alt="{{ $orden->proveedor->banco->nombre_banco }}" 
+                                 style="height: 25px; width: auto; object-fit: contain;"
+                                 onerror="this.style.display='none'">
+                        @endif
+                        <strong>{{ $orden->proveedor->banco->nombre_banco }}</strong>
+                    </div>
+                </td>
+            </tr>
+            @endif
             <tr>
                 <td>Moneda:</td>
                 <td>{{ $orden->moneda->nombre ?? 'SOLES' }}</td>

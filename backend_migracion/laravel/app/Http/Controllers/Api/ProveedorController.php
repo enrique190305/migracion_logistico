@@ -95,6 +95,8 @@ class ProveedorController extends Controller
             'contacto' => 'nullable|string|max:100',
             'celular' => 'nullable|string|max:20',
             'correo' => 'nullable|email|max:100',
+            'numero_cuenta' => 'nullable|string|max:50',
+            'id_banco' => 'nullable|exists:banco,id_banco',
             'forma_pago' => 'nullable|string|max:100',
             'servicio' => 'nullable|string'
         ], [
@@ -121,6 +123,8 @@ class ProveedorController extends Controller
                 'contacto' => $request->contacto,
                 'celular' => $request->celular,
                 'correo' => $request->correo,
+                'numero_cuenta' => $request->numero_cuenta,
+                'id_banco' => $request->id_banco,
                 'forma_pago' => $request->forma_pago,
                 'servicio' => $request->servicio
             ]);
@@ -161,6 +165,8 @@ class ProveedorController extends Controller
             'contacto' => 'nullable|string|max:100',
             'celular' => 'nullable|string|max:20',
             'correo' => 'nullable|email|max:100',
+            'numero_cuenta' => 'nullable|string|max:50',
+            'id_banco' => 'nullable|exists:banco,id_banco',
             'forma_pago' => 'nullable|string|max:100',
             'servicio' => 'nullable|string'
         ], [
@@ -189,6 +195,8 @@ class ProveedorController extends Controller
                 'contacto' => $request->contacto,
                 'celular' => $request->celular,
                 'correo' => $request->correo,
+                'numero_cuenta' => $request->numero_cuenta,
+                'id_banco' => $request->id_banco,
                 'forma_pago' => $request->forma_pago,
                 'servicio' => $request->servicio
             ]);
