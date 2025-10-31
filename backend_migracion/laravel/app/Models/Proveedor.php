@@ -20,7 +20,7 @@ class Proveedor extends Model
         'contacto',
         'celular',
         'correo',
-        'numero_cuenta',
+        'numer_cuenta',  // Nombre del campo en la BD (sin 'o')
         'id_banco',
         'forma_pago',
         'servicio'
