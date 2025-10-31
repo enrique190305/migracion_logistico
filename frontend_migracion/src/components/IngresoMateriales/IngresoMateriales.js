@@ -614,7 +614,7 @@ const IngresoMateriales = () => {
                   className="ingreso-form-input"
                   value={numGuia}
                   onChange={(e) => setNumGuia(e.target.value)}
-                  placeholder="Opcional"
+                  placeholder=""
                 />
               </div>
 
@@ -628,7 +628,7 @@ const IngresoMateriales = () => {
                   className="ingreso-form-input"
                   value={factura}
                   onChange={(e) => setFactura(e.target.value)}
-                  placeholder="Opcional"
+                  placeholder=""
                 />
               </div>
 
@@ -1146,7 +1146,7 @@ const IngresoMateriales = () => {
                   className="ingreso-form-input"
                   value={numGuiaDirecto}
                   onChange={(e) => setNumGuiaDirecto(e.target.value)}
-                  placeholder="Opcional"
+                  placeholder=""
                 />
               </div>
 
@@ -1160,7 +1160,7 @@ const IngresoMateriales = () => {
                   className="ingreso-form-input"
                   value={facturaDirecto}
                   onChange={(e) => setFacturaDirecto(e.target.value)}
-                  placeholder="Opcional"
+                  placeholder=""
                 />
               </div>
 

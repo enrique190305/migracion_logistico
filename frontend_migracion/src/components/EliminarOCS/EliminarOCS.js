@@ -17,11 +17,31 @@ const EliminarOCS = () => {
   const [correlativoSeleccionado, setCorrelativoSeleccionado] = useState('');
   const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
   const [detallesOrden, setDetallesOrden] = useState([]);
+  const [totalesOrden, setTotalesOrden] = useState({
+    subtotal: 0,
+    igv: 0,
+    total: 0
+  });
   
   // Estados de UI
   const [loading, setLoading] = useState(false);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [error, setError] = useState(null);
+
+  // Estados para modales
+  const [modalMensaje, setModalMensaje] = useState({
+    mostrar: false,
+    tipo: '', // 'success', 'error', 'warning', 'info'
+    titulo: '',
+    mensaje: ''
+  });
+
+  const [modalConfirmacion, setModalConfirmacion] = useState({
+    mostrar: false,
+    titulo: '',
+    mensaje: '',
+    onConfirm: null
+  });
 
   // Cargar órdenes cuando cambia el tipo
   useEffect(() => {
@@ -38,6 +58,7 @@ const EliminarOCS = () => {
     setCorrelativoSeleccionado('');
     setOrdenSeleccionada(null);
     setDetallesOrden([]);
+    setTotalesOrden({ subtotal: 0, igv: 0, total: 0 });
     
     try {
       const data = tipoOrden === 'OC' 
@@ -95,7 +116,7 @@ const EliminarOCS = () => {
    */
   const handleBuscarOrden = async () => {
     if (!ordenSeleccionada) {
-      alert('⚠️ Por favor seleccione una orden');
+      mostrarModalMensaje('warning', '⚠️ Atención', 'Por favor seleccione una orden');
       return;
     }
 
@@ -111,15 +132,23 @@ const EliminarOCS = () => {
       
       if (detalle && detalle.detalles) {
         setDetallesOrden(detalle.detalles);
+        // Guardar totales (subtotal, IGV, total)
+        setTotalesOrden({
+          subtotal: detalle.subtotal || 0,
+          igv: detalle.igv || 0,
+          total: detalle.total_general || 0
+        });
       } else {
         setDetallesOrden([]);
-        alert('ℹ️ No se encontraron detalles para esta orden');
+        setTotalesOrden({ subtotal: 0, igv: 0, total: 0 });
+        mostrarModalMensaje('info', 'ℹ️ Información', 'No se encontraron detalles para esta orden');
       }
     } catch (err) {
       console.error('Error al buscar orden:', err);
       setError('Error al cargar el detalle de la orden');
       setDetallesOrden([]);
-      alert('❌ Error al cargar el detalle de la orden');
+      setTotalesOrden({ subtotal: 0, igv: 0, total: 0 });
+      mostrarModalMensaje('error', '❌ Error', 'Error al cargar el detalle de la orden');
     } finally {
       setLoadingDetalle(false);
     }
@@ -128,27 +157,40 @@ const EliminarOCS = () => {
   /**
    * Eliminar orden (ahora anula en lugar de eliminar)
    */
-  const handleEliminar = async () => {
+  const handleEliminar = () => {
     if (!ordenSeleccionada || detallesOrden.length === 0) {
-      alert('⚠️ No hay orden seleccionada para anular');
+      mostrarModalMensaje('warning', '⚠️ Atención', 'No hay orden seleccionada para anular');
       return;
     }
 
     // Validar que la orden esté en estado PENDIENTE
     if (ordenSeleccionada.estado !== 'PENDIENTE') {
-      alert(`⚠️ ADVERTENCIA\n\nNo se puede anular esta orden.\n\nSolo se pueden anular órdenes en estado PENDIENTE.\nEstado actual: ${ordenSeleccionada.estado}`);
+      mostrarModalMensaje(
+        'warning',
+        '⚠️ No se puede anular',
+        `No se puede anular esta orden.\n\nSolo se pueden anular órdenes en estado PENDIENTE.\n\nEstado actual: ${ordenSeleccionada.estado}`
+      );
       return;
     }
 
     const tipoTexto = tipoOrden === 'OC' ? 'Orden de Compra' : 'Orden de Servicio';
-    const confirmacion = window.confirm(
-      `⚠️ ADVERTENCIA\n\n¿Está seguro de anular la ${tipoTexto} ${correlativoSeleccionado}?\n\nLa orden cambiará su estado a ANULADO y no se mostrará en las interfaces normales.\n\nPodrá visualizarla únicamente en el HISTORIAL.\n\nTotal de la orden: S/ ${calcularTotal()}`
+    const mensaje = `¿Está seguro de anular la ${tipoTexto} ${correlativoSeleccionado}?\n\nLa orden cambiará su estado a ANULADO y no se mostrará en las interfaces normales.\n\nPodrá visualizarla únicamente en el HISTORIAL.\n\nSubtotal: S/ ${parseFloat(totalesOrden.subtotal || 0).toFixed(2)}\nIGV (18%): S/ ${parseFloat(totalesOrden.igv || 0).toFixed(2)}\nTotal: S/ ${parseFloat(totalesOrden.total || 0).toFixed(2)}`;
+
+    mostrarModalConfirmacion(
+      '⚠️ Confirmar Anulación',
+      mensaje,
+      confirmarAnulacion
     );
+  };
 
-    if (!confirmacion) return;
-
+  /**
+   * Confirmar anulación de la orden
+   */
+  const confirmarAnulacion = async () => {
     setLoading(true);
     setError(null);
+
+    const tipoTexto = tipoOrden === 'OC' ? 'Orden de Compra' : 'Orden de Servicio';
 
     try {
       const result = tipoOrden === 'OC'
@@ -157,7 +199,11 @@ const EliminarOCS = () => {
 
       console.log('✅ Anulación exitosa:', result);
 
-      alert(`✅ ${tipoTexto} anulada correctamente\n\nCorrelativo: ${correlativoSeleccionado}\nEstado: ANULADO\n\nLa orden ya no aparecerá en listados normales.`);
+      mostrarModalMensaje(
+        'success',
+        '✅ Anulación Exitosa',
+        `${tipoTexto} anulada correctamente\n\nCorrelativo: ${correlativoSeleccionado}\nEstado: ANULADO\n\nLa orden ya no aparecerá en listados normales.`
+      );
       
       // Recargar lista y limpiar formulario
       handleLimpiar();
@@ -167,7 +213,7 @@ const EliminarOCS = () => {
       console.error('Error al anular orden:', err);
       const mensajeError = err.message || 'Error al anular la orden';
       setError(mensajeError);
-      alert(`❌ ${mensajeError}`);
+      mostrarModalMensaje('error', '❌ Error al Anular', mensajeError);
     } finally {
       setLoading(false);
     }
@@ -181,14 +227,66 @@ const EliminarOCS = () => {
     setCorrelativoSeleccionado('');
     setOrdenSeleccionada(null);
     setDetallesOrden([]);
+    setTotalesOrden({ subtotal: 0, igv: 0, total: 0 });
     setError(null);
   };
 
   /**
-   * Calcular total general
+   * Mostrar modal de mensaje
    */
-  const calcularTotal = () => {
-    return detallesOrden.reduce((sum, item) => sum + parseFloat(item.total || 0), 0).toFixed(2);
+  const mostrarModalMensaje = (tipo, titulo, mensaje) => {
+    setModalMensaje({
+      mostrar: true,
+      tipo,
+      titulo,
+      mensaje
+    });
+  };
+
+  /**
+   * Cerrar modal de mensaje
+   */
+  const cerrarModalMensaje = () => {
+    setModalMensaje({
+      mostrar: false,
+      tipo: '',
+      titulo: '',
+      mensaje: ''
+    });
+  };
+
+  /**
+   * Mostrar modal de confirmación
+   */
+  const mostrarModalConfirmacion = (titulo, mensaje, onConfirm) => {
+    setModalConfirmacion({
+      mostrar: true,
+      titulo,
+      mensaje,
+      onConfirm
+    });
+  };
+
+  /**
+   * Cerrar modal de confirmación
+   */
+  const cerrarModalConfirmacion = () => {
+    setModalConfirmacion({
+      mostrar: false,
+      titulo: '',
+      mensaje: '',
+      onConfirm: null
+    });
+  };
+
+  /**
+   * Confirmar acción del modal
+   */
+  const confirmarAccion = () => {
+    if (modalConfirmacion.onConfirm) {
+      modalConfirmacion.onConfirm();
+    }
+    cerrarModalConfirmacion();
   };
 
   return (
@@ -377,8 +475,16 @@ const EliminarOCS = () => {
             {detallesOrden.length > 0 && !loadingDetalle && (
               <tfoot>
                 <tr>
+                  <td colSpan="6" className="text-right"><strong>SUBTOTAL:</strong></td>
+                  <td className="text-right"><strong>S/ {parseFloat(totalesOrden.subtotal || 0).toFixed(2)}</strong></td>
+                </tr>
+                <tr>
+                  <td colSpan="6" className="text-right"><strong>IGV (18%):</strong></td>
+                  <td className="text-right"><strong>S/ {parseFloat(totalesOrden.igv || 0).toFixed(2)}</strong></td>
+                </tr>
+                <tr>
                   <td colSpan="6" className="text-right"><strong>TOTAL GENERAL:</strong></td>
-                  <td className="text-right total-general"><strong>S/ {calcularTotal()}</strong></td>
+                  <td className="text-right total-general"><strong>S/ {parseFloat(totalesOrden.total || 0).toFixed(2)}</strong></td>
                 </tr>
               </tfoot>
             )}
@@ -397,6 +503,64 @@ const EliminarOCS = () => {
           <span>🗑️</span> {loading ? 'ANULANDO...' : 'ANULAR ORDEN'}
         </button>
       </div>
+
+      {/* Modal de Mensaje */}
+      {modalMensaje.mostrar && (
+        <>
+          <div className="modal-overlay" onClick={cerrarModalMensaje}></div>
+          <div className={`modal-mensaje modal-mensaje-${modalMensaje.tipo}`}>
+            <div className="modal-mensaje-header">
+              <div className="modal-mensaje-icono">
+                {modalMensaje.tipo === 'success' && '✅'}
+                {modalMensaje.tipo === 'error' && '❌'}
+                {modalMensaje.tipo === 'warning' && '⚠️'}
+                {modalMensaje.tipo === 'info' && 'ℹ️'}
+              </div>
+              <h3>{modalMensaje.titulo}</h3>
+            </div>
+            <div className="modal-mensaje-body">
+              <p style={{ whiteSpace: 'pre-line' }}>{modalMensaje.mensaje}</p>
+            </div>
+            <div className="modal-mensaje-footer">
+              <button 
+                className={`btn-mensaje btn-mensaje-${modalMensaje.tipo}`}
+                onClick={cerrarModalMensaje}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Modal de Confirmación */}
+      {modalConfirmacion.mostrar && (
+        <>
+          <div className="modal-overlay" onClick={cerrarModalConfirmacion}></div>
+          <div className="modal-confirmacion">
+            <div className="modal-confirmacion-header">
+              <h3>{modalConfirmacion.titulo}</h3>
+            </div>
+            <div className="modal-confirmacion-body">
+              <p style={{ whiteSpace: 'pre-line' }}>{modalConfirmacion.mensaje}</p>
+            </div>
+            <div className="modal-confirmacion-footer">
+              <button 
+                className="btn-cancelar"
+                onClick={cerrarModalConfirmacion}
+              >
+                ✕ Cancelar
+              </button>
+              <button 
+                className="btn-confirmar"
+                onClick={confirmarAccion}
+              >
+                ✓ Confirmar
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

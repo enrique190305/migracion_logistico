@@ -1,0 +1,925 @@
+/* ===================================
+   CONTENEDOR PRINCIPAL
+   =================================== */
+.registro-empresa-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ===================================
+   HEADER
+   =================================== */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.titulo-seccion h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.subtitulo {
+  margin: 5px 0 0 0;
+  color: #718096;
+  font-size: 14px;
+}
+
+.btn-nuevo {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-nuevo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+/* ===================================
+   ESTADÍSTICAS
+   =================================== */
+.estadisticas-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.estadistica-card {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.estadistica-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.estadistica-card.activas {
+  border-left: 5px solid #48bb78;
+}
+
+.estadistica-card.inactivas {
+  border-left: 5px solid #f56565;
+}
+
+.estadistica-icono {
+  font-size: 40px;
+  opacity: 0.8;
+}
+
+.estadistica-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.estadistica-numero {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1;
+}
+
+.estadistica-label {
+  font-size: 14px;
+  color: #718096;
+  margin-top: 5px;
+}
+
+/* ===================================
+   FILTROS
+   =================================== */
+.filtros-container {
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.filtro-busqueda {
+  flex: 1;
+  min-width: 300px;
+  position: relative;
+}
+
+.icono-busqueda {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  opacity: 0.5;
+}
+
+.filtro-busqueda input {
+  width: 100%;
+  padding: 12px 12px 12px 45px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.filtro-busqueda input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filtro-estado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filtro-estado label {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.filtro-estado select {
+  padding: 10px 15px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.filtro-estado select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* ===================================
+   TABLA
+   =================================== */
+.tabla-container {
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px;
+}
+
+.tabla-empresas {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-empresas thead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.tabla-empresas th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tabla-empresas tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.tabla-empresas tbody tr:hover {
+  background-color: #f7fafc;
+  transform: scale(1.01);
+}
+
+.tabla-empresas td {
+  padding: 15px;
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.celda-importante {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.texto-vacio {
+  text-align: center;
+  padding: 40px !important;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* ===================================
+   BADGES DE ESTADO
+   =================================== */
+.badge-estado {
+  display: inline-block;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-estado.activo {
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.badge-estado.inactivo {
+  background-color: #fed7d7;
+  color: #742a2a;
+}
+
+/* ===================================
+   ACCIONES
+   =================================== */
+.acciones-grupo {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-accion {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  opacity: 0.7;
+}
+
+.btn-accion:hover {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.btn-accion.ver:hover {
+  background-color: #bee3f8;
+}
+
+.btn-accion.editar:hover {
+  background-color: #fef5e7;
+}
+
+.btn-accion.eliminar:hover {
+  background-color: #fed7d7;
+}
+
+/* ===================================
+   PAGINACIÓN
+   =================================== */
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-paginacion {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-paginacion:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-paginacion:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.info-paginacion {
+  color: #2d3748;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ===================================
+   MODALES - BASE
+   =================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-contenido {
+  position: relative;
+  background: white;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideInFixed 0.3s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 25px;
+  border-bottom: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 15px 15px 0 0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.btn-cerrar {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-cerrar:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 20px 25px;
+  border-top: none;
+  background-color: #f7fafc;
+}
+
+/* ===================================
+   MODAL FORMULARIO
+   =================================== */
+.modal-form form {
+  padding: 25px;
+}
+
+.form-grupo {
+  margin-bottom: 20px;
+}
+
+.form-grupo label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.obligatorio {
+  color: #e53e3e;
+  font-weight: bold;
+}
+
+.form-grupo input,
+.form-grupo select,
+.form-grupo textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-grupo input:focus,
+.form-grupo select:focus,
+.form-grupo textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-grupo textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn-cancelar,
+.btn-guardar {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.btn-cancelar {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.btn-cancelar:hover {
+  background-color: #cbd5e0;
+  transform: translateY(-2px);
+}
+
+.btn-guardar {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+}
+
+.btn-guardar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+}
+
+/* ===================================
+   MODAL DETALLES
+   =================================== */
+.modal-detalles {
+  position: relative;
+  max-width: 700px;
+}
+
+.detalles-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  padding: 25px;
+}
+
+.detalle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detalle-item.detalle-completo {
+  grid-column: 1 / -1;
+}
+
+.detalle-item label {
+  font-weight: 600;
+  color: #718096;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detalle-item span {
+  color: #2d3748;
+  font-size: 14px;
+  padding: 8px;
+  background-color: #f7fafc;
+  border-radius: 6px;
+}
+
+.valor-importante {
+  font-weight: 600 !important;
+  color: #667eea !important;
+}
+
+.btn-cerrar-modal {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cerrar-modal:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+/* ===================================
+   MODAL ELIMINAR
+   =================================== */
+.modal-eliminar {
+  position: relative;
+  max-width: 500px;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.modal-eliminar .modal-header {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+  border: none;
+  border-radius: 15px 15px 0 0;
+  padding: 20px 25px;
+  margin: 0;
+}
+
+.modal-eliminar .modal-body {
+  padding: 30px 25px;
+  text-align: center;
+  background: white;
+  margin: 0;
+}
+
+.modal-eliminar .modal-footer {
+  background: white;
+  padding: 20px 25px;
+  margin: 0;
+  border: none;
+  display: flex;
+  justify-content: center;
+}
+
+.modal-eliminar .modal-footer .btn-cancelar {
+  display: none;
+}
+
+.modal-eliminar .modal-footer .btn-eliminar {
+  min-width: 180px;
+}
+
+.icono-advertencia {
+  font-size: 60px;
+  margin-bottom: 20px;
+  animation: iconBounce 0.6s ease;
+}
+
+.modal-eliminar p {
+  color: #4a5568;
+  font-size: 14px;
+  margin: 10px 0;
+}
+
+.nombre-empresa {
+  font-weight: 700;
+  font-size: 18px;
+  color: #2d3748;
+  margin: 15px 0 !important;
+}
+
+.texto-advertencia {
+  color: #e53e3e;
+  font-weight: 600;
+  margin-top: 20px !important;
+}
+
+.btn-eliminar {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+  min-width: 120px;
+}
+
+.btn-eliminar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 101, 101, 0.6);
+}
+
+/* ===================================
+   MODAL MENSAJES
+   =================================== */
+.modal-mensaje {
+  position: relative;
+  max-width: 400px;
+  padding: 30px;
+  text-align: center;
+  animation: modalSlideInFixed 0.3s ease-out;
+}
+
+.modal-mensaje-icono {
+  font-size: 60px;
+  margin-bottom: 20px;
+  animation: iconBounce 0.6s ease;
+}
+
+.modal-mensaje h3 {
+  margin: 0 0 15px 0;
+  font-size: 24px;
+}
+
+.modal-mensaje p {
+  color: #4a5568;
+  font-size: 14px;
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.modal-mensaje button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Tipos de mensajes */
+.modal-mensaje-success {
+  border-top: 5px solid #48bb78;
+}
+
+.modal-mensaje-success h3 {
+  color: #48bb78;
+}
+
+.btn-mensaje-success {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+}
+
+.btn-mensaje-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(72, 187, 120, 0.6);
+}
+
+.modal-mensaje-error {
+  border-top: 5px solid #f56565;
+}
+
+.modal-mensaje-error h3 {
+  color: #f56565;
+}
+
+.btn-mensaje-error {
+  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(245, 101, 101, 0.4);
+}
+
+.btn-mensaje-error:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 101, 101, 0.6);
+}
+
+.modal-mensaje-warning {
+  border-top: 5px solid #ed8936;
+}
+
+.modal-mensaje-warning h3 {
+  color: #ed8936;
+}
+
+.btn-mensaje-warning {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(237, 137, 54, 0.4);
+}
+
+.btn-mensaje-warning:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(237, 137, 54, 0.6);
+}
+
+.modal-mensaje-info {
+  border-top: 5px solid #4299e1;
+}
+
+.modal-mensaje-info h3 {
+  color: #4299e1;
+}
+
+.btn-mensaje-info {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(66, 153, 225, 0.4);
+}
+
+.btn-mensaje-info:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(66, 153, 225, 0.6);
+}
+
+/* ===================================
+   LOADING OVERLAY
+   =================================== */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.3s ease;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid rgba(255, 255, 255, 0.3);
+  border-top: 5px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-overlay p {
+  color: white;
+  margin-top: 20px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ===================================
+   ANIMACIONES
+   =================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideInFixed {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes iconBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+@media (max-width: 768px) {
+  .registro-empresa-container {
+    padding: 10px;
+  }
+
+  .header-section {
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .btn-nuevo {
+    width: 100%;
+  }
+
+  .estadisticas-container {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros-container {
+    flex-direction: column;
+  }
+
+  .filtro-busqueda {
+    min-width: 100%;
+  }
+
+  .tabla-container {
+    overflow-x: auto;
+  }
+
+  .tabla-empresas {
+    font-size: 12px;
+  }
+
+  .tabla-empresas th,
+  .tabla-empresas td {
+    padding: 10px 8px;
+  }
+
+  .acciones-grupo {
+    flex-direction: column;
+  }
+
+  .modal-contenido {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .detalles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .paginacion {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .titulo-seccion h2 {
+    font-size: 22px;
+  }
+
+  .estadistica-numero {
+    font-size: 24px;
+  }
+
+  .modal-header h3 {
+    font-size: 18px;
+  }
+
+  .form-grupo input,
+  .form-grupo select,
+  .form-grupo textarea {
+    font-size: 16px; /* Evita zoom en iOS */
+  }
+}

@@ -1027,6 +1027,10 @@ class OrdenCompraServicioController extends Controller
                 ];
             });
 
+            // Calcular subtotal (sin IGV) y monto IGV
+            $subtotal = $detalles->sum('subtotal');
+            $montoIGV = $ordenCompra->total_general - $subtotal;
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -1048,6 +1052,9 @@ class OrdenCompraServicioController extends Controller
                         'tipo_moneda' => $ordenCompra->moneda->tipo_moneda ?? 'SOLES'
                     ],
                     'fecha_emision' => $ordenCompra->fecha_oc,
+                    'subtotal' => round($subtotal, 2),
+                    'igv' => round($montoIGV, 2),
+                    'porcentaje_igv' => $ordenCompra->igv ?? 18,
                     'total_general' => $ordenCompra->total_general,
                     'estado' => $ordenCompra->estado,
                     'detalles' => $detalles,
@@ -1091,6 +1098,10 @@ class OrdenCompraServicioController extends Controller
                 ];
             });
 
+            // Calcular subtotal (sin IGV) y monto IGV
+            $subtotal = $detalles->sum('subtotal');
+            $montoIGV = $ordenServicio->total_general - $subtotal;
+
             return response()->json([
                 'success' => true,
                 'data' => [
@@ -1112,6 +1123,9 @@ class OrdenCompraServicioController extends Controller
                         'tipo_moneda' => $ordenServicio->moneda->tipo_moneda ?? 'SOLES'
                     ],
                     'fecha_emision' => $ordenServicio->fecha_servicio,
+                    'subtotal' => round($subtotal, 2),
+                    'igv' => round($montoIGV, 2),
+                    'porcentaje_igv' => $ordenServicio->igv ?? 18,
                     'total_general' => $ordenServicio->total_general,
                     'estado' => $ordenServicio->estado,
                     'detalles' => $detalles,

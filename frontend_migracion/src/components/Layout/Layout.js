@@ -9,6 +9,7 @@ import RegistroProyecto from '../RegistroProyecto/RegistroProyecto';
 import RegistroBodega from '../RegistroBodega/RegistroBodega';
 import RegistroReserva from '../RegistroReserva/RegistroReserva';
 import RegistroProductos from '../RegistroProductos/RegistroProductos';
+import RegistroEmpresa from '../RegistroEmpresa/RegistroEmpresa';
 import EliminarOCS from '../EliminarOCS/EliminarOCS';
 import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
@@ -48,6 +49,8 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <RegistroBodega />;
       case 'registro-reserva':
         return <RegistroReserva />;
+      case 'registro-empresa':
+        return <RegistroEmpresa />;
       case 'orden-pedido':
         return <OrdenPedido />;
       case 'ordenes-compra':

@@ -21,6 +21,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
       icon: '📦',
       color: '#e74c3c',
       items: [
+        { id: 'registro-empresa', title: 'Registro de Empresa', icon: '🏢' },
         { id: 'registro-bodega', title: 'Registro de Bodega', icon: '📦' },
         { id: 'registro-reserva', title: 'Registro de Reserva', icon: '📋' },
       ]
