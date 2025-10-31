@@ -26,6 +26,12 @@ class Proveedor extends Model
         'servicio'
     ];
 
+    // Accessor para mantener compatibilidad con 'numero_cuenta'
+    public function getNumeroCuentaAttribute()
+    {
+        return $this->numer_cuenta;
+    }
+
     // Relaciones
     public function banco()
     {
