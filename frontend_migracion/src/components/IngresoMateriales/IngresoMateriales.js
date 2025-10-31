@@ -21,9 +21,8 @@ const IngresoMateriales = () => {
   const [proveedor, setProveedor] = useState('');
   const [razonSocial, setRazonSocial] = useState('');
   const [estado, setEstado] = useState('');
-  const [proyectoAlmacen, setProyectoAlmacen] = useState('');
-  const [bodegaSeleccionada, setBodegaSeleccionada] = useState(''); // NUEVO
-  const [reservaSeleccionada, setReservaSeleccionada] = useState(''); // NUEVO
+  const [bodegaSeleccionada, setBodegaSeleccionada] = useState('');
+  const [reservaSeleccionada, setReservaSeleccionada] = useState('');
   const [numGuia, setNumGuia] = useState('');
   const [factura, setFactura] = useState('');
   const [observaciones, setObservaciones] = useState('');
@@ -33,7 +32,6 @@ const IngresoMateriales = () => {
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState('');
   const [proveedorDirecto, setProveedorDirecto] = useState('');
   const [moneda, setMoneda] = useState('');
-  const [proyectoAlmacenDirecto, setProyectoAlmacenDirecto] = useState('');
   const [fechaIngresoDirecto, setFechaIngresoDirecto] = useState(new Date().toISOString().split('T')[0]);
   const [numGuiaDirecto, setNumGuiaDirecto] = useState('');
   const [facturaDirecto, setFacturaDirecto] = useState('');
@@ -49,9 +47,8 @@ const IngresoMateriales = () => {
 
   // Catálogos
   const [ordenesPendientes, setOrdenesPendientes] = useState([]);
-  const [proyectosAlmacen, setProyectosAlmacen] = useState([]);
-  const [bodegas, setBodegas] = useState([]); // NUEVO
-  const [reservas, setReservas] = useState([]); // NUEVO - filtradas por bodega
+  const [bodegas, setBodegas] = useState([]);
+  const [reservas, setReservas] = useState([]);
   const [productos, setProductos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
@@ -87,7 +84,6 @@ const IngresoMateriales = () => {
     }
   }, [tabActivo]);
 
-  // NUEVO: Cargar reservas cuando cambia la bodega seleccionada
   useEffect(() => {
     if (bodegaSeleccionada) {
       cargarReservasPorBodega(bodegaSeleccionada);
@@ -101,25 +97,27 @@ const IngresoMateriales = () => {
   // FUNCIONES DE CARGA DE DATOS
   // ============================================
 
-  const cargarDatosIniciales = async () => {
-    try {
-      setCargando(true);
-      
-      const respOrdenes = await ingresoMaterialesAPI.listarOrdenesPendientes();
-      if (respOrdenes.success) {
-        setOrdenesPendientes(respOrdenes.data);
-      }
+ const cargarDatosIniciales = async () => {
+  try {
+    setCargando(true);
+    
+    const respOrdenes = await ingresoMaterialesAPI.listarOrdenesPendientes();
+    if (respOrdenes.success) {
+      setOrdenesPendientes(respOrdenes.data);
+    }
 
-      const respProyectos = await ingresoMaterialesAPI.listarProyectosAlmacen();
-      if (respProyectos.success) {
-        setProyectosAlmacen(respProyectos.data);
-      }
-
-      // NUEVO: Cargar bodegas
-      const respBodegas = await obtenerBodegas();
-      if (respBodegas.success) {
-        setBodegas(respBodegas.data || []);
-      }
+    // ✅ AGREGAR ESTOS LOGS
+    console.log('🔍 Cargando bodegas...');
+    const respBodegas = await obtenerBodegas();
+    console.log('📦 Respuesta bodegas:', respBodegas);
+    
+    if (respBodegas.success) {
+      console.log('✅ Bodegas data:', respBodegas.data);
+      setBodegas(respBodegas.data || []);
+    } else {
+      console.error('❌ Error en respuesta de bodegas:', respBodegas);
+      setBodegas([]);
+    }
 
       const respProductos = await ingresoMaterialesAPI.listarProductos();
       if (respProductos.success) {
@@ -155,7 +153,6 @@ const IngresoMateriales = () => {
     }
   };
 
-  // NUEVO: Cargar reservas por bodega
   const cargarReservasPorBodega = async (idBodega) => {
     try {
       const respReservas = await obtenerReservasPorBodega(idBodega);
@@ -328,12 +325,6 @@ const IngresoMateriales = () => {
       return;
     }
 
-    if (!proyectoAlmacen) {
-      mostrarMensaje('error', 'Seleccione un proyecto almacén');
-      return;
-    }
-
-    // NUEVO: Validar bodega y reserva
     if (!bodegaSeleccionada) {
       mostrarMensaje('error', 'Debe seleccionar una bodega');
       return;
@@ -365,9 +356,8 @@ const IngresoMateriales = () => {
 
       const datos = {
         correlativo: ordenSeleccionada,
-        proyecto_almacen: proyectoAlmacen,
-        id_bodega: parseInt(bodegaSeleccionada),       // NUEVO
-        id_reserva: parseInt(reservaSeleccionada),     // NUEVO
+        id_bodega: parseInt(bodegaSeleccionada),
+        id_reserva: parseInt(reservaSeleccionada),
         fecha_ingreso: fechaIngreso,
         num_guia: numGuia,
         factura: factura,
@@ -385,7 +375,6 @@ const IngresoMateriales = () => {
       if (response.success) {
         mostrarMensaje('success', '✅ Ingreso guardado correctamente');
         
-        // Descargar PDF automáticamente
         try {
           const idIngreso = response.data?.id_ingreso;
           if (idIngreso) {
@@ -404,7 +393,6 @@ const IngresoMateriales = () => {
           }
         } catch (pdfError) {
           console.error('Error al generar PDF:', pdfError);
-          // No mostrar error al usuario, el ingreso se guardó correctamente
         }
         
         limpiarFormulario();
@@ -427,10 +415,9 @@ const IngresoMateriales = () => {
     setProveedor('');
     setRazonSocial('');
     setEstado('');
-    setProyectoAlmacen('');
-    setBodegaSeleccionada('');      // NUEVO
-    setReservaSeleccionada('');     // NUEVO
-    setReservas([]);                // NUEVO
+    setBodegaSeleccionada('');
+    setReservaSeleccionada('');
+    setReservas([]);
     setNumGuia('');
     setFactura('');
     setObservaciones('');
@@ -509,7 +496,6 @@ const IngresoMateriales = () => {
     setDropdownAbiertoProducto(!dropdownAbiertoProducto);
   };
 
-  // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (!event.target.closest('.producto-combobox') && 
@@ -530,7 +516,6 @@ const IngresoMateriales = () => {
     return (
       <div className="nuevo-ingreso-form">
         
-        {/* SECCIÓN 1: INFORMACIÓN GENERAL */}
         <div className="ingreso-card">
           <div className="ingreso-card-header">
             <span className="ingreso-icon">📋</span>
@@ -539,7 +524,6 @@ const IngresoMateriales = () => {
           <div className="ingreso-card-body">
             <div className="ingreso-form-row">
               
-              {/* Número de Ingreso */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   🔢 N° Ingreso
@@ -553,7 +537,6 @@ const IngresoMateriales = () => {
                 />
               </div>
 
-              {/* Selección de Orden */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📄 Seleccionar Orden (OC/OS) *
@@ -572,7 +555,6 @@ const IngresoMateriales = () => {
                 </select>
               </div>
 
-              {/* Fecha */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📅 Fecha de Ingreso *
@@ -590,7 +572,6 @@ const IngresoMateriales = () => {
             {ordenSeleccionada && (
               <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
                 
-                {/* Proveedor */}
                 <div className="ingreso-form-group">
                   <label className="ingreso-form-label">
                     👤 Proveedor
@@ -603,7 +584,6 @@ const IngresoMateriales = () => {
                   />
                 </div>
 
-                {/* Razón Social */}
                 <div className="ingreso-form-group">
                   <label className="ingreso-form-label">
                     🏢 Razón Social
@@ -616,7 +596,6 @@ const IngresoMateriales = () => {
                   />
                 </div>
 
-                {/* Estado */}
                 <div className="ingreso-form-group">
                   <label className="ingreso-form-label">
                     📊 Estado
@@ -635,26 +614,6 @@ const IngresoMateriales = () => {
 
             <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Proyecto Almacén */}
-              <div className="ingreso-form-group">
-                <label className="ingreso-form-label">
-                  🏭 Proyecto Almacén *
-                </label>
-                <select
-                  className="ingreso-form-select"
-                  value={proyectoAlmacen}
-                  onChange={(e) => setProyectoAlmacen(e.target.value)}
-                >
-                  <option value="">-- Seleccione proyecto --</option>
-                  {proyectosAlmacen.map((proyecto, index) => (
-                    <option key={index} value={proyecto.nombre_proyecto}>
-                      {proyecto.nombre_proyecto}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Bodega (NUEVO) */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   🏪 Bodega *
@@ -667,13 +626,12 @@ const IngresoMateriales = () => {
                   <option value="">-- Seleccione bodega --</option>
                   {bodegas.map((bodega) => (
                     <option key={bodega.id_bodega} value={bodega.id_bodega}>
-                      {bodega.nombre_bodega}
+                      {bodega.nombre}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Reserva (NUEVO) */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📍 Reserva *
@@ -689,7 +647,7 @@ const IngresoMateriales = () => {
                   </option>
                   {reservas.map((reserva) => (
                     <option key={reserva.id_reserva} value={reserva.id_reserva}>
-                      {reserva.nombre_reserva}
+                      {reserva.tipo_reserva}
                     </option>
                   ))}
                 </select>
@@ -699,7 +657,6 @@ const IngresoMateriales = () => {
 
             <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Guía */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📦 N° Guía de Remisión
@@ -713,7 +670,6 @@ const IngresoMateriales = () => {
                 />
               </div>
 
-              {/* Factura */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   🧾 N° Factura
@@ -731,7 +687,6 @@ const IngresoMateriales = () => {
 
             <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Observaciones */}
               <div className="ingreso-form-group" style={{ gridColumn: '1 / -1' }}>
                 <label className="ingreso-form-label">
                   📝 Observaciones
@@ -749,7 +704,6 @@ const IngresoMateriales = () => {
           </div>
         </div>
 
-        {/* SECCIÓN 2: PRODUCTOS */}
         <div className="ingreso-card">
           <div className="ingreso-card-header">
             <span className="ingreso-icon">📦</span>
@@ -757,7 +711,6 @@ const IngresoMateriales = () => {
           </div>
           <div className="ingreso-card-body">
             
-            {/* Botón Precargar */}
             {ordenSeleccionada && (
               <div style={{ marginBottom: '20px' }}>
                 <button
@@ -771,7 +724,6 @@ const IngresoMateriales = () => {
               </div>
             )}
 
-            {/* Formulario para agregar productos */}
             <div className="ingreso-form-row">
               
               <div className="ingreso-form-group">
@@ -842,7 +794,6 @@ const IngresoMateriales = () => {
 
             </div>
 
-            {/* Tabla de productos agregados */}
             {productosAgregados.length > 0 ? (
               <div style={{ marginTop: '25px', overflowX: 'auto' }}>
                 <table className="ingreso-table">
@@ -902,7 +853,6 @@ const IngresoMateriales = () => {
           </div>
         </div>
 
-        {/* SECCIÓN 3: ACCIONES */}
         <div className="ingreso-card">
           <div className="ingreso-card-body">
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
@@ -939,7 +889,6 @@ const IngresoMateriales = () => {
 
   const renderIngresoDirecto = () => {
     
-    // Funciones auxiliares para cálculos
     const calcularSubtotal = (producto) => {
       const cantidad = parseFloat(producto.cantidad_ingresar) || 0;
       const precio = parseFloat(producto.precio_unitario) || 0;
@@ -951,7 +900,6 @@ const IngresoMateriales = () => {
     };
 
     const handleAgregarProductoDirecto = () => {
-      // Validaciones
       if (!productoSeleccionado) {
         mostrarMensaje('error', '❌ Debe seleccionar un producto');
         return;
@@ -965,21 +913,18 @@ const IngresoMateriales = () => {
         return;
       }
 
-      // Buscar info del producto
       const productoInfo = productos.find(p => p.codigo_producto === productoSeleccionado);
       if (!productoInfo) {
         mostrarMensaje('error', '❌ Producto no encontrado');
         return;
       }
 
-      // Verificar si ya existe en la lista
       const yaExiste = productosDirectos.some(p => p.codigo_producto === productoSeleccionado);
       if (yaExiste) {
         mostrarMensaje('warning', '⚠️ El producto ya fue agregado. Puede modificar su cantidad en la tabla.');
         return;
       }
 
-      // Agregar producto
       const nuevoProducto = {
         codigo_producto: productoSeleccionado,
         descripcion: productoInfo.descripcion,
@@ -991,7 +936,6 @@ const IngresoMateriales = () => {
 
       setProductosDirectos([...productosDirectos, nuevoProducto]);
       
-      // Limpiar campos
       setProductoSeleccionado('');
       setCantidadIngresar('');
       setPrecioUnitario('');
@@ -1022,7 +966,6 @@ const IngresoMateriales = () => {
     };
 
     const handleGuardarIngresoDirecto = async () => {
-      // Validaciones
       if (!empresaSeleccionada) {
         mostrarMensaje('error', '❌ Debe seleccionar una empresa');
         return;
@@ -1035,10 +978,6 @@ const IngresoMateriales = () => {
         mostrarMensaje('error', '❌ Debe seleccionar una moneda');
         return;
       }
-      if (!proyectoAlmacenDirecto) {
-        mostrarMensaje('error', '❌ Debe seleccionar un proyecto almacén');
-        return;
-      }
       if (!fechaIngresoDirecto) {
         mostrarMensaje('error', '❌ Debe ingresar la fecha');
         return;
@@ -1048,13 +987,11 @@ const IngresoMateriales = () => {
         return;
       }
 
-      // Preparar datos
       const datosIngreso = {
         numero_ingreso: numeroIngresoDirecto,
         id_empresa: empresaSeleccionada,
         id_proveedor: proveedorDirecto,
         moneda: moneda,
-        proyecto_almacen: proyectoAlmacenDirecto,
         fecha_ingreso: fechaIngresoDirecto,
         total: calcularTotalGeneral(),
         num_guia: numGuiaDirecto,
@@ -1076,7 +1013,6 @@ const IngresoMateriales = () => {
           mostrarMensaje('success', `✅ ${response.message}`);
           limpiarFormularioDirecto();
           
-          // Recargar número de ingreso
           const respNumero = await ingresoMaterialesAPI.generarNumeroIngreso();
           if (respNumero.success) {
             setNumeroIngresoDirecto(respNumero.numero_ingreso);
@@ -1096,7 +1032,6 @@ const IngresoMateriales = () => {
       setEmpresaSeleccionada('');
       setProveedorDirecto('');
       setMoneda('');
-      setProyectoAlmacenDirecto('');
       setFechaIngresoDirecto(new Date().toISOString().split('T')[0]);
       setNumGuiaDirecto('');
       setFacturaDirecto('');
@@ -1111,7 +1046,6 @@ const IngresoMateriales = () => {
     return (
       <div className="ingreso-directo-form">
         
-        {/* SECCIÓN 1: INFORMACIÓN GENERAL */}
         <div className="ingreso-card">
           <div className="ingreso-card-header" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
             <span className="ingreso-icon">📥</span>
@@ -1120,7 +1054,6 @@ const IngresoMateriales = () => {
           <div className="ingreso-card-body">
             <div className="ingreso-form-row">
               
-              {/* Número de Ingreso */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   🔢 N° Ingreso
@@ -1134,7 +1067,6 @@ const IngresoMateriales = () => {
                 />
               </div>
 
-              {/* Empresa */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   🏢 Empresa *
@@ -1153,7 +1085,6 @@ const IngresoMateriales = () => {
                 </select>
               </div>
 
-              {/* Proveedor */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   👤 Proveedor *
@@ -1176,7 +1107,6 @@ const IngresoMateriales = () => {
 
             <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Moneda */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   💰 Moneda *
@@ -1195,26 +1125,6 @@ const IngresoMateriales = () => {
                 </select>
               </div>
 
-              {/* Proyecto Almacén */}
-              <div className="ingreso-form-group">
-                <label className="ingreso-form-label">
-                  🏭 Proyecto Almacén *
-                </label>
-                <select
-                  className="ingreso-form-select"
-                  value={proyectoAlmacenDirecto}
-                  onChange={(e) => setProyectoAlmacenDirecto(e.target.value)}
-                >
-                  <option value="">-- Seleccione proyecto --</option>
-                  {proyectosAlmacen.map((proyecto, index) => (
-                    <option key={index} value={proyecto.nombre_proyecto}>
-                      {proyecto.nombre_proyecto}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Fecha */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📅 Fecha de Ingreso *
@@ -1231,7 +1141,6 @@ const IngresoMateriales = () => {
 
             <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Guía */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📦 N° Guía de Remisión
@@ -1245,7 +1154,6 @@ const IngresoMateriales = () => {
                 />
               </div>
 
-              {/* Factura */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   🧾 N° Factura
@@ -1259,7 +1167,6 @@ const IngresoMateriales = () => {
                 />
               </div>
 
-              {/* Observaciones */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">
                   📝 Observaciones
@@ -1277,7 +1184,6 @@ const IngresoMateriales = () => {
           </div>
         </div>
 
-        {/* SECCIÓN 2: PRODUCTOS */}
         <div className="ingreso-card">
           <div className="ingreso-card-header" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
             <span className="ingreso-icon">📦</span>
@@ -1285,7 +1191,6 @@ const IngresoMateriales = () => {
           </div>
           <div className="ingreso-card-body">
             
-            {/* Formulario para agregar productos */}
             <div className="ingreso-form-row">
               
               <div className="ingreso-form-group">
@@ -1362,7 +1267,6 @@ const IngresoMateriales = () => {
 
             </div>
 
-            {/* Tabla de productos agregados */}
             {productosDirectos.length > 0 ? (
               <div style={{ marginTop: '25px', overflowX: 'auto' }}>
                 <table className="ingreso-table">
@@ -1441,7 +1345,6 @@ const IngresoMateriales = () => {
           </div>
         </div>
 
-        {/* SECCIÓN 3: ACCIONES */}
         <div className="ingreso-card">
           <div className="ingreso-card-body">
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
@@ -1478,7 +1381,6 @@ const IngresoMateriales = () => {
 
   return (
     <div className="ingreso-materiales-container">
-      {/* ENCABEZADO */}
       <div className="ingreso-header">
         <span className="ingreso-icon">📦</span>
         <div>
@@ -1487,14 +1389,12 @@ const IngresoMateriales = () => {
         </div>
       </div>
 
-      {/* MENSAJE DE NOTIFICACIÓN */}
       {mensaje.texto && (
         <div className={`ingreso-mensaje ingreso-mensaje-${mensaje.tipo}`}>
           {mensaje.texto}
         </div>
       )}
 
-      {/* TABS */}
       <div className="ingreso-tabs">
         <button
           className={`ingreso-tab ${tabActivo === 'nuevo' ? 'activo' : ''}`}
@@ -1510,14 +1410,11 @@ const IngresoMateriales = () => {
         </button>
       </div>
 
-      {/* CONTENIDO SEGÚN TAB ACTIVO */}
       <div className="ingreso-content">
         {tabActivo === 'nuevo' && renderNuevoIngreso()}
-        
         {tabActivo === 'directo' && renderIngresoDirecto()}
       </div>
 
-      {/* LOADER */}
       {cargando && (
         <div className="ingreso-loader">
           <div className="spinner"></div>
@@ -1525,7 +1422,6 @@ const IngresoMateriales = () => {
         </div>
       )}
 
-      {/* Dropdown de productos (renderizado fuera con position fixed) */}
       {dropdownAbiertoProducto && dropdownPositionProducto.top && (
         <div 
           className="dropdown-productos-fixed"

@@ -63,6 +63,41 @@ class ReservaController extends Controller
         }
     }
 
+/**
+     * ✅ MEJORADO: Obtener reservas por bodega usando bodega_stock
+     */
+    public function obtenerPorBodega($idBodega)
+    {
+        try {
+            // Obtener las reservas que tienen relación con esta bodega en bodega_stock
+            $reservas = \DB::table('bodega_stock')
+                ->join('reserva', 'bodega_stock.id_reserva', '=', 'reserva.id_reserva')
+                ->where('bodega_stock.id_bodega', $idBodega)
+                ->where('reserva.estado', 'ACTIVO')
+                ->select('reserva.id_reserva', 'reserva.tipo_reserva')
+                ->distinct()
+                ->get();
+
+            // Log para debug
+            \Log::info("Reservas encontradas para bodega {$idBodega}: " . $reservas->count());
+
+            return response()->json([
+                'success' => true,
+                'data' => $reservas,
+                'count' => $reservas->count()
+            ], 200);
+
+        } catch (\Exception $e) {
+            \Log::error("Error al obtener reservas por bodega {$idBodega}: " . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener reservas por bodega',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Obtener estadísticas de reservas
      */

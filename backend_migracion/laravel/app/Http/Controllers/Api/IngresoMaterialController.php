@@ -316,7 +316,6 @@ class IngresoMaterialController extends Controller
             
             $validator = Validator::make($request->all(), [
                 'correlativo' => 'required|string',
-                'proyecto_almacen' => 'required|string',
                 'fecha_ingreso' => 'required|date',
                 'num_guia' => 'nullable|string',
                 'factura' => 'nullable|string',
@@ -410,7 +409,6 @@ class IngresoMaterialController extends Controller
             'factura' => $request->input('factura'),
             'observaciones' => $request->input('observaciones'),
             'usuario' => $request->input('usuario'),
-            'proyecto_almacen' => $request->input('proyecto_almacen'),
             'id_bodega' => $request->input('id_bodega'),      // Nueva columna
             'id_reserva' => $request->input('id_reserva')     // Nueva columna
         ]);
@@ -481,8 +479,7 @@ class IngresoMaterialController extends Controller
             'num_doc_servicio' => $request->input('num_guia'),
             'factura' => $request->input('factura'),
             'observaciones' => $request->input('observaciones'),
-            'usuario' => $request->input('usuario'),
-            'proyecto_almacen' => $request->input('proyecto_almacen')
+            'usuario' => $request->input('usuario')
         ]);
 
         // Insertar detalles

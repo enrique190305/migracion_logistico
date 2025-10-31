@@ -371,6 +371,9 @@ Route::prefix('reservas')->group(function () {
     
     // Obtener solo activas
     Route::get('/activas', [ReservaController::class, 'activas']);
+
+     // ✅ CORREGIR AQUÍ - Quitar el /reservas duplicado
+    Route::get('/bodega/{idBodega}', [ReservaController::class, 'obtenerPorBodega']);
     
     // Estadísticas
     Route::get('/estadisticas', [ReservaController::class, 'estadisticas']);

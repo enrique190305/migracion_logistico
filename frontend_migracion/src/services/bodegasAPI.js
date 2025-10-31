@@ -8,6 +8,12 @@ const API_URL = 'http://127.0.0.1:8000/api/bodegas';
 export const obtenerBodegas = async () => {
   try {
     const response = await axios.get(API_URL);
+    
+    // ✅ AGREGAR ESTOS LOGS
+    console.log('📦 Response completo de axios:', response);
+    console.log('📦 Response.data:', response.data);
+    console.log('📦 Response.data.data:', response.data.data);
+    
     return {
       success: true,
       data: response.data.data || []
@@ -139,18 +145,24 @@ export const obtenerReservas = async () => {
  */
 export const obtenerReservasPorBodega = async (idBodega) => {
   try {
-    const response = await axios.get(`http://127.0.0.1:8000/api/reservas/bodega/${idBodega}`);
-    return {
-      success: true,
-      data: response.data.data || []
-    };
+    const token = localStorage.getItem('token');
+    // ✅ USAR URL COMPLETA Y CORRECTA
+    const response = await fetch(`http://127.0.0.1:8000/api/reservas/bodega/${idBodega}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al obtener reservas');
+    }
+
+    const data = await response.json();
+    return data;
   } catch (error) {
-    console.error('Error al obtener reservas por bodega:', error);
-    return {
-      success: false,
-      message: error.response?.data?.message || 'Error al cargar reservas',
-      data: []
-    };
+    console.error('Error al obtener reservas:', error);
+    return { success: false, data: [], message: 'Error al obtener reservas' };
   }
 };
 
