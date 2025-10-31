@@ -271,21 +271,8 @@
   display: none;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    transform: translateX(-100%);
-  }
-  
-  .sidebar.collapsed {
-    width: 100%;
-    transform: translateX(-100%);
-  }
-  
-  .sidebar.mobile-open {
-    transform: translateX(0);
-  }
+.sidebar.collapsed .logo-text {
+  display: none;
 }
 
 /* Estilos para información del usuario en sidebar */
@@ -372,4 +359,262 @@
 
 .category-header.disabled:hover {
   background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN - MÓVILES */
+/* ============================================ */
+@media screen and (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+  
+  .sidebar.collapsed {
+    width: 50px;
+  }
+
+  .sidebar-header {
+    padding: 12px 10px;
+    min-height: 60px;
+  }
+
+  .logo-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+
+  .logo-title {
+    font-size: 14px;
+  }
+
+  .logo-subtitle {
+    font-size: 10px;
+  }
+
+  .toggle-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .category-header {
+    padding: 10px 12px;
+  }
+
+  .category-icon {
+    font-size: 16px;
+  }
+
+  .category-title {
+    font-size: 13px;
+  }
+
+  .menu-item {
+    padding: 8px 12px 8px 30px;
+    font-size: 12px;
+  }
+
+  .menu-item:hover {
+    padding-left: 33px;
+  }
+
+  .menu-icon {
+    font-size: 14px;
+  }
+
+  .menu-title {
+    font-size: 12px;
+  }
+
+  .sidebar-footer {
+    padding: 12px;
+  }
+
+  .help-item {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .user-info-sidebar {
+    padding: 12px;
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN - MÓVILES PEQUEÑOS */
+/* ============================================ */
+@media screen and (max-width: 480px) {
+  .sidebar {
+    width: 180px;
+  }
+
+  .sidebar.collapsed {
+    width: 45px;
+  }
+
+  .sidebar-header {
+    padding: 10px 8px;
+    min-height: 55px;
+  }
+
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 12px;
+  }
+
+  .logo-container {
+    gap: 8px;
+  }
+
+  .logo-title {
+    font-size: 13px;
+  }
+
+  .logo-subtitle {
+    font-size: 9px;
+  }
+
+  .toggle-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
+  }
+
+  .category-header {
+    padding: 8px 10px;
+  }
+
+  .category-icon {
+    font-size: 15px;
+    margin-right: 8px;
+  }
+
+  .category-title {
+    font-size: 12px;
+  }
+
+  .expand-icon {
+    font-size: 9px;
+  }
+
+  .menu-item {
+    padding: 7px 10px 7px 25px;
+    font-size: 11px;
+  }
+
+  .menu-item:hover {
+    padding-left: 28px;
+  }
+
+  .menu-icon {
+    font-size: 13px;
+    margin-right: 8px;
+  }
+
+  .menu-title {
+    font-size: 11px;
+  }
+
+  .sidebar-footer {
+    padding: 10px;
+  }
+
+  .help-item {
+    padding: 7px;
+    font-size: 11px;
+  }
+
+  .user-info-sidebar {
+    padding: 10px;
+  }
+
+  .user-avatar-small {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .user-name-small {
+    font-size: 11px;
+  }
+
+  .user-role-small {
+    font-size: 9px;
+    padding: 1px 5px;
+  }
+
+  .notice-text {
+    font-size: 9px;
+  }
+}
+
+/* ============================================ */
+/* MÓVILES EXTRA PEQUEÑOS */
+/* ============================================ */
+@media screen and (max-width: 360px) {
+  .sidebar {
+    width: 160px;
+  }
+
+  .sidebar.collapsed {
+    width: 40px;
+  }
+
+  .sidebar-header {
+    padding: 8px 6px;
+    min-height: 50px;
+  }
+
+  .logo-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .logo-title {
+    font-size: 12px;
+  }
+
+  .logo-subtitle {
+    display: none;
+  }
+
+  .toggle-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 9px;
+  }
+
+  .category-header {
+    padding: 7px 8px;
+  }
+
+  .category-icon {
+    font-size: 14px;
+    margin-right: 6px;
+  }
+
+  .category-title {
+    font-size: 11px;
+  }
+
+  .menu-item {
+    padding: 6px 8px 6px 22px;
+    font-size: 10px;
+  }
+
+  .menu-item:hover {
+    padding-left: 25px;
+  }
+
+  .menu-icon {
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  .menu-title {
+    font-size: 10px;
+  }
 }

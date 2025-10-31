@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Aprobacion.css';
+import ModalDetalle from './ModalDetalle';
 
 // ✅ CAMBIAR de 5000 a 8000
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -342,102 +343,20 @@ const Aprobacion = () => {
       )}
 
       {showModal && selectedOrden && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-title">
-                <span className="modal-icon">📊</span>
-                <div>
-                  <h2>Detalle de la Orden: {activeTab === 'compra' ? selectedOrden.codigo_oc : selectedOrden.codigo_os} - {activeTab === 'compra' ? 'OC' : 'OS'}</h2>
-                </div>
-              </div>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
-            </div>
-
-            <div className="modal-body">
-              {loadingDetalles ? (
-                <div className="modal-loading">
-                  <div className="spinner"></div>
-                  <p>Cargando detalles de la orden...</p>
-                </div>
-              ) : detallesOrden.length > 0 ? (
-                <>
-                  <div className="detalle-info-header">
-                    <div className="info-badge">
-                      <span className="badge-icon">📦</span>
-                      <span className="badge-text">{detallesOrden.length} {detallesOrden.length === 1 ? 'Producto' : 'Productos'}</span>
-                    </div>
-                    <div className="info-badge">
-                      <span className="badge-icon">💰</span>
-                      <span className="badge-text">Moneda: {selectedOrden.moneda || 'PEN'}</span>
-                    </div>
-                  </div>
-                  <div className="detalle-items">
-                    <table className="detalle-table">
-                      <thead>
-                        <tr>
-                          <th style={{width: '12%', paddingLeft: '30px'}}>Código</th>
-                          <th style={{width: '42%'}}>Descripción</th>
-                          <th style={{width: '10%', textAlign: 'center'}}>Unidad</th>
-                          <th style={{width: '11%', textAlign: 'right'}}>Cantidad</th>
-                          <th style={{width: '12%', textAlign: 'right'}}>Precio Unit.</th>
-                          <th style={{width: '13%', textAlign: 'right', paddingRight: '30px'}}>Subtotal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detallesOrden.map((item, idx) => (
-                          <tr key={idx}>
-                            <td style={{fontWeight: '600', color: '#495057', paddingLeft: '30px'}}>{item.codigo_producto || item.codigo_servicio}</td>
-                            <td style={{color: '#2c3e50', paddingRight: '25px'}}>{item.descripcion}</td>
-                            <td style={{textAlign: 'center', color: '#6c757d'}}>{item.unidad}</td>
-                            <td style={{textAlign: 'right', fontWeight: '600'}}>{parseFloat(item.cantidad).toFixed(2)}</td>
-                            <td style={{textAlign: 'right'}}>{formatCurrency(item.precio_unitario, selectedOrden.moneda)}</td>
-                            <td style={{textAlign: 'right', fontWeight: '700', color: '#28a745', paddingRight: '30px'}}>{formatCurrency(item.subtotal, selectedOrden.moneda)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr className="detalle-total-row">
-                          <td colSpan="5" className="detalle-total-label">
-                            <strong>TOTAL GENERAL:</strong>
-                          </td>
-                          <td className="detalle-total-value" style={{paddingRight: '30px'}}>
-                            <strong>{formatCurrency(calcularTotalDetalles(), selectedOrden.moneda)}</strong>
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </>
-              ) : (
-                <div className="modal-loading">
-                  <p>No hay detalles disponibles para esta orden</p>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-actions">
-              <h3 className="actions-title">
-                <span className="actions-icon">⚡</span>
-                Acciones de Verificación
-              </h3>
-              <div className="action-buttons">
-                <button className="btn-confirmar" onClick={aprobarOrden}>
-                  ✅ Confirmar/Aprobar
-                </button>
-                <button className="btn-rechazar" onClick={rechazarOrden}>
-                  ✕ Rechazar
-                </button>
-              </div>
-            </div>
-
-            <div className="modal-footer-info">
-              <span className="footer-icon">📊</span>
-              Sistema de verificación activo | Órdenes cargadas: {ordenesFiltradas.length} | 
-              Última actualización: {new Date().toLocaleString('es-PE')}
-            </div>
-          </div>
-        </div>
+        <ModalDetalle
+          selectedOrden={{
+            ...selectedOrden,
+            numero_orden: activeTab === 'compra' ? selectedOrden.codigo_oc : selectedOrden.codigo_os,
+            tipo_orden: activeTab === 'compra' ? 'OC' : 'OS'
+          }}
+          detallesOrden={detallesOrden}
+          loadingDetalles={loadingDetalles}
+          onClose={() => setShowModal(false)}
+          onAprobar={aprobarOrden}
+          onRechazar={rechazarOrden}
+          formatCurrency={formatCurrency}
+          calcularTotalDetalles={calcularTotalDetalles}
+        />
       )}
     </div>
   );

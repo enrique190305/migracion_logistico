@@ -324,53 +324,668 @@
   margin-top: 40px;
   padding-top: 20px;
   border-top: 1px solid #ecf0f1;
+  flex-shrink: 0;
 }
 
 .login-footer p {
   font-size: 0.85rem;
   color: #95a5a6;
   margin: 5px 0;
+  line-height: 1.4;
 }
 
 .version {
   font-weight: 600;
   color: #3498db;
+  display: block;
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
+/* ============================================ */
+/* RESPONSIVE DESIGN - TABLETS */
+/* ============================================ */
+@media screen and (max-width: 1024px) {
+  .login-left-panel {
+    padding: 50px 30px;
+  }
+
+  .system-title {
+    font-size: 3rem;
+  }
+
+  .system-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .system-description p {
+    font-size: 1rem;
+  }
+
+  .feature-item {
+    padding: 12px 15px;
+    font-size: 0.95rem;
+  }
+
+  .login-right-panel {
+    padding: 30px;
+  }
+}
+
+/* ============================================ */
+/* RESPONSIVE DESIGN - MÓVILES (LANDSCAPE/PORTRAIT) */
+/* ============================================ */
+@media screen and (max-width: 768px) {
   .login-container {
     flex-direction: column;
   }
   
   .login-left-panel {
-    min-height: 300px;
-    padding: 40px 20px;
+    min-height: auto;
+    padding: 30px 20px;
+  }
+
+  .logo-container {
+    margin-bottom: 25px;
+    text-align: center;
+  }
+
+  .logo {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+  }
+
+  .logo-text {
+    font-size: 10px;
   }
   
   .system-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+  }
+
+  .system-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+  }
+
+  .system-description {
+    margin-bottom: 25px;
+  }
+
+  .system-description p {
+    font-size: 0.95rem;
+    line-height: 1.3;
+  }
+
+  .features-list {
+    gap: 12px;
+  }
+
+  .feature-item {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    gap: 10px;
+  }
+
+  .feature-icon {
+    font-size: 1.1rem;
+    width: 25px;
   }
   
   .login-right-panel {
-    padding: 20px;
+    padding: 30px 20px 20px 20px;
+    min-height: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  
-  .features-list {
-    display: none;
+
+  .login-form-container {
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  .login-header {
+    margin-bottom: 30px;
+  }
+
+  .logo-small {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 15px;
+  }
+
+  .login-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .login-form {
+    gap: 20px;
+    flex: 0 1 auto;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .input-icon {
+    width: 40px;
+    height: 48px;
+    font-size: 1.1rem;
+  }
+
+  .input-container input {
+    padding: 14px 12px;
+    font-size: 0.95rem;
+  }
+
+  .password-toggle {
+    font-size: 9px;
+    padding: 5px 7px;
+    min-width: 38px;
+  }
+
+  .login-button {
+    padding: 14px 28px;
+    font-size: 0.95rem;
+    margin-top: 10px;
+  }
+
+  .login-footer {
+    margin-top: auto;
+    padding-top: 15px;
+  }
+
+  .login-footer p {
+    font-size: 0.75rem;
+    line-height: 1.3;
   }
 }
 
-@media (max-width: 480px) {
+/* ============================================ */
+/* RESPONSIVE DESIGN - MÓVILES PEQUEÑOS */
+/* ============================================ */
+@media screen and (max-width: 480px) {
+  .login-left-panel {
+    padding: 25px 15px;
+  }
+
+  .logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .logo-text {
+    font-size: 9px;
+  }
+  
   .system-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
+    margin-bottom: 6px;
   }
-  
+
   .system-subtitle {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    margin-bottom: 20px;
   }
-  
+
+  .system-description {
+    margin-bottom: 20px;
+  }
+
+  .system-description p {
+    font-size: 0.9rem;
+  }
+
+  .features-list {
+    gap: 10px;
+  }
+
+  .feature-item {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    gap: 8px;
+  }
+
+  .feature-icon {
+    font-size: 1rem;
+    width: 20px;
+  }
+
+  .login-right-panel {
+    padding: 25px 15px 15px 15px;
+  }
+
+  .login-header {
+    margin-bottom: 20px;
+  }
+
+  .logo-small {
+    width: 45px;
+    height: 45px;
+    margin-bottom: 12px;
+  }
+
+  .logo-text-small {
+    font-size: 9px;
+  }
+
+  .login-header h2 {
+    font-size: 1.4rem;
+    margin-bottom: 8px;
+  }
+
+  .login-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .login-form {
+    gap: 15px;
+  }
+
+  .form-group {
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+  }
+
+  .input-icon {
+    width: 38px;
+    height: 44px;
+    font-size: 1rem;
+  }
+
+  .input-container input {
+    padding: 12px 10px;
+    font-size: 0.9rem;
+  }
+
+  .input-container input::placeholder {
+    font-size: 0.88rem;
+  }
+
+  .password-toggle {
+    font-size: 8px;
+    padding: 4px 6px;
+    min-width: 35px;
+    right: 6px;
+  }
+
+  .login-button {
+    padding: 12px 24px;
+    font-size: 0.9rem;
+    margin-top: 8px;
+  }
+
+  .login-footer {
+    margin-top: 20px;
+    padding-top: 12px;
+  }
+
+  .login-footer p {
+    font-size: 0.7rem;
+    margin: 3px 0;
+    line-height: 1.2;
+  }
+}
+
+/* ============================================ */
+/* MÓVILES EXTRA PEQUEÑOS */
+/* ============================================ */
+@media screen and (max-width: 360px) {
+  .login-left-panel {
+    padding: 20px 12px;
+  }
+
+  .logo-container {
+    margin-bottom: 15px;
+  }
+
+  .logo {
+    width: 45px;
+    height: 45px;
+  }
+
+  .system-title {
+    font-size: 1.6rem;
+  }
+
+  .system-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+  }
+
+  .system-description {
+    margin-bottom: 15px;
+  }
+
+  .system-description p {
+    font-size: 0.85rem;
+  }
+
+  .features-list {
+    gap: 8px;
+  }
+
+  .feature-item {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .login-right-panel {
+    padding: 20px 12px 12px 12px;
+  }
+
+  .logo-small {
+    width: 40px;
+    height: 40px;
+  }
+
+  .login-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .login-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .login-form {
+    gap: 12px;
+  }
+
+  .input-icon {
+    width: 36px;
+    height: 42px;
+    font-size: 0.95rem;
+  }
+
+  .input-container input {
+    padding: 11px 9px;
+    font-size: 0.85rem;
+  }
+
+  .password-toggle {
+    font-size: 7px;
+    padding: 3px 5px;
+    min-width: 32px;
+  }
+
+  .login-button {
+    padding: 11px 20px;
+    font-size: 0.85rem;
+  }
+
+  .login-footer {
+    margin-top: 15px;
+    padding-top: 8px;
+  }
+
+  .login-footer p {
+    font-size: 0.65rem;
+    line-height: 1.1;
+  }
+}
+
+/* ============================================ */
+/* ORIENTACIÓN HORIZONTAL - MÓVILES */
+/* ============================================ */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  .login-container {
+    flex-direction: row;
+    min-height: 100vh;
+  }
+
+  .login-left-panel {
+    flex: 0.8;
+    padding: 20px 15px;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  .logo-container {
+    margin-bottom: 15px;
+  }
+
+  .system-title {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+  }
+
+  .system-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 15px;
+  }
+
+  .system-description {
+    margin-bottom: 15px;
+  }
+
+  .system-description p {
+    font-size: 0.85rem;
+  }
+
+  .features-list {
+    gap: 8px;
+  }
+
+  .feature-item {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+
+  .login-right-panel {
+    flex: 1.2;
+    padding: 20px 15px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .login-header {
+    margin-bottom: 15px;
+  }
+
+  .login-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .login-form {
+    gap: 12px;
+  }
+
+  .login-footer {
+    margin-top: 15px;
+    padding-top: 10px;
+  }
+
+  .login-footer p {
+    font-size: 0.65rem;
+  }
+}
+
+/* ============================================ */
+/* MEJORAS TÁCTILES */
+/* ============================================ */
+@media (hover: none) and (pointer: coarse) {
+  .login-button {
+    min-height: 48px;
+  }
+
+  .input-container input {
+    min-height: 44px;
+  }
+
+  .password-toggle {
+    min-height: 32px;
+    min-width: 40px;
+  }
+
+  .login-button:active {
+    transform: scale(0.98);
+  }
+
+  .password-toggle:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+}
+
+/* ============================================ */
+/* OPTIMIZACIÓN PARA PANTALLAS ALTAS Y CORTAS */
+/* ============================================ */
+@media screen and (max-height: 600px) and (max-width: 768px) {
+  .login-left-panel {
+    padding: 15px;
+  }
+
+  .logo-container {
+    margin-bottom: 10px;
+  }
+
+  .system-title {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+  }
+
+  .system-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 10px;
+  }
+
+  .system-description {
+    display: none;
+  }
+
+  .features-list {
+    gap: 6px;
+  }
+
+  .login-right-panel {
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  .login-header {
+    margin-bottom: 12px;
+  }
+
+  .login-form {
+    gap: 10px;
+  }
+
+  .login-button {
+    margin-top: 5px;
+    padding: 10px 20px;
+  }
+
+  .login-footer {
+    margin-top: 12px;
+    padding-top: 8px;
+  }
+
+  .login-footer p {
+    font-size: 0.65rem;
+    margin: 2px 0;
+  }
+}
+
+/* ============================================ */
+/* PANTALLAS MUY CORTAS */
+/* ============================================ */
+@media screen and (max-height: 450px) {
+  .login-right-panel {
+    padding: 10px 15px;
+    overflow-y: auto;
+  }
+
+  .login-header {
+    margin-bottom: 10px;
+  }
+
+  .logo-small {
+    width: 35px;
+    height: 35px;
+    margin-bottom: 8px;
+  }
+
+  .login-header h2 {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  .login-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .login-form {
+    gap: 8px;
+  }
+
+  .form-group {
+    gap: 4px;
+  }
+
+  .form-group label {
+    font-size: 0.75rem;
+    margin-bottom: 2px;
+  }
+
+  .input-icon {
+    width: 35px;
+    height: 38px;
+    font-size: 0.9rem;
+  }
+
+  .input-container input {
+    padding: 10px 8px;
+    font-size: 0.85rem;
+  }
+
+  .password-toggle {
+    font-size: 7px;
+    padding: 3px 5px;
+    min-width: 30px;
+  }
+
+  .login-button {
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    margin-top: 5px;
+  }
+
+  .login-footer {
+    margin-top: 8px;
+    padding-top: 6px;
+  }
+
+  .login-footer p {
+    font-size: 0.6rem;
+    margin: 1px 0;
+  }
+}
+
+/* ============================================ */
+/* ASEGURAR SCROLL CUANDO ES NECESARIO */
+/* ============================================ */
+@media screen and (max-height: 700px) and (max-width: 768px) {
+  .login-right-panel {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .login-form-container {
-    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .login-footer {
+    margin-top: auto;
+    flex-shrink: 0;
   }
 }
