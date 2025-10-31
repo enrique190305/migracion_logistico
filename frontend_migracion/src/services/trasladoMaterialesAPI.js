@@ -238,6 +238,46 @@ const trasladoMaterialesAPI = {
                 message: error.response?.data?.message || 'Error al generar PDF'
             };
         }
+    },
+
+    /**
+     * Guardar un nuevo traslado de materiales entre RESERVAS (NUEVO)
+     * 
+     * @param {Object} datosTraslado - Datos del traslado
+     * @param {string} datosTraslado.numero_traslado - Número del traslado
+     * @param {number} datosTraslado.reserva_origen - ID de la reserva origen
+     * @param {number} datosTraslado.reserva_destino - ID de la reserva destino
+     * @param {string} datosTraslado.fecha_traslado - Fecha del traslado (YYYY-MM-DD)
+     * @param {string} datosTraslado.usuario - Usuario responsable
+     * @param {string} datosTraslado.observaciones - Observaciones generales
+     * @param {Array} datosTraslado.productos - Array de productos a trasladar
+     * @returns {Promise<Object>} Respuesta del servidor
+     */
+    guardarTrasladoConReservas: async (datosTraslado) => {
+        try {
+            const response = await axios.post(`${API_URL}/con-reservas`, datosTraslado);
+            return {
+                success: true,
+                message: response.data.message,
+                data: response.data.data
+            };
+        } catch (error) {
+            console.error('Error al guardar traslado con reservas:', error);
+            
+            // Manejar errores de validación
+            if (error.response?.status === 422) {
+                return {
+                    success: false,
+                    message: error.response.data.message || 'Error de validación',
+                    errors: error.response.data.errors
+                };
+            }
+            
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Error al guardar el traslado'
+            };
+        }
     }
 };
 

@@ -20,7 +20,11 @@ class TrasladoMaterial extends Model
         'proyecto_destino',
         'usuario',
         'estado',
-        'fecha_creacion'
+        'fecha_creacion',
+        'id_bodega_origen',      // Nueva columna para bodega origen
+        'reserva_origen',        // Nueva columna para reserva origen
+        'id_bodega_destino',     // Nueva columna para bodega destino
+        'reserva_destino'        // Nueva columna para reserva destino
     ];
 
     protected $casts = [
@@ -34,6 +38,38 @@ class TrasladoMaterial extends Model
     public function detalles()
     {
         return $this->hasMany(DetalleTraslado::class, 'id_traslado', 'id_traslado');
+    }
+
+    /**
+     * Relación con Bodega Origen (nueva)
+     */
+    public function bodegaOrigen()
+    {
+        return $this->belongsTo(Bodega::class, 'id_bodega_origen', 'id_bodega');
+    }
+
+    /**
+     * Relación con Reserva Origen (nueva)
+     */
+    public function reservaOrigenRelacion()
+    {
+        return $this->belongsTo(Reserva::class, 'reserva_origen', 'id_reserva');
+    }
+
+    /**
+     * Relación con Bodega Destino (nueva)
+     */
+    public function bodegaDestino()
+    {
+        return $this->belongsTo(Bodega::class, 'id_bodega_destino', 'id_bodega');
+    }
+
+    /**
+     * Relación con Reserva Destino (nueva)
+     */
+    public function reservaDestinoRelacion()
+    {
+        return $this->belongsTo(Reserva::class, 'reserva_destino', 'id_reserva');
     }
 
     /**
@@ -58,6 +94,22 @@ class TrasladoMaterial extends Model
     public function scopeProyectoDestino($query, $proyecto)
     {
         return $query->where('proyecto_destino', $proyecto);
+    }
+
+    /**
+     * Scope para filtrar por reserva origen (nuevo)
+     */
+    public function scopeReservaOrigen($query, $idReserva)
+    {
+        return $query->where('reserva_origen', $idReserva);
+    }
+
+    /**
+     * Scope para filtrar por reserva destino (nuevo)
+     */
+    public function scopeReservaDestino($query, $idReserva)
+    {
+        return $query->where('reserva_destino', $idReserva);
     }
 
     /**

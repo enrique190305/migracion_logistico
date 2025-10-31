@@ -322,6 +322,8 @@ class IngresoMaterialController extends Controller
                 'factura' => 'nullable|string',
                 'observaciones' => 'nullable|string',
                 'usuario' => 'required|string',
+                'id_bodega' => 'required|integer|exists:bodega,id_bodega',        // Nueva validación
+                'id_reserva' => 'required|integer|exists:reserva,id_reserva',    // Nueva validación
                 'productos' => 'required|array|min:1',
                 'productos.*.codigo_producto' => 'required|string',
                 'productos.*.cantidad_ingresar' => 'required|numeric|min:0.01',
@@ -408,12 +410,15 @@ class IngresoMaterialController extends Controller
             'factura' => $request->input('factura'),
             'observaciones' => $request->input('observaciones'),
             'usuario' => $request->input('usuario'),
-            'proyecto_almacen' => $request->input('proyecto_almacen')
+            'proyecto_almacen' => $request->input('proyecto_almacen'),
+            'id_bodega' => $request->input('id_bodega'),      // Nueva columna
+            'id_reserva' => $request->input('id_reserva')     // Nueva columna
         ]);
 
         // Insertar detalles y movimientos kardex
         foreach ($request->input('productos') as $producto) {
             // Insertar detalle
+            // NOTA: El trigger 'after_insert_detalle_ingreso_material' actualizará automáticamente bodega_stock
             DB::table('detalle_ingreso_material')->insert([
                 'id_ingreso' => $numeroIngreso,
                 'codigo_producto' => $producto['codigo_producto'],

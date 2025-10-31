@@ -72,13 +72,16 @@ const RegistroBodega = () => {
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [bodegasData, stats] = await Promise.all([
+      const [bodegasResponse, statsResponse] = await Promise.all([
         bodegasAPI.obtenerBodegas(),
         bodegasAPI.obtenerEstadisticas()
       ]);
       
+      const bodegasData = bodegasResponse.success ? bodegasResponse.data : [];
+      const statsData = statsResponse.success ? statsResponse.data : {};
+      
       setBodegas(bodegasData);
-      setEstadisticas(stats);
+      setEstadisticas(statsData);
 
       // Extraer empresas únicas
       const empresasUnicas = Array.from(

@@ -86,6 +86,86 @@ class TrasladoMaterialesController extends Controller
     }
 
     /**
+     * Listar reservas disponibles para traslado (NUEVO MÉTODO)
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function listarReservas()
+    {
+        try {
+            // Obtener reservas con su bodega asociada a través de proyecto_almacen
+            $reservas = DB::table('proyecto_almacen as pa')
+                ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
+                ->join('bodega as b', 'pa.id_bodega', '=', 'b.id_bodega')
+                ->select(
+                    'r.id_reserva',
+                    'r.tipo_reserva as nombre_reserva',
+                    'pa.id_bodega',
+                    'b.nombre as nombre_bodega',
+                    DB::raw("CONCAT(b.nombre, ' - ', r.tipo_reserva) as nombre_completo")
+                )
+                ->where('pa.estado', 'ACTIVO')
+                ->groupBy('r.id_reserva', 'r.tipo_reserva', 'pa.id_bodega', 'b.nombre')
+                ->orderBy('b.nombre')
+                ->orderBy('r.tipo_reserva')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $reservas
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error al listar reservas: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cargar reservas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener productos con stock disponible en una reserva (NUEVO MÉTODO)
+     * 
+     * @param int $idReserva
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function productosConStockReserva($idReserva)
+    {
+        try {
+            $productos = DB::table('bodega_stock as bs')
+                ->join('producto as p', 'bs.codigo_producto', '=', 'p.codigo_producto')
+                ->where('bs.id_reserva', $idReserva)
+                ->where('bs.cantidad_disponible', '>', 0)
+                ->select(
+                    'bs.codigo_producto',
+                    'p.descripcion',
+                    'p.unidad',
+                    'bs.cantidad_disponible as stock_disponible',
+                    'bs.cantidad_reservada'
+                )
+                ->orderBy('p.descripcion')
+                ->get();
+            
+            return response()->json([
+                'success' => true,
+                'data' => $productos
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error al obtener productos con stock en reserva: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al cargar productos de la reserva: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Obtener productos con stock disponible en un proyecto
      * 
      * @param int $proyectoId
@@ -180,7 +260,166 @@ class TrasladoMaterialesController extends Controller
     }
 
     /**
-     * Guardar traslado de materiales completo
+     * Guardar traslado de materiales entre RESERVAS (NUEVO MÉTODO)
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeConReservas(Request $request)
+    {
+        // Validar datos de entrada
+        $validator = Validator::make($request->all(), [
+            'numero_traslado' => 'required|string|max:20|unique:traslado_materiales,id_traslado',
+            'reserva_origen' => 'required|integer|exists:reserva,id_reserva',
+            'reserva_destino' => 'required|integer|exists:reserva,id_reserva|different:reserva_origen',
+            'fecha_traslado' => 'required|date',
+            'usuario' => 'required|string|max:100',
+            'observaciones' => 'nullable|string',
+            'productos' => 'required|array|min:1',
+            'productos.*.codigo_producto' => 'required|string|max:50',
+            'productos.*.cantidad' => 'required|numeric|min:0.01',
+            'productos.*.observaciones' => 'nullable|string'
+        ], [
+            'numero_traslado.required' => 'El número de traslado es obligatorio',
+            'numero_traslado.unique' => 'El número de traslado ya existe',
+            'reserva_origen.required' => 'Debe seleccionar una reserva de origen',
+            'reserva_destino.required' => 'Debe seleccionar una reserva de destino',
+            'reserva_destino.different' => 'La reserva origen y destino deben ser diferentes',
+            'fecha_traslado.required' => 'La fecha de traslado es obligatoria',
+            'productos.required' => 'Debe agregar al menos un producto',
+            'productos.min' => 'Debe agregar al menos un producto'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Iniciar transacción
+        DB::beginTransaction();
+
+        try {
+            // Obtener información de reservas a través de proyecto_almacen
+            $reservaOrigen = DB::table('proyecto_almacen as pa')
+                ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
+                ->join('bodega as b', 'pa.id_bodega', '=', 'b.id_bodega')
+                ->where('r.id_reserva', $request->reserva_origen)
+                ->select('r.*', 'pa.id_bodega', 'b.nombre as nombre_bodega', 'r.tipo_reserva as nombre_reserva')
+                ->first();
+
+            $reservaDestino = DB::table('proyecto_almacen as pa')
+                ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
+                ->join('bodega as b', 'pa.id_bodega', '=', 'b.id_bodega')
+                ->where('r.id_reserva', $request->reserva_destino)
+                ->select('r.*', 'pa.id_bodega', 'b.nombre as nombre_bodega', 'r.tipo_reserva as nombre_reserva')
+                ->first();
+
+            // Verificar stock disponible ANTES de procesar
+            foreach ($request->productos as $producto) {
+                $stock = DB::table('bodega_stock')
+                    ->where('id_reserva', $request->reserva_origen)
+                    ->where('codigo_producto', $producto['codigo_producto'])
+                    ->first();
+
+                if (!$stock || $stock->cantidad_disponible < $producto['cantidad']) {
+                    throw new Exception(
+                        "Stock insuficiente para el producto {$producto['codigo_producto']}. " .
+                        "Disponible: " . ($stock->cantidad_disponible ?? 0) . ", Solicitado: {$producto['cantidad']}"
+                    );
+                }
+            }
+
+            // 1. Crear registro de traslado
+            $traslado = TrasladoMaterial::create([
+                'id_traslado' => $request->numero_traslado,
+                'fecha_traslado' => $request->fecha_traslado,
+                'reserva_origen' => $request->reserva_origen,         // NUEVO
+                'id_bodega_origen' => $reservaOrigen->id_bodega,      // NUEVO
+                'reserva_destino' => $request->reserva_destino,       // NUEVO
+                'id_bodega_destino' => $reservaDestino->id_bodega,    // NUEVO
+                'usuario' => $request->usuario,
+                'observaciones' => $request->observaciones,
+                'fecha_creacion' => now()
+            ]);
+
+            // 2. Procesar cada producto
+            foreach ($request->productos as $producto) {
+                // Obtener información del producto
+                $productoInfo = DB::table('producto')
+                    ->where('codigo_producto', $producto['codigo_producto'])
+                    ->first();
+
+                // A) Guardar detalle del traslado
+                // NOTA: El trigger 'after_insert_detalle_traslado' actualizará automáticamente bodega_stock
+                DetalleTraslado::create([
+                    'id_traslado' => $traslado->id_traslado,
+                    'codigo_producto' => $producto['codigo_producto'],
+                    'descripcion' => $productoInfo->descripcion ?? '',
+                    'cantidad' => $producto['cantidad'],
+                    'unidad' => $productoInfo->unidad ?? '',
+                    'observaciones' => $producto['observaciones'] ?? ''
+                ]);
+
+                // B) Registrar en Kardex (SALIDA - origen)
+                MovimientoKardex::create([
+                    'fecha' => $request->fecha_traslado,
+                    'tipo_movimiento' => 'SALIDA',
+                    'codigo_producto' => $producto['codigo_producto'],
+                    'descripcion' => $productoInfo->descripcion ?? '',
+                    'unidad' => $productoInfo->unidad ?? '',
+                    'cantidad' => $producto['cantidad'],
+                    'proyecto' => $reservaOrigen->nombre_reserva,
+                    'documento' => $traslado->id_traslado,
+                    'observaciones' => "Traslado a {$reservaDestino->nombre_bodega} - {$reservaDestino->nombre_reserva}"
+                ]);
+
+                // C) Registrar en Kardex (INGRESO - destino)
+                MovimientoKardex::create([
+                    'fecha' => $request->fecha_traslado,
+                    'tipo_movimiento' => 'INGRESO',
+                    'codigo_producto' => $producto['codigo_producto'],
+                    'descripcion' => $productoInfo->descripcion ?? '',
+                    'unidad' => $productoInfo->unidad ?? '',
+                    'cantidad' => $producto['cantidad'],
+                    'proyecto' => $reservaDestino->nombre_reserva,
+                    'documento' => $traslado->id_traslado,
+                    'observaciones' => "Traslado desde {$reservaOrigen->nombre_bodega} - {$reservaOrigen->nombre_reserva}"
+                ]);
+            }
+
+            // Confirmar transacción
+            DB::commit();
+
+            Log::info("Traslado entre reservas creado exitosamente: {$traslado->id_traslado}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Traslado de materiales registrado exitosamente',
+                'data' => [
+                    'id_traslado' => $traslado->id_traslado,
+                    'reserva_origen' => $reservaOrigen->nombre_reserva,
+                    'reserva_destino' => $reservaDestino->nombre_reserva,
+                    'total_productos' => count($request->productos)
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al guardar traslado con reservas: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el traslado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Guardar traslado de materiales completo (MÉTODO ORIGINAL - mantener compatibilidad)
      * 
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse

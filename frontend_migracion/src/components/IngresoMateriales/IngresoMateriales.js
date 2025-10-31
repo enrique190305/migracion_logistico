@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './IngresoMateriales.css';
 import ingresoMaterialesAPI from '../../services/ingresoMaterialesAPI';
+import { obtenerBodegas, obtenerReservasPorBodega } from '../../services/bodegasAPI';
 
 const IngresoMateriales = () => {
   // ============================================
@@ -21,6 +22,8 @@ const IngresoMateriales = () => {
   const [razonSocial, setRazonSocial] = useState('');
   const [estado, setEstado] = useState('');
   const [proyectoAlmacen, setProyectoAlmacen] = useState('');
+  const [bodegaSeleccionada, setBodegaSeleccionada] = useState(''); // NUEVO
+  const [reservaSeleccionada, setReservaSeleccionada] = useState(''); // NUEVO
   const [numGuia, setNumGuia] = useState('');
   const [factura, setFactura] = useState('');
   const [observaciones, setObservaciones] = useState('');
@@ -47,6 +50,8 @@ const IngresoMateriales = () => {
   // Catálogos
   const [ordenesPendientes, setOrdenesPendientes] = useState([]);
   const [proyectosAlmacen, setProyectosAlmacen] = useState([]);
+  const [bodegas, setBodegas] = useState([]); // NUEVO
+  const [reservas, setReservas] = useState([]); // NUEVO - filtradas por bodega
   const [productos, setProductos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
   const [proveedores, setProveedores] = useState([]);
@@ -82,6 +87,16 @@ const IngresoMateriales = () => {
     }
   }, [tabActivo]);
 
+  // NUEVO: Cargar reservas cuando cambia la bodega seleccionada
+  useEffect(() => {
+    if (bodegaSeleccionada) {
+      cargarReservasPorBodega(bodegaSeleccionada);
+    } else {
+      setReservas([]);
+      setReservaSeleccionada('');
+    }
+  }, [bodegaSeleccionada]);
+
   // ============================================
   // FUNCIONES DE CARGA DE DATOS
   // ============================================
@@ -98,6 +113,12 @@ const IngresoMateriales = () => {
       const respProyectos = await ingresoMaterialesAPI.listarProyectosAlmacen();
       if (respProyectos.success) {
         setProyectosAlmacen(respProyectos.data);
+      }
+
+      // NUEVO: Cargar bodegas
+      const respBodegas = await obtenerBodegas();
+      if (respBodegas.success) {
+        setBodegas(respBodegas.data || []);
       }
 
       const respProductos = await ingresoMaterialesAPI.listarProductos();
@@ -131,6 +152,19 @@ const IngresoMateriales = () => {
       mostrarMensaje('error', 'Error al cargar los datos iniciales');
     } finally {
       setCargando(false);
+    }
+  };
+
+  // NUEVO: Cargar reservas por bodega
+  const cargarReservasPorBodega = async (idBodega) => {
+    try {
+      const respReservas = await obtenerReservasPorBodega(idBodega);
+      if (respReservas.success) {
+        setReservas(respReservas.data || []);
+      }
+    } catch (error) {
+      console.error('Error al cargar reservas:', error);
+      setReservas([]);
     }
   };
 
@@ -299,6 +333,17 @@ const IngresoMateriales = () => {
       return;
     }
 
+    // NUEVO: Validar bodega y reserva
+    if (!bodegaSeleccionada) {
+      mostrarMensaje('error', 'Debe seleccionar una bodega');
+      return;
+    }
+
+    if (!reservaSeleccionada) {
+      mostrarMensaje('error', 'Debe seleccionar una reserva');
+      return;
+    }
+
     if (productosAgregados.length === 0) {
       mostrarMensaje('error', 'Debe agregar al menos un producto');
       return;
@@ -321,6 +366,8 @@ const IngresoMateriales = () => {
       const datos = {
         correlativo: ordenSeleccionada,
         proyecto_almacen: proyectoAlmacen,
+        id_bodega: parseInt(bodegaSeleccionada),       // NUEVO
+        id_reserva: parseInt(reservaSeleccionada),     // NUEVO
         fecha_ingreso: fechaIngreso,
         num_guia: numGuia,
         factura: factura,
@@ -381,6 +428,9 @@ const IngresoMateriales = () => {
     setRazonSocial('');
     setEstado('');
     setProyectoAlmacen('');
+    setBodegaSeleccionada('');      // NUEVO
+    setReservaSeleccionada('');     // NUEVO
+    setReservas([]);                // NUEVO
     setNumGuia('');
     setFactura('');
     setObservaciones('');
@@ -604,6 +654,51 @@ const IngresoMateriales = () => {
                 </select>
               </div>
 
+              {/* Bodega (NUEVO) */}
+              <div className="ingreso-form-group">
+                <label className="ingreso-form-label">
+                  🏪 Bodega *
+                </label>
+                <select
+                  className="ingreso-form-select"
+                  value={bodegaSeleccionada}
+                  onChange={(e) => setBodegaSeleccionada(e.target.value)}
+                >
+                  <option value="">-- Seleccione bodega --</option>
+                  {bodegas.map((bodega) => (
+                    <option key={bodega.id_bodega} value={bodega.id_bodega}>
+                      {bodega.nombre_bodega}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Reserva (NUEVO) */}
+              <div className="ingreso-form-group">
+                <label className="ingreso-form-label">
+                  📍 Reserva *
+                </label>
+                <select
+                  className="ingreso-form-select"
+                  value={reservaSeleccionada}
+                  onChange={(e) => setReservaSeleccionada(e.target.value)}
+                  disabled={!bodegaSeleccionada}
+                >
+                  <option value="">
+                    {bodegaSeleccionada ? '-- Seleccione reserva --' : '-- Primero seleccione bodega --'}
+                  </option>
+                  {reservas.map((reserva) => (
+                    <option key={reserva.id_reserva} value={reserva.id_reserva}>
+                      {reserva.nombre_reserva}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+            </div>
+
+            <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
+              
               {/* Guía */}
               <div className="ingreso-form-group">
                 <label className="ingreso-form-label">

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './TrasladoMateriales.css';
 import trasladoMaterialesAPI from '../../services/trasladoMaterialesAPI';
+import { obtenerReservasParaTraslado } from '../../services/bodegasAPI';
+import { obtenerProductosConStockReserva, verificarDisponibilidad } from '../../services/stockAPI';
 
 const TrasladoMateriales = () => {
   // ============================================
@@ -9,8 +11,8 @@ const TrasladoMateriales = () => {
   
   // Información del Traslado
   const [numeroTraslado, setNumeroTraslado] = useState('NT-003');
-  const [proyectoOrigen, setProyectoOrigen] = useState('');
-  const [proyectoDestino, setProyectoDestino] = useState('');
+  const [reservaOrigen, setReservaOrigen] = useState('');           // CAMBIADO de proyectoOrigen
+  const [reservaDestino, setReservaDestino] = useState('');         // CAMBIADO de proyectoDestino
   const [fechaTraslado, setFechaTraslado] = useState(new Date().toISOString().split('T')[0]);
   const [observacionesGenerales, setObservacionesGenerales] = useState('');
 
@@ -26,7 +28,7 @@ const TrasladoMateriales = () => {
   const [productosATraslador, setProductosATraslador] = useState([]);
 
   // Catálogos
-  const [proyectos, setProyectos] = useState([]);
+  const [reservas, setReservas] = useState([]);                     // CAMBIADO de proyectos
   const [productos, setProductos] = useState([]);
   const [descripcionesProductos, setDescripcionesProductos] = useState([]);
 
@@ -48,13 +50,13 @@ const TrasladoMateriales = () => {
   }, []);
 
   useEffect(() => {
-    if (proyectoOrigen) {
-      cargarProductosDelProyecto(proyectoOrigen);
+    if (reservaOrigen) {
+      cargarProductosDeLaReserva(reservaOrigen);  // CAMBIADO
     } else {
       setDescripcionesProductos([]);
       limpiarDetalleProducto();
     }
-  }, [proyectoOrigen]);
+  }, [reservaOrigen]);  // CAMBIADO
 
   useEffect(() => {
     if (descripcionSeleccionada) {
@@ -72,12 +74,12 @@ const TrasladoMateriales = () => {
     try {
       setCargando(true);
 
-      // Cargar proyectos
-      const respProyectos = await trasladoMaterialesAPI.listarProyectos();
-      if (respProyectos.success) {
-        setProyectos(respProyectos.data);
+      // CAMBIADO: Cargar reservas en lugar de proyectos
+      const respReservas = await obtenerReservasParaTraslado();
+      if (respReservas.success) {
+        setReservas(respReservas.data || []);
       } else {
-        mostrarMensaje('error', respProyectos.message);
+        mostrarMensaje('error', respReservas.message || 'Error al cargar reservas');
       }
 
       // Generar número de traslado
@@ -96,12 +98,13 @@ const TrasladoMateriales = () => {
     }
   };
 
-  const cargarProductosDelProyecto = async (idProyecto) => {
+  // NUEVO: Cargar productos de una reserva
+  const cargarProductosDeLaReserva = async (idReserva) => {
     try {
       setCargando(true);
 
-      // Llamar al API para obtener productos con stock
-      const respProductos = await trasladoMaterialesAPI.obtenerProductosConStock(idProyecto);
+      // Llamar al API para obtener productos con stock en la reserva
+      const respProductos = await obtenerProductosConStockReserva(idReserva);
       
       if (respProductos.success && respProductos.data.length > 0) {
         // Formatear productos
@@ -109,7 +112,7 @@ const TrasladoMateriales = () => {
           codigo: p.codigo_producto,
           descripcion: p.descripcion,
           unidad: p.unidad,
-          stock: parseFloat(p.stock_disponible)
+          stock: parseFloat(p.stock_disponible || 0)
         }));
 
         setProductos(productosFormateados);
@@ -118,13 +121,13 @@ const TrasladoMateriales = () => {
         setProductos([]);
         setDescripcionesProductos([]);
         if (!respProductos.success) {
-          mostrarMensaje('warning', 'No hay productos con stock en este proyecto');
+          mostrarMensaje('warning', 'No hay productos con stock en esta reserva');
         }
       }
 
     } catch (error) {
-      console.error('Error al cargar productos:', error);
-      mostrarMensaje('error', 'Error al cargar los productos del proyecto');
+      console.error('Error al cargar productos de la reserva:', error);
+      mostrarMensaje('error', 'Error al cargar los productos de la reserva');
     } finally {
       setCargando(false);
     }
@@ -224,8 +227,8 @@ const TrasladoMateriales = () => {
 
   const handleLimpiar = () => {
     if (window.confirm('¿Está seguro que desea limpiar el formulario?')) {
-      setProyectoOrigen('');
-      setProyectoDestino('');
+      setReservaOrigen('');      // CAMBIADO
+      setReservaDestino('');     // CAMBIADO
       setFechaTraslado(new Date().toISOString().split('T')[0]);
       setObservacionesGenerales('');
       setProductosATraslador([]);
@@ -239,18 +242,18 @@ const TrasladoMateriales = () => {
 
   const handleGuardarYGenerarPDF = async () => {
     // Validaciones
-    if (!proyectoOrigen) {
-      mostrarMensaje('error', '❌ Debe seleccionar un proyecto de origen');
+    if (!reservaOrigen) {
+      mostrarMensaje('error', '❌ Debe seleccionar una reserva de origen');
       return;
     }
 
-    if (!proyectoDestino) {
-      mostrarMensaje('error', '❌ Debe seleccionar un proyecto de destino');
+    if (!reservaDestino) {
+      mostrarMensaje('error', '❌ Debe seleccionar una reserva de destino');
       return;
     }
 
-    if (proyectoOrigen === proyectoDestino) {
-      mostrarMensaje('error', '❌ El proyecto de origen y destino no pueden ser el mismo');
+    if (reservaOrigen === reservaDestino) {
+      mostrarMensaje('error', '❌ La reserva de origen y destino no pueden ser la misma');
       return;
     }
 
@@ -259,37 +262,49 @@ const TrasladoMateriales = () => {
       return;
     }
 
+    // NUEVO: Validar stock disponible antes de guardar
+    for (const producto of productosATraslador) {
+      try {
+        const validacion = await verificarDisponibilidad(
+          parseInt(reservaOrigen),
+          producto.codigo,
+          parseFloat(producto.cantidad)
+        );
+
+        if (!validacion.disponible) {
+          mostrarMensaje('error', 
+            `❌ Stock insuficiente para ${producto.descripcion}. ` +
+            `Disponible: ${validacion.cantidad_disponible}, Solicitado: ${producto.cantidad}`
+          );
+          return;
+        }
+      } catch (error) {
+        console.error('Error validando stock:', error);
+        mostrarMensaje('error', `❌ Error al validar stock de ${producto.descripcion}`);
+        return;
+      }
+    }
+
     try {
       setCargando(true);
 
-      // Buscar nombres de los proyectos
-      const proyectoOrigenObj = proyectos.find(p => p.id === parseInt(proyectoOrigen));
-      const proyectoDestinoObj = proyectos.find(p => p.id === parseInt(proyectoDestino));
-
-      if (!proyectoOrigenObj || !proyectoDestinoObj) {
-        mostrarMensaje('error', '❌ Error al identificar los proyectos');
-        return;
-      }
-
-      // Preparar datos del traslado
+      // Preparar datos del traslado (NUEVO FORMATO)
       const datosTraslado = {
         numero_traslado: numeroTraslado,
-        proyecto_origen: proyectoOrigenObj.nombre_proyecto,
-        proyecto_destino: proyectoDestinoObj.nombre_proyecto,
+        reserva_origen: parseInt(reservaOrigen),         // CAMBIADO
+        reserva_destino: parseInt(reservaDestino),       // CAMBIADO
         fecha_traslado: fechaTraslado,
         usuario: localStorage.getItem('userName') || 'Usuario',
         observaciones: observacionesGenerales || '',
         productos: productosATraslador.map(p => ({
           codigo_producto: p.codigo,
-          descripcion: p.descripcion,
-          cantidad: parseInt(p.cantidad),
-          unidad: p.unidad,
+          cantidad: parseFloat(p.cantidad),              // CAMBIADO a float
           observaciones: p.observaciones || ''
         }))
       };
 
-      // Llamar al API para guardar
-      const response = await trasladoMaterialesAPI.guardarTraslado(datosTraslado);
+      // Llamar al NUEVO endpoint para traslados con reservas
+      const response = await trasladoMaterialesAPI.guardarTrasladoConReservas(datosTraslado);
 
       if (response.success) {
         mostrarMensaje('success', `✅ ${response.message}`);
@@ -433,20 +448,20 @@ const TrasladoMateriales = () => {
         <div className="traslado-card-body">
           <div className="traslado-form-row">
             
-            {/* Proyecto Origen */}
+            {/* Reserva Origen (CAMBIADO) */}
             <div className="traslado-form-group">
               <label className="traslado-form-label">
-                🏭 Proyecto Origen *
+                📍 Reserva Origen *
               </label>
               <select
                 className="traslado-form-select"
-                value={proyectoOrigen}
-                onChange={(e) => setProyectoOrigen(e.target.value)}
+                value={reservaOrigen}
+                onChange={(e) => setReservaOrigen(e.target.value)}
               >
-                <option value="">-- Seleccione proyecto origen --</option>
-                {proyectos.map((proyecto) => (
-                  <option key={proyecto.id} value={proyecto.id}>
-                    {proyecto.nombre_proyecto}
+                <option value="">-- Seleccione reserva origen --</option>
+                {reservas.map((reserva, index) => (
+                  <option key={`origen-${reserva.id_bodega}-${reserva.id_reserva}-${index}`} value={reserva.id_reserva}>
+                    {reserva.nombre_completo}
                   </option>
                 ))}
               </select>
@@ -469,22 +484,22 @@ const TrasladoMateriales = () => {
 
           <div className="traslado-form-row" style={{ marginTop: '15px' }}>
             
-            {/* Proyecto Destino */}
+            {/* Reserva Destino (CAMBIADO) */}
             <div className="traslado-form-group">
               <label className="traslado-form-label">
-                🎯 Proyecto Destino *
+                🎯 Reserva Destino *
               </label>
               <select
                 className="traslado-form-select"
-                value={proyectoDestino}
-                onChange={(e) => setProyectoDestino(e.target.value)}
+                value={reservaDestino}
+                onChange={(e) => setReservaDestino(e.target.value)}
               >
-                <option value="">-- Seleccione proyecto destino --</option>
-                {proyectos
-                  .filter(p => p.id !== parseInt(proyectoOrigen))
-                  .map((proyecto) => (
-                    <option key={proyecto.id} value={proyecto.id}>
-                      {proyecto.nombre_proyecto}
+                <option value="">-- Seleccione reserva destino --</option>
+                {reservas
+                  .filter(r => r.id_reserva !== parseInt(reservaOrigen))
+                  .map((reserva, index) => (
+                    <option key={`destino-${reserva.id_bodega}-${reserva.id_reserva}-${index}`} value={reserva.id_reserva}>
+                      {reserva.nombre_completo}
                     </option>
                   ))}
               </select>
@@ -515,13 +530,13 @@ const TrasladoMateriales = () => {
         </div>
         <div className="traslado-card-body">
           
-          {!proyectoOrigen && (
+          {!reservaOrigen && (
             <div className="traslado-warning-box">
-              ⚠️ Primero debe seleccionar un proyecto de origen para ver los productos disponibles
+              ⚠️ Primero debe seleccionar una reserva de origen para ver los productos disponibles
             </div>
           )}
 
-          {proyectoOrigen && (
+          {reservaOrigen && (
             <>
               <div className="traslado-form-row">
                 

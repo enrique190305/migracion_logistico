@@ -126,17 +126,26 @@ Route::prefix('traslado-materiales')->group(function () {
     // Generar número de traslado
     Route::get('/generar-numero', [TrasladoMaterialesController::class, 'generarNumero']);
     
-    // Listar proyectos disponibles
+    // Listar proyectos disponibles (LEGACY - mantener compatibilidad)
     Route::get('/proyectos', [TrasladoMaterialesController::class, 'listarProyectos']);
     
-    // Productos con stock por proyecto
+    // Listar reservas disponibles (NUEVO)
+    Route::get('/reservas', [TrasladoMaterialesController::class, 'listarReservas']);
+    
+    // Productos con stock por proyecto (LEGACY)
     Route::get('/proyectos/{id}/productos-stock', [TrasladoMaterialesController::class, 'productosConStock']);
+    
+    // Productos con stock por reserva (NUEVO)
+    Route::get('/reservas/{id}/productos-stock', [TrasladoMaterialesController::class, 'productosConStockReserva']);
     
     // Obtener stock de un producto específico
     Route::get('/stock/{codigo_producto}/proyecto/{proyecto_id}', [TrasladoMaterialesController::class, 'obtenerStock']);
     
-    // Guardar traslado
+    // Guardar traslado (LEGACY - entre proyectos)
     Route::post('/', [TrasladoMaterialesController::class, 'store']);
+    
+    // Guardar traslado entre reservas (NUEVO)
+    Route::post('/con-reservas', [TrasladoMaterialesController::class, 'storeConReservas']);
     
     // Historial de traslados
     Route::get('/historial', [TrasladoMaterialesController::class, 'historial']);
@@ -166,6 +175,31 @@ Route::prefix('kardex')->group(function () {
     
     // Stock actual de un producto
     Route::get('/stock/{codigo}/{proyecto?}', [KardexController::class, 'getStockProducto']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - STOCK DE BODEGAS (NUEVO)
+|--------------------------------------------------------------------------
+*/
+
+use App\Http\Controllers\Api\BodegaStockController;
+
+Route::prefix('stock')->group(function () {
+    // Obtener stock por bodega
+    Route::get('/bodega/{idBodega}', [BodegaStockController::class, 'getStockPorBodega']);
+    
+    // Obtener stock por reserva
+    Route::get('/reserva/{idReserva}', [BodegaStockController::class, 'getStockPorReserva']);
+    
+    // Obtener stock de un producto específico en todas las ubicaciones
+    Route::get('/producto/{codigoProducto}', [BodegaStockController::class, 'getStockProducto']);
+    
+    // Obtener resumen general de stock
+    Route::get('/resumen', [BodegaStockController::class, 'getResumenStock']);
+    
+    // Verificar disponibilidad para traslado
+    Route::post('/verificar-disponibilidad', [BodegaStockController::class, 'verificarDisponibilidad']);
 });
 
 /*

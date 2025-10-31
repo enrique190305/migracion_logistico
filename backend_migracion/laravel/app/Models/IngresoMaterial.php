@@ -20,7 +20,9 @@ class IngresoMaterial extends Model
         'factura',
         'observaciones',
         'usuario',
-        'proyecto_almacen'
+        'proyecto_almacen',
+        'id_bodega',      // Nueva columna para almacenamiento por bodega
+        'id_reserva'      // Nueva columna para almacenamiento por reserva
     ];
 
     protected $casts = [
@@ -41,5 +43,21 @@ class IngresoMaterial extends Model
     public function detalles()
     {
         return $this->hasMany(DetalleIngresoMaterial::class, 'id_ingreso', 'id_ingreso');
+    }
+
+    /**
+     * Relación con Bodega (nueva)
+     */
+    public function bodega()
+    {
+        return $this->belongsTo(Bodega::class, 'id_bodega', 'id_bodega');
+    }
+
+    /**
+     * Relación con Reserva (nueva)
+     */
+    public function reserva()
+    {
+        return $this->belongsTo(Reserva::class, 'id_reserva', 'id_reserva');
     }
 }

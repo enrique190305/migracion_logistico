@@ -18,6 +18,7 @@ import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
 import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
+import StockBodegas from '../StockBodegas/StockBodegas';
 import Reporteria from '../Reporteria/Reporteria';
 
 
@@ -65,6 +66,8 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <TrasladoMateriales />;
       case 'salida-materiales':
         return <SalidaMateriales />;
+      case 'stock-bodegas':
+        return <StockBodegas />;
       case 'registro-proveedores':
         return <RegistroProveedor />;
       case 'editar-proveedores':
