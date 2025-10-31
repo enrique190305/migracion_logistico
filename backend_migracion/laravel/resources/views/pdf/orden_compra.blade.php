@@ -246,7 +246,7 @@
 
     <!-- INFORMACIÓN DEL DOCUMENTO -->
     <div class="document-info">
-        <div class="doc-number">DOCUMENTO N°: {{ $orden->numero_oc }}</div>
+        <div class="doc-number">DOCUMENTO N°: {{ $orden->correlativo }}</div>
         <div class="doc-date">Fecha de emisión: {{ \Carbon\Carbon::parse($orden->fecha_oc)->format('d/m/Y') }}</div>
     </div>
 
@@ -273,25 +273,17 @@
                 <td>Dirección:</td>
                 <td>{{ $orden->proveedor->direccion ?? 'N/A' }}</td>
             </tr>
-            @if($orden->proveedor && $orden->proveedor->numero_cuenta)
+            @if($orden->proveedor && ($orden->proveedor->numero_cuenta || $orden->proveedor->banco))
             <tr>
                 <td>Número de Cuenta:</td>
-                <td><strong>{{ $orden->proveedor->numero_cuenta }}</strong></td>
-            </tr>
-            @endif
-            @if($orden->proveedor && $orden->proveedor->banco)
-            <tr>
-                <td>Banco:</td>
                 <td>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        @if($orden->proveedor->banco->logo_banco)
-                            <img src="{{ public_path('storage/' . $orden->proveedor->banco->logo_banco) }}" 
-                                 alt="{{ $orden->proveedor->banco->nombre_banco }}" 
-                                 style="height: 25px; width: auto; object-fit: contain;"
-                                 onerror="this.style.display='none'">
-                        @endif
-                        <strong>{{ $orden->proveedor->banco->nombre_banco }}</strong>
-                    </div>
+                    @if($orden->proveedor->banco && $orden->proveedor->banco->logo_banco)
+                        <img src="{{ public_path('storage/' . $orden->proveedor->banco->logo_banco) }}" 
+                             alt="{{ $orden->proveedor->banco->nombre_banco }}" 
+                             style="height: 20px; width: auto; object-fit: contain; vertical-align: middle; margin-right: 8px;"
+                             onerror="this.style.display='none'">
+                    @endif
+                    <strong>{{ $orden->proveedor->numero_cuenta ?? 'N/A' }}</strong>
                 </td>
             </tr>
             @endif

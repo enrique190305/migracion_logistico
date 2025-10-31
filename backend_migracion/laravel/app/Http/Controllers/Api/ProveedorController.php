@@ -123,7 +123,7 @@ class ProveedorController extends Controller
                 'contacto' => $request->contacto,
                 'celular' => $request->celular,
                 'correo' => $request->correo,
-                'numero_cuenta' => $request->numero_cuenta,
+                'numer_cuenta' => $request->numero_cuenta,  // Mapear al nombre correcto de la BD
                 'id_banco' => $request->id_banco,
                 'forma_pago' => $request->forma_pago,
                 'servicio' => $request->servicio
@@ -195,7 +195,7 @@ class ProveedorController extends Controller
                 'contacto' => $request->contacto,
                 'celular' => $request->celular,
                 'correo' => $request->correo,
-                'numero_cuenta' => $request->numero_cuenta,
+                'numer_cuenta' => $request->numero_cuenta,  // Mapear al nombre correcto de la BD
                 'id_banco' => $request->id_banco,
                 'forma_pago' => $request->forma_pago,
                 'servicio' => $request->servicio

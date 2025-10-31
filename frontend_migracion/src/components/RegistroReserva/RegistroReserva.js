@@ -27,7 +27,7 @@ const RegistroReserva = () => {
   const [modalEliminar, setModalEliminar] = useState(false);
   const [reservaSeleccionada, setReservaSeleccionada] = useState(null);
 
-  // Estado para formulario
+  // Estado para formulario (mantener estado ACTIVO por defecto)
   const [formulario, setFormulario] = useState({
     tipo_reserva: '',
     estado: 'ACTIVO'
@@ -413,13 +413,8 @@ const RegistroReserva = () => {
                   maxLength="100"
                 />
               </div>
-              <div className="form-group-reserva">
-                <label>Estado</label>
-                <select name="estado" value={formulario.estado} onChange={handleInputChange}>
-                  <option value="ACTIVO">Activo</option>
-                  <option value="INACTIVO">Inactivo</option>
-                </select>
-              </div>
+              {/* Campo Estado OCULTO pero enviado al backend */}
+              <input type="hidden" name="estado" value={formulario.estado} />
             </div>
             <div className="modal-footer-reserva">
               <button className="btn-secondary-reserva" onClick={() => setModalNuevo(false)}>
@@ -454,13 +449,8 @@ const RegistroReserva = () => {
                   maxLength="100"
                 />
               </div>
-              <div className="form-group-reserva">
-                <label>Estado</label>
-                <select name="estado" value={formulario.estado} onChange={handleInputChange}>
-                  <option value="ACTIVO">Activo</option>
-                  <option value="INACTIVO">Inactivo</option>
-                </select>
-              </div>
+              {/* Campo Estado OCULTO pero enviado al backend */}
+              <input type="hidden" name="estado" value={formulario.estado} />
             </div>
             <div className="modal-footer-reserva">
               <button className="btn-secondary-reserva" onClick={() => setModalEditar(false)}>
@@ -529,7 +519,7 @@ const RegistroReserva = () => {
                 "{reservaSeleccionada.tipo_reserva}"?
               </p>
               <p style={{ textAlign: 'center', marginTop: '15px', fontSize: '14px', color: '#666' }}>
-                Esta acción no se puede deshacer.
+                Esta acción cambiará el estado a INACTIVO.
               </p>
             </div>
             <div className="modal-footer-reserva">

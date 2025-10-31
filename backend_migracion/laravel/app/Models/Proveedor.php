@@ -20,11 +20,17 @@ class Proveedor extends Model
         'contacto',
         'celular',
         'correo',
-        'numero_cuenta',
+        'numer_cuenta',  // Nombre del campo en la BD (sin 'o')
         'id_banco',
         'forma_pago',
         'servicio'
     ];
+
+    // Accessor para mantener compatibilidad con 'numero_cuenta'
+    public function getNumeroCuentaAttribute()
+    {
+        return $this->numer_cuenta;
+    }
 
     // Relaciones
     public function banco()

@@ -28,7 +28,7 @@ const RegistroBodega = () => {
   const [modalEliminar, setModalEliminar] = useState(false);
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState(null);
 
-  // Estado para formulario
+  // Estado para formulario (mantener estado ACTIVO por defecto)
   const [formulario, setFormulario] = useState({
     nombre: '',
     ubicacion: '',
@@ -480,17 +480,8 @@ const RegistroBodega = () => {
                   ))}
                 </select>
               </div>
-              <div className="form-group-bodega">
-                <label>Estado</label>
-                <select
-                  name="estado"
-                  value={formulario.estado}
-                  onChange={handleInputChange}
-                >
-                  <option value="ACTIVO">Activo</option>
-                  <option value="INACTIVO">Inactivo</option>
-                </select>
-              </div>
+              {/* Campo Estado OCULTO pero enviado al backend */}
+              <input type="hidden" name="estado" value={formulario.estado} />
             </div>
             <div className="modal-footer-bodega">
               <button className="btn-secondary-bodega" onClick={() => setModalNuevo(false)}>
@@ -549,17 +540,8 @@ const RegistroBodega = () => {
                   ))}
                 </select>
               </div>
-              <div className="form-group-bodega">
-                <label>Estado</label>
-                <select
-                  name="estado"
-                  value={formulario.estado}
-                  onChange={handleInputChange}
-                >
-                  <option value="ACTIVO">Activo</option>
-                  <option value="INACTIVO">Inactivo</option>
-                </select>
-              </div>
+              {/* Campo Estado OCULTO pero enviado al backend */}
+              <input type="hidden" name="estado" value={formulario.estado} />
             </div>
             <div className="modal-footer-bodega">
               <button className="btn-secondary-bodega" onClick={() => setModalEditar(false)}>
@@ -636,7 +618,7 @@ const RegistroBodega = () => {
                 "{bodegaSeleccionada.nombre}"?
               </p>
               <p style={{ textAlign: 'center', fontSize: '14px', color: '#999', marginTop: '15px' }}>
-                Esta acción no se puede deshacer.
+                Esta acción cambiará el estado a INACTIVO.
               </p>
             </div>
             <div className="modal-footer-bodega">

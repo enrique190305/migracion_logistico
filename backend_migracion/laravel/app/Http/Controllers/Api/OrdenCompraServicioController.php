@@ -1278,7 +1278,7 @@ class OrdenCompraServicioController extends Controller
             $pdf->setPaper('A4', 'portrait');
 
             // Descargar el PDF
-            return $pdf->download("Orden_Compra_{$orden->numero_oc}.pdf");
+            return $pdf->download("Orden_Compra_{$orden->correlativo}.pdf");
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
