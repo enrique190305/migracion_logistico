@@ -720,7 +720,7 @@ class ProyectoController extends Controller
                 'empresa:id_empresa,razon_social',
                 'bodega:id_bodega,nombre,ubicacion',
                 'reserva:id_reserva,tipo_reserva',
-                'responsable:id_personal,nom_ape,dni', // ✅ Corregido: usar campos de tabla 'personal'
+                'responsable:id_movil_persona,nom_ape,dni', // ✅ Corregido: usar campos de tabla 'movil_persona'
                 'proyectoAlmacen'
             ])
             ->where('proyecto_padre_id', $movilProyecto->id_movil_proyecto)
@@ -738,7 +738,7 @@ class ProyectoController extends Controller
                     'bodega' => $sub->bodega->nombre ?? null,
                     'ubicacion' => $sub->bodega->ubicacion ?? null,
                     'tipo_reserva' => $sub->reserva->tipo_reserva ?? null,
-                    'responsable' => $sub->responsable->nom_ape ?? 'Sin responsable', // ✅ Corregido: usar nom_ape
+                    'responsable' => $sub->responsable->nom_ape ?? 'Sin responsable', // ✅ nom_ape de movil_persona
                     'dni_responsable' => $sub->responsable->dni ?? null,
                     'fecha_registro' => $sub->fecha_registro,
                     'estado' => $sub->estado
@@ -928,7 +928,7 @@ class ProyectoController extends Controller
             DB::commit();
 
             // Recargar con relaciones
-            $subproyecto->load(['responsable:id_personal,nom_ape,dni']);
+            $subproyecto->load(['responsable:id_movil_persona,nom_ape,dni']);
 
             return response()->json([
                 'success' => true,

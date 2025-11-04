@@ -925,11 +925,13 @@ class IngresoMaterialController extends Controller
             $ingreso = DB::table('ingreso_material as im')
                 ->leftJoin('orden_compra as oc', 'im.id_oc', '=', 'oc.id_oc')
                 ->leftJoin('proveedor as p', 'oc.id_proveedor', '=', 'p.id_proveedor')
+                ->leftJoin('bodega as b', 'im.id_bodega', '=', 'b.id_bodega')
                 ->select(
                     'im.*',
                     'oc.correlativo as correlativo_oc',
                     'p.nombre as razon_social',
-                    'p.ruc'
+                    'p.ruc',
+                    'b.nombre as nombre_bodega'
                 )
                 ->where('im.id_ingreso', $idIngreso)
                 ->first();

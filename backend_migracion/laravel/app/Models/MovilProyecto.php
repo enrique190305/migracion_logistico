@@ -52,7 +52,7 @@ class MovilProyecto extends Model
 
     public function responsable()
     {
-        return $this->belongsTo(Personal::class, 'id_responsable', 'id_personal');
+        return $this->belongsTo(MovilPersona::class, 'id_responsable', 'id_movil_persona');
     }
 
     public function proyectoPadre()

@@ -158,9 +158,12 @@ class ProveedorController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // ✅ Obtener el proveedor actual para mantener el RUC si no se envía
+        $proveedorActual = Proveedor::where('id_proveedor', $id)->firstOrFail();
+        
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
-            'ruc' => 'required|string|size:11|unique:proveedor,ruc,' . $id . ',id_proveedor',
+            'ruc' => 'nullable|string|size:11|unique:proveedor,ruc,' . $id . ',id_proveedor',
             'direccion' => 'nullable|string|max:255',
             'contacto' => 'nullable|string|max:100',
             'celular' => 'nullable|string|max:20',
@@ -171,7 +174,6 @@ class ProveedorController extends Controller
             'servicio' => 'nullable|string'
         ], [
             'nombre.required' => 'El nombre del proveedor es obligatorio',
-            'ruc.required' => 'El RUC es obligatorio',
             'ruc.size' => 'El RUC debe tener 11 dígitos',
             'ruc.unique' => 'Ya existe un proveedor con ese RUC',
             'correo.email' => 'El formato del email no es válido'
@@ -186,34 +188,42 @@ class ProveedorController extends Controller
         }
 
         try {
-            $proveedor = Proveedor::where('id_proveedor', $id)->firstOrFail();
-
-            $proveedor->update([
+            // ✅ Actualizar solo los campos que se envían
+            $datosActualizar = [
                 'nombre' => $request->nombre,
-                'ruc' => $request->ruc,
                 'direccion' => $request->direccion,
                 'contacto' => $request->contacto,
                 'celular' => $request->celular,
                 'correo' => $request->correo,
-                'numer_cuenta' => $request->numero_cuenta,  // Mapear al nombre correcto de la BD
+                'numer_cuenta' => $request->numero_cuenta,
                 'id_banco' => $request->id_banco,
                 'forma_pago' => $request->forma_pago,
                 'servicio' => $request->servicio
-            ]);
+            ];
+
+            // Solo actualizar RUC si se envía
+            if ($request->filled('ruc')) {
+                $datosActualizar['ruc'] = $request->ruc;
+            }
+
+            $proveedorActual->update($datosActualizar);
+
+            // ✅ Recargar el proveedor para obtener datos actualizados
+            $proveedorActual->refresh();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Proveedor actualizado exitosamente',
                 'data' => [
-                    'id' => $proveedor->id_proveedor,
-                    'proveedor' => $proveedor->nombre,
-                    'ruc' => $proveedor->ruc,
-                    'direccion' => $proveedor->direccion,
-                    'contacto' => $proveedor->contacto,
-                    'telefono' => $proveedor->celular,
-                    'email' => $proveedor->correo,
-                    'formaPago' => $proveedor->forma_pago,
-                    'servicios' => $proveedor->servicio
+                    'id' => $proveedorActual->id_proveedor,
+                    'proveedor' => $proveedorActual->nombre,
+                    'ruc' => $proveedorActual->ruc,
+                    'direccion' => $proveedorActual->direccion,
+                    'contacto' => $proveedorActual->contacto,
+                    'telefono' => $proveedorActual->celular,
+                    'email' => $proveedorActual->correo,
+                    'formaPago' => $proveedorActual->forma_pago,
+                    'servicios' => $proveedorActual->servicio
                 ]
             ], 200);
         } catch (Exception $e) {

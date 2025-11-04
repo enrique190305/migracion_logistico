@@ -105,12 +105,13 @@
             font-weight: bold;
         }
         .footer {
-            margin-top: 40px;
-            text-align: center;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px 20px;
             font-size: 9px;
             color: #7f8c8d;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
         }
         .text-right {
             text-align: right;
@@ -118,15 +119,26 @@
         .text-center {
             text-align: center;
         }
+        .firma-box {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .firma-linea {
+            border-top: 1px solid #333;
+            width: 250px;
+            margin: 0 auto;
+            padding-top: 5px;
+            font-size: 8px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>📥 INGRESO DE MATERIAL</h1>
+        <h1>INGRESO DE MATERIAL</h1>
         <h2>{{ $ingreso->id_ingreso }}</h2>
     </div>
 
-    <div class="section-title">📋 INFORMACIÓN GENERAL</div>
+    <div class="section-title">INFORMACIÓN GENERAL</div>
     <div class="info-grid">
         <div class="info-row">
             <div class="info-label">Orden de Compra:</div>
@@ -141,8 +153,8 @@
             <div class="info-value">{{ $ingreso->ruc ?? 'N/A' }}</div>
         </div>
         <div class="info-row">
-            <div class="info-label">Proyecto:</div>
-            <div class="info-value">{{ $ingreso->proyecto_almacen }}</div>
+            <div class="info-label">Bodega:</div>
+            <div class="info-value">{{ $ingreso->nombre_bodega ?? $ingreso->proyecto_almacen }}</div>
             <div class="info-label">Usuario:</div>
             <div class="info-value">{{ $ingreso->usuario }}</div>
         </div>
@@ -160,7 +172,7 @@
         @endif
     </div>
 
-    <div class="section-title">📦 DETALLE DE PRODUCTOS</div>
+    <div class="section-title">DETALLE DE PRODUCTOS</div>
     <table>
         <thead>
             <tr>
@@ -206,8 +218,21 @@
     <div style="clear: both;"></div>
 
     <div class="footer">
-        <p>Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}</p>
-        <p>Sistema de Gestión Logística</p>
+        <p style="font-size: 9px; color: #7f8c8d; margin-bottom: 50px; text-align: justify;">
+            Declaro que he recibido los elementos relacionados en la parte superior. Me comprometo a responder por estos elementos y en caso de pérdida o diferencias de inventario a mi cargo, autorizo a la empresa para que de mi salario y prestaciones sociales me sea descontado este valor
+        </p>
+        
+        <div class="firma-box">
+            <div class="firma-linea">
+                <strong>Responsable de Ingreso Material:</strong> {{ $ingreso->usuario }}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #7f8c8d;">
+            <p>Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}</p>
+            <p>Sistema de Gestión Logística</p>
+            <p style="font-weight: bold;">Pagina 1/1</p>
+        </div>
     </div>
 </body>
 </html>
