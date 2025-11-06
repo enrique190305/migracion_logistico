@@ -76,7 +76,9 @@ class OrdenCompraServicioController extends Controller
     public function obtenerDetalleProveedor($id)
     {
         try {
-            $proveedor = Proveedor::where('id_proveedor', $id)->first();
+            $proveedor = Proveedor::with('banco:id_banco,nombre_banco')
+                ->where('id_proveedor', $id)
+                ->first();
 
             if (!$proveedor) {
                 return response()->json([
@@ -92,6 +94,9 @@ class OrdenCompraServicioController extends Controller
                 'contacto' => $proveedor->contacto,
                 'celular' => $proveedor->celular,
                 'correo' => $proveedor->correo,
+                'numeroCuenta' => $proveedor->numer_cuenta,
+                'banco' => $proveedor->banco ? $proveedor->banco->nombre_banco : null,
+                'idBanco' => $proveedor->id_banco,
                 'formaPago' => $proveedor->forma_pago,
                 'servicio' => $proveedor->servicio
             ], 200);
@@ -583,6 +588,8 @@ class OrdenCompraServicioController extends Controller
             'destino' => 'nullable|string|max:255',
             'latitud' => 'nullable|string|max:50',
             'longitud' => 'nullable|string|max:50',
+            'latitud_destino' => 'nullable|string|max:50',
+            'longitud_destino' => 'nullable|string|max:50',
             'igv' => 'required|numeric|min:0',
             'total_general' => 'required|numeric|min:0',
             'estado' => 'nullable|string|max:50',
@@ -621,6 +628,8 @@ class OrdenCompraServicioController extends Controller
                 'destino' => $request->destino,
                 'latitud' => $request->latitud,
                 'longitud' => $request->longitud,
+                'latitud_destino' => $request->latitud_destino,
+                'longitud_destino' => $request->longitud_destino,
                 'igv' => $request->igv,
                 'total_general' => $request->total_general,
                 'estado' => $request->estado ?? 'PENDIENTE',

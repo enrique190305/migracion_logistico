@@ -48,6 +48,8 @@ const OrdenesCompraServicio = () => {
   // Estados para Detalles del Servicio
   const [latitud, setLatitud] = useState('');
   const [longitud, setLongitud] = useState('');
+  const [latitudDestino, setLatitudDestino] = useState('');
+  const [longitudDestino, setLongitudDestino] = useState('');
   const [fechaRequerida, setFechaRequerida] = useState(new Date().toISOString().split('T')[0]);
   const [destino, setDestino] = useState('');
   
@@ -597,6 +599,8 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
           destino,
           latitud,
           longitud,
+          latitud_destino: latitudDestino,
+          longitud_destino: longitudDestino,
           igv: parseFloat(igv.toFixed(2)),
           total_general: parseFloat(total.toFixed(2)),
           detalles: productosAgregados.map(serv => ({
@@ -678,6 +682,8 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
       setDestino('');
       setLatitud('');
       setLongitud('');
+      setLatitudDestino('');
+      setLongitudDestino('');
       
       // Recargar correlativo
       if (tipoOrden === 'compra') {
@@ -1138,7 +1144,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             <div className="card-body">
               <div className="form-row">
                 <div className="form-group">
-                  <label>Latitud:</label>
+                  <label>Latitud Origen:</label>
                   <input 
                     type="text" 
                     value={latitud}
@@ -1148,13 +1154,35 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                   />
                 </div>
                 <div className="form-group">
-                  <label>Longitud:</label>
+                  <label>Longitud Origen:</label>
                   <input 
                     type="text" 
                     value={longitud}
                     onChange={(e) => setLongitud(e.target.value)}
                     className="form-input"
                     placeholder="Ej: -77.0428"
+                  />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Latitud Destino:</label>
+                  <input 
+                    type="text" 
+                    value={latitudDestino}
+                    onChange={(e) => setLatitudDestino(e.target.value)}
+                    className="form-input"
+                    placeholder="Ej: -12.1234"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Longitud Destino:</label>
+                  <input 
+                    type="text" 
+                    value={longitudDestino}
+                    onChange={(e) => setLongitudDestino(e.target.value)}
+                    className="form-input"
+                    placeholder="Ej: -77.5678"
                   />
                 </div>
               </div>
@@ -1563,36 +1591,44 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             <div className="modal-body">
               <div className="proveedor-info-grid">
                 <div className="info-item">
-                  <strong>Nombre/Razón Social:</strong>
+                  <strong>NOMBRE/RAZÓN SOCIAL:</strong>
                   <span>{proveedorSeleccionado.nombre || 'N/A'}</span>
                 </div>
                 <div className="info-item">
                   <strong>RUC:</strong>
                   <span>{proveedorSeleccionado.ruc || 'N/A'}</span>
                 </div>
-                <div className="info-item">
-                  <strong>Dirección:</strong>
+                <div className="info-item full-width">
+                  <strong>DIRECCIÓN:</strong>
                   <span>{proveedorSeleccionado.direccion || 'N/A'}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Contacto:</strong>
+                  <strong>CONTACTO:</strong>
                   <span>{proveedorSeleccionado.contacto || 'N/A'}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Celular:</strong>
+                  <strong>CELULAR:</strong>
                   <span>{proveedorSeleccionado.celular || 'N/A'}</span>
                 </div>
-                <div className="info-item">
-                  <strong>Correo:</strong>
+                <div className="info-item full-width">
+                  <strong>CORREO:</strong>
                   <span>{proveedorSeleccionado.correo || 'N/A'}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Forma de Pago:</strong>
+                  <strong>FORMA DE PAGO:</strong>
                   <span>{proveedorSeleccionado.formaPago || 'N/A'}</span>
                 </div>
                 <div className="info-item">
-                  <strong>Servicio:</strong>
+                  <strong>SERVICIO:</strong>
                   <span>{proveedorSeleccionado.servicio || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>BANCO:</strong>
+                  <span>{proveedorSeleccionado.banco || 'N/A'}</span>
+                </div>
+                <div className="info-item">
+                  <strong>NÚMERO DE CUENTA:</strong>
+                  <span>{proveedorSeleccionado.numeroCuenta || 'N/A'}</span>
                 </div>
               </div>
             </div>
