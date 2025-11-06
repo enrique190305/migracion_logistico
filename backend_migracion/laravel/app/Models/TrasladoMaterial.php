@@ -20,6 +20,7 @@ class TrasladoMaterial extends Model
         'proyecto_destino',
         'usuario',
         'estado',
+        // 'observaciones',         // Campo no existe en tabla
         'fecha_creacion',
         'id_bodega_origen',      // Nueva columna para bodega origen
         'reserva_origen',        // Nueva columna para reserva origen

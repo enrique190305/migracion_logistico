@@ -135,6 +135,16 @@ class TrasladoMaterialesController extends Controller
     public function productosConStockReserva($idReserva)
     {
         try {
+            // Verificar si la reserva existe
+            $reserva = DB::table('reserva')->where('id_reserva', $idReserva)->first();
+            if (!$reserva) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La reserva seleccionada no existe'
+                ], 404);
+            }
+
+            // Obtener productos con stock
             $productos = DB::table('bodega_stock as bs')
                 ->join('producto as p', 'bs.codigo_producto', '=', 'p.codigo_producto')
                 ->where('bs.id_reserva', $idReserva)
@@ -148,7 +158,16 @@ class TrasladoMaterialesController extends Controller
                 )
                 ->orderBy('p.descripcion')
                 ->get();
-            
+
+            // ✅ NUEVO: Validar si no hay productos
+            if ($productos->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta bodega no tiene productos disponibles para trasladar',
+                    'data' => []
+                ], 200); // 200 porque no es un error del servidor
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => $productos
@@ -336,12 +355,17 @@ class TrasladoMaterialesController extends Controller
             $traslado = TrasladoMaterial::create([
                 'id_traslado' => $request->numero_traslado,
                 'fecha_traslado' => $request->fecha_traslado,
-                'reserva_origen' => $request->reserva_origen,         // NUEVO
-                'id_bodega_origen' => $reservaOrigen->id_bodega,      // NUEVO
-                'reserva_destino' => $request->reserva_destino,       // NUEVO
-                'id_bodega_destino' => $reservaDestino->id_bodega,    // NUEVO
+                // Campos de reservas (NUEVO flujo)
+                'reserva_origen' => $request->reserva_origen,
+                'id_bodega_origen' => $reservaOrigen->id_bodega,
+                'reserva_destino' => $request->reserva_destino,
+                'id_bodega_destino' => $reservaDestino->id_bodega,
+                // Campos legacy (para compatibilidad con tabla)
+                'proyecto_origen' => $reservaOrigen->nombre_bodega ?? 'TRASLADO-RESERVA',
+                'proyecto_destino' => $reservaDestino->nombre_bodega ?? 'TRASLADO-RESERVA',
+                // Campos comunes
                 'usuario' => $request->usuario,
-                'observaciones' => $request->observaciones,
+                // 'observaciones' => $request->observaciones, // Campo no existe en tabla
                 'fecha_creacion' => now()
             ]);
 
@@ -761,9 +785,20 @@ class TrasladoMaterialesController extends Controller
     public function generarPDF($idTraslado)
     {
         try {
-            // Obtener el traslado con sus detalles
-            $traslado = TrasladoMaterial::with('detalles')
-                ->where('id_traslado', $idTraslado)
+            // ✅ Obtener datos del traslado con JOINs para información completa
+            $traslado = DB::table('traslado_materiales as tm')
+                ->leftJoin('bodega as bo', 'tm.id_bodega_origen', '=', 'bo.id_bodega')
+                ->leftJoin('bodega as bd', 'tm.id_bodega_destino', '=', 'bd.id_bodega')
+                ->leftJoin('reserva as ro', 'tm.reserva_origen', '=', 'ro.id_reserva')
+                ->leftJoin('reserva as rd', 'tm.reserva_destino', '=', 'rd.id_reserva')
+                ->select(
+                    'tm.*',
+                    'bo.nombre as bodega_origen',
+                    'bd.nombre as bodega_destino',
+                    'ro.tipo_reserva as reserva_origen_nombre',
+                    'rd.tipo_reserva as reserva_destino_nombre'
+                )
+                ->where('tm.id_traslado', $idTraslado)
                 ->first();
 
             if (!$traslado) {
@@ -773,23 +808,31 @@ class TrasladoMaterialesController extends Controller
                 ], 404);
             }
 
+            // ✅ Obtener detalles del traslado
+            $detalles = DB::table('detalle_traslado')
+                ->where('id_traslado', $idTraslado)
+                ->get();
+
             // Generar el PDF con la vista
             $pdf = Pdf::loadView('pdf.traslado_materiales', [
-                'traslado' => $traslado
+                'traslado' => $traslado,
+                'detalles' => $detalles
             ]);
 
             // Configurar orientación y tamaño de página
             $pdf->setPaper('A4', 'portrait');
 
             // Descargar el PDF
-            return $pdf->download("Traslado_{$idTraslado}.pdf");
+            return $pdf->stream("Traslado_{$idTraslado}.pdf");
 
         } catch (Exception $e) {
-            Log::error('Error al generar PDF: ' . $e->getMessage());
+            Log::error('Error al generar PDF de traslado: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Error al generar el PDF del traslado'
+                'message' => 'Error al generar el PDF del traslado',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

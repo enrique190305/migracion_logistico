@@ -215,7 +215,7 @@ const Kardex = () => {
       
       if (tipo === 'inventario') {
         worksheetData.push([
-          'Proyecto',
+          'Bodega',
           'Código',
           'Descripción',
           'Unidad',
@@ -248,7 +248,7 @@ const Kardex = () => {
           'Descripción',
           'Unidad',
           'Cantidad',
-          'Proyecto',
+          'Bodega',
           'Documento',
           'Observaciones'
         ]);
@@ -334,7 +334,7 @@ const Kardex = () => {
 
       if (tipo === 'inventario') {
         columns = [
-          { header: 'Proyecto', dataKey: 'proyecto' },
+          { header: 'Bodega', dataKey: 'proyecto' },
           { header: 'Código', dataKey: 'codigo' },
           { header: 'Descripción', dataKey: 'descripcion' },
           { header: 'Unidad', dataKey: 'unidad' },
@@ -404,7 +404,7 @@ const Kardex = () => {
           { header: 'Descripción', dataKey: 'descripcion' },
           { header: 'Unidad', dataKey: 'unidad' },
           { header: 'Cantidad', dataKey: 'cantidad' },
-          { header: 'Proyecto', dataKey: 'proyecto' },
+          { header: 'Bodega', dataKey: 'proyecto' },
           { header: 'Documento', dataKey: 'documento' }
         ];
 
@@ -481,12 +481,12 @@ const Kardex = () => {
     
     let csv = '';
     if (tipo === 'inventario') {
-      csv = 'Proyecto,Código,Descripción,Unidad,Cantidad,Precio Unit.,Precio Total\n';
+      csv = 'Bodega,Código,Descripción,Unidad,Cantidad,Precio Unit.,Precio Total\n';
       data.forEach(item => {
         csv += `"${item.proyecto}","${item.codigo_producto}","${item.descripcion}","${item.unidad}",${item.stock},${item.precio_unitario},${item.precio_total}\n`;
       });
     } else {
-      csv = 'Fecha,Tipo,Código,Descripción,Unidad,Cantidad,Proyecto,Documento,Observaciones\n';
+      csv = 'Fecha,Tipo,Código,Descripción,Unidad,Cantidad,Bodega,Documento,Observaciones\n';
       data.forEach(item => {
         csv += `"${formatearFecha(item.fecha)}","${item.tipo_movimiento}","${item.codigo_producto}","${item.descripcion}","${item.unidad}",${item.cantidad},"${item.proyecto}","${item.documento}","${item.observaciones}"\n`;
       });
@@ -590,7 +590,7 @@ const Kardex = () => {
               <span className="search-icon-kardex">🔍</span>
               <input
                 type="text"
-                placeholder="Buscar por proyecto, código o descripción..."
+                placeholder="Buscar por bodega, código o descripción..."
                 value={searchInventario}
                 onChange={(e) => aplicarFiltroInventario(e.target.value)}
                 className="search-input-kardex"
@@ -616,7 +616,7 @@ const Kardex = () => {
             <table className="kardex-table">
               <thead>
                 <tr>
-                  <th>Proyecto</th>
+                  <th>Bodega</th>
                   <th>Código</th>
                   <th>Descripción</th>
                   <th>Unidad</th>

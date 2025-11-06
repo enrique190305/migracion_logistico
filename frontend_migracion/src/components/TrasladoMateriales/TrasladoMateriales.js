@@ -106,7 +106,16 @@ const TrasladoMateriales = () => {
       // Llamar al API para obtener productos con stock en la reserva
       const respProductos = await obtenerProductosConStockReserva(idReserva);
       
-      if (respProductos.success && respProductos.data.length > 0) {
+      // Validar si la bodega no tiene productos
+      if (!respProductos.success) {
+        setProductos([]);
+        setDescripcionesProductos([]);
+        // Mostrar mensaje amigable al usuario
+        mostrarMensaje('warning', respProductos.message || 'Esta bodega no tiene productos disponibles para trasladar');
+        return;
+      }
+
+      if (respProductos.data && respProductos.data.length > 0) {
         // Formatear productos
         const productosFormateados = respProductos.data.map(p => ({
           codigo: p.codigo_producto,
@@ -117,17 +126,18 @@ const TrasladoMateriales = () => {
 
         setProductos(productosFormateados);
         setDescripcionesProductos(productosFormateados.map(p => p.descripcion));
+        mostrarMensaje('success', `Se encontraron ${productosFormateados.length} productos disponibles`);
       } else {
         setProductos([]);
         setDescripcionesProductos([]);
-        if (!respProductos.success) {
-          mostrarMensaje('warning', 'No hay productos con stock en esta reserva');
-        }
+        mostrarMensaje('warning', 'No hay productos con stock en esta reserva');
       }
 
     } catch (error) {
       console.error('Error al cargar productos de la reserva:', error);
       mostrarMensaje('error', 'Error al cargar los productos de la reserva');
+      setProductos([]);
+      setDescripcionesProductos([]);
     } finally {
       setCargando(false);
     }

@@ -216,6 +216,7 @@ class SalidaMaterialController extends Controller
                     'stock_nuevo' => $stock - $producto['cantidad'],
                     'fecha_movimiento' => $request->fecha_salida,
                     'proyecto_almacen' => $request->proyecto_almacen,
+                    'id_bodega' => $request->id_bodega, // ✅ Agregar id_bodega
                     'documento_referencia' => $request->numero_salida,
                     'observaciones' => "Salida de material - {$request->numero_salida}",
                     'usuario_registro' => 'admin',

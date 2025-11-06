@@ -150,7 +150,7 @@
 <body>
     <!-- ENCABEZADO -->
     <div class="header">
-        <h1>📦 TRASLADO DE MATERIALES</h1>
+        <h1>TRASLADO DE MATERIALES</h1>
         <h2>N° {{ $traslado->id_traslado }}</h2>
     </div>
 
@@ -158,24 +158,42 @@
     <div class="info-section">
         <div class="info-grid">
             <div class="info-row">
-                <div class="info-label">📅 Fecha Traslado:</div>
+                <div class="info-label">Fecha Traslado:</div>
                 <div class="info-value">{{ \Carbon\Carbon::parse($traslado->fecha_traslado)->format('d/m/Y') }}</div>
             </div>
             <div class="info-row">
-                <div class="info-label">👤 Usuario:</div>
+                <div class="info-label">Usuario:</div>
                 <div class="info-value">{{ $traslado->usuario }}</div>
             </div>
             <div class="info-row">
-                <div class="info-label">📊 Estado:</div>
+                <div class="info-label">Estado:</div>
                 <div class="info-value">{{ $traslado->estado }}</div>
             </div>
         </div>
     </div>
 
-    <!-- PROYECTOS -->
-    <div class="section-title">🏭 INFORMACIÓN DE PROYECTOS</div>
+    <!-- PROYECTOS / RESERVAS -->
+    <div class="section-title">INFORMACIÓN DE ORIGEN Y DESTINO</div>
     <div class="info-section">
         <div class="info-grid">
+            @if(isset($traslado->bodega_origen))
+            <div class="info-row">
+                <div class="info-label">Bodega Origen:</div>
+                <div class="info-value">{{ $traslado->bodega_origen }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Reserva Origen:</div>
+                <div class="info-value">{{ $traslado->reserva_origen_nombre ?? 'N/A' }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Bodega Destino:</div>
+                <div class="info-value">{{ $traslado->bodega_destino }}</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">Reserva Destino:</div>
+                <div class="info-value">{{ $traslado->reserva_destino_nombre ?? 'N/A' }}</div>
+            </div>
+            @else
             <div class="info-row">
                 <div class="info-label">Proyecto Origen:</div>
                 <div class="info-value">{{ $traslado->proyecto_origen }}</div>
@@ -184,11 +202,18 @@
                 <div class="info-label">Proyecto Destino:</div>
                 <div class="info-value">{{ $traslado->proyecto_destino }}</div>
             </div>
+            @endif
+            @if(isset($traslado->observaciones) && $traslado->observaciones)
+            <div class="info-row">
+                <div class="info-label">Observaciones:</div>
+                <div class="info-value">{{ $traslado->observaciones }}</div>
+            </div>
+            @endif
         </div>
     </div>
 
     <!-- DETALLE DE PRODUCTOS -->
-    <div class="section-title">📋 DETALLE DE PRODUCTOS TRASLADADOS</div>
+    <div class="section-title">DETALLE DE PRODUCTOS TRASLADADOS</div>
     <table>
         <thead>
             <tr>
@@ -201,7 +226,10 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($traslado->detalles as $index => $detalle)
+            @php
+                $detallesArray = isset($detalles) ? $detalles : $traslado->detalles;
+            @endphp
+            @foreach($detallesArray as $index => $detalle)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 <td>{{ $detalle->codigo_producto }}</td>
@@ -215,7 +243,7 @@
     </table>
 
     <div class="total-productos">
-        Total de productos trasladados: {{ $traslado->detalles->count() }} items
+        Total de productos trasladados: {{ is_array($detallesArray) || is_object($detallesArray) ? count((array)$detallesArray) : 0 }} items
     </div>
 
     <!-- PIE DE PÁGINA CON FIRMAS -->
@@ -227,17 +255,14 @@
                         <div class="signature-line">
                             <strong>Entregado por</strong><br>
                             {{ $traslado->usuario }}<br>
-                            {{ $traslado->proyecto_origen }}
+                            {{ $traslado->bodega_origen ?? $traslado->proyecto_origen }}
                         </div>
                     </div>
                 </td>
                 <td style="width: 50%; border: none; text-align: center;">
                     <div class="signature-box">
-                        <div class="signature-line">
-                            <strong>Recibido por</strong><br>
-                            _________________________<br>
-                            {{ $traslado->proyecto_destino }}
-                        </div>
+                        _________________________<br>
+                        <strong>Recibido por</strong>
                     </div>
                 </td>
             </tr>

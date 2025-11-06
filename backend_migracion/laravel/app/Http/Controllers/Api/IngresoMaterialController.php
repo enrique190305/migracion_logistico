@@ -444,6 +444,7 @@ class IngresoMaterialController extends Controller
                 'unidad' => $productoInfo->unidad ?? '',
                 'cantidad' => $producto['cantidad_ingresar'],
                 'proyecto' => $request->input('proyecto_almacen'),
+                'id_bodega' => $request->input('id_bodega'), // ✅ Agregar id_bodega
                 'documento' => $numeroIngreso,
                 'precio_unitario' => $detalleOC->precio_unitario ?? 0,
                 'observaciones' => $producto['observaciones'] ?? ''
@@ -838,6 +839,7 @@ class IngresoMaterialController extends Controller
                     'stock_nuevo' => $stockActual + $cantidad,
                     'fecha_movimiento' => $request->fecha_ingreso,
                     'proyecto_almacen' => $request->proyecto_almacen,
+                    'id_bodega' => $request->id_bodega, // ✅ Agregar id_bodega
                     'observaciones' => "Ingreso Directo - {$request->num_guia}",
                     'usuario_registro' => 'admin',
                     'fecha_registro' => now()
