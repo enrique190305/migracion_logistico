@@ -173,12 +173,14 @@ const OrdenesCompraServicio = () => {
   /**
    * Mostrar notificación personalizada
    */
-  const mostrarNotificacion = (tipo, titulo, mensaje, detalles = []) => {
+  const mostrarNotificacion = (tipo, titulo, mensaje, detalles = [], onAction = null, actionLabel = null) => {
     setNotificacion({
       tipo,
       titulo,
       mensaje,
-      detalles
+      detalles,
+      onAction,
+      actionLabel
     });
   };
 
@@ -472,19 +474,43 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
     const { total: totalCalculado } = calcularTotales();
     const simboloMoneda = obtenerSimboloMoneda();
     
-    // Detectar si es compra directa (≤ 500) - SOLO SI HAY ORDEN DE PEDIDO
-    if (idOrdenPedido && totalCalculado <= 500) {
-      // Mostrar confirmación para compra directa
-      mostrarConfirmacion(
+    // Detectar si el total es menor a 500
+    if (totalCalculado < 500) {
+      // Mostrar notificación indicando que debe ir a Ingreso Directo
+      mostrarNotificacion(
         'warning',
-        'COMPRA DIRECTA DETECTADA',
-        `Como el total es menor o igual a ${simboloMoneda} 500.00, esta orden se procesará como COMPRA DIRECTA.`,
+        '⚠️ MONTO INSUFICIENTE PARA OC/OS',
+        `El total de ${simboloMoneda} ${totalCalculado.toFixed(2)} es menor a ${simboloMoneda} 500.00. No se puede generar una Orden de Compra o Servicio con este monto.`,
         [
-          { label: '💵 Total', valor: `${simboloMoneda} ${totalCalculado.toFixed(2)}` },
+          { label: '💵 Total actual', valor: `${simboloMoneda} ${totalCalculado.toFixed(2)}` },
+          { label: '� Mínimo requerido', valor: `${simboloMoneda} 500.00` },
+          { label: '📍 Solución', valor: 'Ingreso Directo de Materiales' },
+          { label: '✅ Acción', valor: 'Ir a: Gestión de Materiales > Ingreso de Materiales > Nuevo Ingreso Directo' }
+        ],
+        () => {
+          // Botón de acción: Redirigir a Ingreso de Materiales con tab 'directo'
+          cerrarNotificacion();
+          // Disparar evento para cambiar de módulo y abrir directamente el tab de Ingreso Directo
+          window.dispatchEvent(new CustomEvent('cambiarModulo', { 
+            detail: { 
+              modulo: 'ingreso-materiales',
+              tab: 'directo'
+            }
+          }));
+        },
+        'Ir a Ingreso Directo'
+      );
+      return;
+    } else if (idOrdenPedido && totalCalculado >= 500 && totalCalculado <= 600) {
+      // Opcional: Advertencia para montos entre 500-600 (cerca del límite)
+      mostrarConfirmacion(
+        'info',
+        'MONTO CERCANO AL LÍMITE',
+        `El total es ${simboloMoneda} ${totalCalculado.toFixed(2)}. Está cerca del límite mínimo de ${simboloMoneda} 500.00 para OC/OS.`,
+        [
+          { label: '� Total', valor: `${simboloMoneda} ${totalCalculado.toFixed(2)}` },
           { label: '📋 Orden de Pedido', valor: ordenPedidoSeleccionada?.correlativo || '' },
-          { label: '⚙️ Procesamiento', valor: 'Directo al Kardex' },
-          { label: '📦 Tipo de movimiento', valor: 'INGRESO' },
-          { label: 'ℹ️ Nota', valor: 'No se generará OC/OS' }
+          { label: '✅ Estado', valor: 'Monto válido para OC/OS' }
         ],
         () => {
           cerrarConfirmacion();
@@ -849,37 +875,29 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                 fontSize: '16px',
                 fontWeight: '600',
                 letterSpacing: '0.5px'
-              }}>INFORMACIÓN DE EMPRESA {idOrdenPedido && '(Auto-completado)'}</h3>
+              }}>INFORMACIÓN DE EMPRESA</h3>
+              <span style={{
+                marginLeft: 'auto',
+                fontSize: '12px',
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontWeight: '500'
+              }}>🔒 Solo lectura</span>
             </div>
             <div className="card-body" style={{ padding: '20px' }}>
               <div className="form-row">
                 <div className="form-group">
                   <label>Razón Social:</label>
-                  {idOrdenPedido ? (
-                    // Readonly cuando hay orden de pedido
-                    <input 
-                      type="text"
-                      value={razonSocial} 
-                      readOnly
-                      className="form-input"
-                      placeholder="Seleccione una orden de pedido..."
-                      style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
-                    />
-                  ) : (
-                    // Editable cuando NO hay orden de pedido
-                    <select 
-                      value={idEmpresa} 
-                      onChange={(e) => handleEmpresaChange(e.target.value)}
-                      className="form-input"
-                    >
-                      <option value="">Seleccione empresa...</option>
-                      {empresas.map(empresa => (
-                        <option key={empresa.id} value={empresa.id}>
-                          {empresa.razonSocial}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                  <input 
+                    type="text"
+                    value={razonSocial} 
+                    readOnly
+                    className="form-input"
+                    placeholder="Se autorellena desde Orden de Pedido"
+                    style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed', color: '#495057' }}
+                    title="Este campo se autorellena y no puede ser modificado"
+                  />
                 </div>
                 <div className="form-group form-group-small">
                   <label>Correlativo:</label>
@@ -888,7 +906,9 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                     value={correlativo}
                     readOnly
                     className="form-input"
-                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                    placeholder="Auto"
+                    style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed', color: '#495057' }}
+                    title="Este campo se autorellena automáticamente"
                   />
                 </div>
               </div>
@@ -902,7 +922,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                       readOnly
                       className="form-input"
                       placeholder="Seleccione una orden de pedido..."
-                      style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                      style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed', color: '#495057' }}
                     />
                   </div>
                 )}
@@ -911,8 +931,10 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                   <input 
                     type="date" 
                     value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
+                    readOnly
                     className="form-input"
+                    style={{ backgroundColor: '#e9ecef', cursor: 'not-allowed', color: '#495057' }}
+                    title="La fecha se establece automáticamente al momento de la creación"
                   />
                 </div>
               </div>
@@ -1591,6 +1613,8 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
           mensaje={notificacion.mensaje}
           detalles={notificacion.detalles}
           onClose={cerrarNotificacion}
+          onAction={notificacion.onAction}
+          actionLabel={notificacion.actionLabel}
         />
       )}
       

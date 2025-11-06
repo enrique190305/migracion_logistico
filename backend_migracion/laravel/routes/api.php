@@ -546,7 +546,7 @@ use App\Http\Controllers\Api\SalidaMaterialController;
 Route::prefix('salida-materiales')->group(function () {
     // Catálogos
     Route::get('/proyectos', [SalidaMaterialController::class, 'listarProyectos']);
-    Route::get('/trabajadores', [SalidaMaterialController::class, 'listarTrabajadores']);
+    Route::get('/proyecto/{id}', [SalidaMaterialController::class, 'obtenerInfoProyecto']);
     Route::get('/productos-por-proyecto', [SalidaMaterialController::class, 'obtenerProductosPorProyecto']);
     
     // Generación de número

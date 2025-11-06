@@ -27,6 +27,7 @@ import Reporteria from '../Reporteria/Reporteria';
 const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
+  const [ingresoMaterialesTab, setIngresoMaterialesTab] = useState(null); // Para controlar el tab de Ingreso Materiales
   
   // Usar el usuario de props si está disponible, sino del localStorage
   const user = propUser || JSON.parse(localStorage.getItem('user') || '{}');
@@ -40,7 +41,30 @@ const Layout = ({ onLogout, user: propUser }) => {
 
   const handleModuleChange = (moduleId) => {
     setActiveModule(moduleId);
+    // Resetear el tab cuando se cambia de módulo manualmente
+    setIngresoMaterialesTab(null);
   };
+
+  // Escuchar evento personalizado para cambiar de módulo desde otros componentes
+  useEffect(() => {
+    const handleCambiarModulo = (event) => {
+      const { modulo, tab } = event.detail;
+      setActiveModule(modulo);
+      
+      // Si se especifica un tab para Ingreso Materiales, guardarlo
+      if (modulo === 'ingreso-materiales' && tab) {
+        setIngresoMaterialesTab(tab);
+      } else {
+        setIngresoMaterialesTab(null);
+      }
+    };
+
+    window.addEventListener('cambiarModulo', handleCambiarModulo);
+
+    return () => {
+      window.removeEventListener('cambiarModulo', handleCambiarModulo);
+    };
+  }, []);
 
   const renderContent = () => {
     switch (activeModule) {
@@ -61,7 +85,7 @@ const Layout = ({ onLogout, user: propUser }) => {
       case 'eliminar-oc':
         return <EliminarOCS />;
       case 'ingreso-materiales':
-        return <IngresoMateriales />;
+        return <IngresoMateriales initialTab={ingresoMaterialesTab} />;
       case 'traslado-materiales':
         return <TrasladoMateriales />;
       case 'salida-materiales':

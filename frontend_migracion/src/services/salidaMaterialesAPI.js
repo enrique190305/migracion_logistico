@@ -12,19 +12,37 @@ const salidaMaterialesAPI = {
       return response.data;
     } catch (error) {
       console.error('Error al listar proyectos:', error);
+      if (error.response) {
+        // El servidor respondió con un código de error
+        console.error('Respuesta del servidor:', error.response.data);
+        console.error('Código de estado:', error.response.status);
+      } else if (error.request) {
+        // La solicitud se realizó pero no hubo respuesta
+        console.error('No se recibió respuesta del servidor');
+      } else {
+        // Algo sucedió al configurar la solicitud
+        console.error('Error al configurar la solicitud:', error.message);
+      }
       throw error;
     }
   },
 
   /**
-   * Listar trabajadores (personal)
+   * Obtener información del proyecto (incluye datos de movil_persona)
+   * @param {number} idProyecto - ID del proyecto
    */
-  listarTrabajadores: async () => {
+  obtenerInfoProyecto: async (idProyecto) => {
     try {
-      const response = await axios.get(`${API_URL}/trabajadores`);
+      const response = await axios.get(`${API_URL}/proyecto/${idProyecto}`);
       return response.data;
     } catch (error) {
-      console.error('Error al listar trabajadores:', error);
+      console.error('Error al obtener información del proyecto:', error);
+      if (error.response) {
+        console.error('Respuesta del servidor:', error.response.data);
+        console.error('Código de estado:', error.response.status);
+      } else if (error.request) {
+        console.error('No se recibió respuesta del servidor');
+      }
       throw error;
     }
   },
@@ -35,12 +53,20 @@ const salidaMaterialesAPI = {
    */
   obtenerProductosPorProyecto: async (nombreProyecto) => {
     try {
+      console.log('Buscando productos para proyecto:', nombreProyecto);
       const response = await axios.get(`${API_URL}/productos-por-proyecto`, {
         params: { proyecto: nombreProyecto }
       });
+      console.log('Productos obtenidos:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error al obtener productos:', error);
+      if (error.response) {
+        console.error('Respuesta del servidor:', error.response.data);
+        console.error('Código de estado:', error.response.status);
+      } else if (error.request) {
+        console.error('No se recibió respuesta del servidor');
+      }
       throw error;
     }
   },
@@ -54,6 +80,12 @@ const salidaMaterialesAPI = {
       return response.data;
     } catch (error) {
       console.error('Error al generar número:', error);
+      if (error.response) {
+        console.error('Respuesta del servidor:', error.response.data);
+        console.error('Código de estado:', error.response.status);
+      } else if (error.request) {
+        console.error('No se recibió respuesta del servidor');
+      }
       throw error;
     }
   },

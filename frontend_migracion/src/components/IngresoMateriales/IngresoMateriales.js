@@ -3,13 +3,13 @@ import './IngresoMateriales.css';
 import ingresoMaterialesAPI from '../../services/ingresoMaterialesAPI';
 import { obtenerBodegas, obtenerReservasPorBodega } from '../../services/bodegasAPI';
 
-const IngresoMateriales = () => {
+const IngresoMateriales = ({ initialTab }) => {
   // ============================================
   // ESTADOS PRINCIPALES
   // ============================================
   
-  // Tab activo principal
-  const [tabActivo, setTabActivo] = useState('nuevo');
+  // Tab activo principal (usa initialTab si está disponible, sino 'nuevo')
+  const [tabActivo, setTabActivo] = useState(initialTab || 'nuevo');
   
   // Sub-tab para historial (OC, OS, ID)
   const [tabHistorial, setTabHistorial] = useState('oc');
@@ -77,6 +77,13 @@ const IngresoMateriales = () => {
   useEffect(() => {
     cargarDatosIniciales();
   }, []);
+
+  // Actualizar el tab cuando cambie initialTab desde el Layout
+  useEffect(() => {
+    if (initialTab) {
+      setTabActivo(initialTab);
+    }
+  }, [initialTab]);
 
   useEffect(() => {
     if (tabActivo === 'historial') {

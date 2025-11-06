@@ -13,13 +13,15 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class SalidaMaterialController extends Controller
 {
     /**
-     * Listar proyectos disponibles
+     * Listar proyectos disponibles (SOLO tipo SIN_PROYECTO - movil_persona)
      */
     public function listarProyectos()
     {
         try {
             $proyectos = DB::table('proyecto_almacen')
-                ->select('id_proyecto', 'nombre_proyecto')
+                ->select('id_proyecto_almacen as id_proyecto', 'nombre_proyecto', 'tipo_movil')
+                ->where('estado', 'ACTIVO')
+                ->where('tipo_movil', 'SIN_PROYECTO') // SOLO movil_persona
                 ->orderBy('nombre_proyecto')
                 ->get();
 
@@ -37,29 +39,51 @@ class SalidaMaterialController extends Controller
     }
 
     /**
-     * Listar trabajadores (personal)
+     * Obtener información del proyecto incluyendo datos de movil_persona ÚNICAMENTE
+     * IMPORTANTE: Solo se usa movil_persona, se ignora movil_proyecto
      */
-    public function listarTrabajadores()
+    public function obtenerInfoProyecto($idProyecto)
     {
         try {
-            $trabajadores = DB::table('personal')
+            // Obtener información del proyecto
+            $proyecto = DB::table('proyecto_almacen as pa')
+                ->leftJoin('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
+                ->where('pa.id_proyecto_almacen', $idProyecto)
+                ->where('pa.tipo_movil', 'SIN_PROYECTO') // SOLO SIN_PROYECTO (movil_persona)
                 ->select(
-                    'id_personal',
-                    'nom_ape',
-                    'dni',
-                    'area'
+                    'pa.id_proyecto_almacen',
+                    'pa.nombre_proyecto',
+                    'pa.tipo_movil',
+                    'pa.id_referencia',
+                    'r.tipo_reserva as area'
                 )
-                ->orderBy('nom_ape')
-                ->get();
+                ->first();
+
+            if (!$proyecto) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Proyecto no encontrado o no es de tipo SIN_PROYECTO (movil_persona)'
+                ], 404);
+            }
+
+            // Obtener datos de movil_persona
+            $movilPersona = DB::table('movil_persona')
+                ->where('id_movil_persona', $proyecto->id_referencia)
+                ->select('nom_ape', 'dni')
+                ->first();
+
+            // Combinar datos
+            $proyecto->trabajador = $movilPersona->nom_ape ?? '';
+            $proyecto->dni = $movilPersona->dni ?? '';
 
             return response()->json([
                 'success' => true,
-                'data' => $trabajadores
+                'data' => $proyecto
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener trabajadores',
+                'message' => 'Error al obtener información del proyecto',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -91,7 +115,7 @@ class SalidaMaterialController extends Controller
                         ELSE -mk.cantidad 
                     END) as stock_actual
                 FROM movimiento_kardex mk
-                WHERE TRIM(mk.proyecto_almacen) = ?
+                WHERE TRIM(mk.proyecto) = ?
                 GROUP BY mk.codigo_producto, mk.descripcion, mk.unidad
                 HAVING SUM(CASE 
                     WHEN mk.tipo_movimiento = 'INGRESO' THEN mk.cantidad 
@@ -149,7 +173,9 @@ class SalidaMaterialController extends Controller
             $validator = Validator::make($request->all(), [
                 'numero_salida' => 'required|string',
                 'proyecto_almacen' => 'required|string',
-                'id_personal' => 'required|integer',
+                'trabajador' => 'required|string',
+                'dni' => 'required|string',
+                'area' => 'required|string',
                 'fecha_salida' => 'required|date',
                 'productos' => 'required|array|min:1',
                 'productos.*.codigo_producto' => 'required|string',
@@ -166,14 +192,14 @@ class SalidaMaterialController extends Controller
 
             DB::beginTransaction();
 
-            // Insertar salida principal
+            // Insertar salida principal (usando datos directos de movil_persona)
             DB::table('salidas_materiales')->insert([
                 'numero_salida' => $request->numero_salida,
-                'proyecto_almacen' => $request->proyecto_almacen,
-                'id_personal' => $request->id_personal,
-                'fecha_salida' => $request->fecha_salida,
-                'observaciones' => $request->observaciones ?? null,
-                'usuario_registro' => 'admin', // Temporal
+                'proyecto' => $request->proyecto_almacen,
+                'nom_ape' => $request->trabajador,
+                'dni' => $request->dni,
+                'area' => $request->area, // Tipo de reserva: EXTERNA, INTERNA, COMERCIAL
+                'id_personal' => 0, // No se usa, pero requerido por la tabla
                 'fecha_registro' => now()
             ]);
 
@@ -210,13 +236,14 @@ class SalidaMaterialController extends Controller
                 // Insertar movimiento en kardex (SALIDA)
                 DB::table('movimiento_kardex')->insert([
                     'codigo_producto' => $producto['codigo_producto'],
+                    'descripcion' => $producto['descripcion'],
+                    'unidad' => $producto['unidad'],
                     'tipo_movimiento' => 'SALIDA',
                     'cantidad' => $producto['cantidad'],
                     'stock_anterior' => $stock,
                     'stock_nuevo' => $stock - $producto['cantidad'],
                     'fecha_movimiento' => $request->fecha_salida,
                     'proyecto_almacen' => $request->proyecto_almacen,
-                    'id_bodega' => $request->id_bodega, // ✅ Agregar id_bodega
                     'documento_referencia' => $request->numero_salida,
                     'observaciones' => "Salida de material - {$request->numero_salida}",
                     'usuario_registro' => 'admin',
@@ -263,17 +290,16 @@ class SalidaMaterialController extends Controller
                     'sm.nom_ape as trabajador',
                     'sm.area',
                     'sm.dni',
-                    'sm.id_personal',
                     DB::raw('(SELECT COUNT(*) FROM detalle_salida WHERE numero_salida = sm.numero_salida) as total_productos')
                 )
                 ->orderBy('sm.fecha_registro', 'desc');
 
             // Filtros opcionales
             if ($request->has('fecha_desde')) {
-                $query->where('sm.fecha_registro', '>=', $request->fecha_desde);
+                $query->whereDate('sm.fecha_registro', '>=', $request->fecha_desde);
             }
             if ($request->has('fecha_hasta')) {
-                $query->where('sm.fecha_registro', '<=', $request->fecha_hasta);
+                $query->whereDate('sm.fecha_registro', '<=', $request->fecha_hasta);
             }
             if ($request->has('proyecto')) {
                 $query->where('sm.proyecto', 'LIKE', '%' . $request->proyecto . '%');
@@ -309,8 +335,7 @@ class SalidaMaterialController extends Controller
                     'sm.fecha_registro as fecha_salida',
                     'sm.nom_ape as trabajador',
                     'sm.dni',
-                    'sm.area',
-                    'sm.id_personal'
+                    'sm.area'
                 )
                 ->first();
 
@@ -354,7 +379,7 @@ class SalidaMaterialController extends Controller
     public function generarPDF($numeroSalida)
     {
         try {
-            // Obtener datos de la salida (sin JOIN, campos ya están en la tabla)
+            // Obtener datos de la salida (sin JOIN, datos ya están en la tabla)
             $salida = DB::table('salidas_materiales as sm')
                 ->select(
                     'sm.numero_salida',
@@ -362,8 +387,7 @@ class SalidaMaterialController extends Controller
                     'sm.fecha_registro as fecha_salida',
                     'sm.nom_ape as trabajador',
                     'sm.dni',
-                    'sm.area',
-                    'sm.id_personal'
+                    'sm.area'
                 )
                 ->where('sm.numero_salida', $numeroSalida)
                 ->first();

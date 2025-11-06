@@ -1,7 +1,7 @@
 import React from 'react';
 import './Notificacion.css';
 
-const Notificacion = ({ tipo, titulo, mensaje, detalles, onClose, mostrarBoton = true }) => {
+const Notificacion = ({ tipo, titulo, mensaje, detalles, onClose, mostrarBoton = true, onAction, actionLabel }) => {
   // Configuración según el tipo de notificación
   const configs = {
     success: {
@@ -68,19 +68,37 @@ const Notificacion = ({ tipo, titulo, mensaje, detalles, onClose, mostrarBoton =
           </div>
         )}
 
-        {/* Botón de acción */}
-        {mostrarBoton && (
-          <button 
-            className="notificacion-boton" 
-            onClick={onClose}
-            style={{ 
-              backgroundColor: config.color,
-              borderColor: config.color 
-            }}
-          >
-            {tipo === 'success' ? 'Entendido' : tipo === 'error' ? 'Cerrar' : 'Aceptar'}
-          </button>
-        )}
+        {/* Botones de acción */}
+        <div className="notificacion-botones">
+          {/* Botón de acción personalizado (si existe) */}
+          {onAction && actionLabel && (
+            <button 
+              className="notificacion-boton notificacion-boton-accion" 
+              onClick={onAction}
+              style={{ 
+                backgroundColor: '#007bff',
+                borderColor: '#007bff',
+                marginRight: '10px'
+              }}
+            >
+              {actionLabel}
+            </button>
+          )}
+          
+          {/* Botón de cerrar */}
+          {mostrarBoton && (
+            <button 
+              className="notificacion-boton" 
+              onClick={onClose}
+              style={{ 
+                backgroundColor: onAction ? '#6c757d' : config.color,
+                borderColor: onAction ? '#6c757d' : config.color 
+              }}
+            >
+              {onAction ? 'Cancelar' : (tipo === 'success' ? 'Entendido' : tipo === 'error' ? 'Cerrar' : 'Aceptar')}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

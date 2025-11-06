@@ -14,7 +14,8 @@ const SalidaMateriales = () => {
 
   // Estados del formulario principal
   const [numeroSalida, setNumeroSalida] = useState('');
-  const [proyectoSeleccionado, setProyectoSeleccionado] = useState('');
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(''); // ID del proyecto
+  const [nombreProyecto, setNombreProyecto] = useState(''); // Nombre del proyecto para mostrar
   const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState('');
   const [fechaSalida, setFechaSalida] = useState(new Date().toISOString().split('T')[0]);
   const [dniTrabajador, setDniTrabajador] = useState('');
@@ -71,17 +72,14 @@ const SalidaMateriales = () => {
         setProyectos(respProyectos.data);
       }
 
-      // Cargar trabajadores
-      const respTrabajadores = await salidaMaterialesAPI.listarTrabajadores();
-      if (respTrabajadores.success) {
-        setTrabajadores(respTrabajadores.data);
-      }
-
       // Generar número de salida
       const respNumero = await salidaMaterialesAPI.generarNumeroSalida();
       if (respNumero.success) {
         setNumeroSalida(respNumero.numero_salida);
       }
+
+      // Establecer fecha actual (bloqueada)
+      setFechaSalida(new Date().toISOString().split('T')[0]);
 
     } catch (error) {
       console.error('Error al cargar datos iniciales:', error);
@@ -143,36 +141,55 @@ const SalidaMateriales = () => {
   // MANEJADORES DE EVENTOS
   // ============================================
 
-  const handleSeleccionProyecto = async (nombreProyecto) => {
-    setProyectoSeleccionado(nombreProyecto);
+  const handleSeleccionProyecto = async (idProyecto) => {
+    if (!idProyecto) {
+      setProyectoSeleccionado('');
+      setNombreProyecto('');
+      setTrabajadorSeleccionado('');
+      setDniTrabajador('');
+      setAreaTrabajador('');
+      setProductosDisponibles([]);
+      return;
+    }
+
+    try {
+      setCargando(true);
+      
+      // Obtener información del proyecto (incluye datos de movil_persona)
+      const response = await salidaMaterialesAPI.obtenerInfoProyecto(idProyecto);
+      
+      if (response.success && response.data) {
+        const proyecto = response.data;
+        
+        // Establecer proyecto seleccionado (ID y nombre)
+        setProyectoSeleccionado(idProyecto);
+        setNombreProyecto(proyecto.nombre_proyecto);
+        
+        // Autocompletar datos del trabajador (de movil_persona)
+        setTrabajadorSeleccionado(proyecto.trabajador || '');
+        setDniTrabajador(proyecto.dni || '');
+        setAreaTrabajador(proyecto.area || ''); // Tipo de reserva: EXTERNA, INTERNA, COMERCIAL
+        
+        // Cargar productos del proyecto
+        await cargarProductosPorProyecto(proyecto.nombre_proyecto);
+      }
+    } catch (error) {
+      console.error('Error al seleccionar proyecto:', error);
+      mostrarMensaje('error', 'Error al cargar información del proyecto');
+    } finally {
+      setCargando(false);
+    }
     
-    // Limpiar productos
-    setProductosDisponibles([]);
+    // Limpiar productos seleccionados
     setProductoSeleccionado('');
     setDescripcionProducto('');
     setCodigoProducto('');
     setUnidadProducto('');
     setStockDisponible('');
-    
-    if (nombreProyecto) {
-      await cargarProductosPorProyecto(nombreProyecto);
-    }
   };
 
-  const handleSeleccionTrabajador = (idTrabajador) => {
-    setTrabajadorSeleccionado(idTrabajador);
-    
-    if (idTrabajador) {
-      const trabajador = trabajadores.find(t => t.id_personal === parseInt(idTrabajador));
-      if (trabajador) {
-        setDniTrabajador(trabajador.dni || '');
-        setAreaTrabajador(trabajador.area || '');
-      }
-    } else {
-      setDniTrabajador('');
-      setAreaTrabajador('');
-    }
-  };
+  // Función removida: Los datos del trabajador ahora se cargan automáticamente desde movil_persona
+  // al seleccionar el proyecto
 
   const handleSeleccionProducto = (descripcion) => {
     setProductoSeleccionado(descripcion);
@@ -278,8 +295,10 @@ const SalidaMateriales = () => {
     // Preparar datos
     const datosSalida = {
       numero_salida: numeroSalida,
-      proyecto_almacen: proyectoSeleccionado,
-      id_personal: parseInt(trabajadorSeleccionado),
+      proyecto_almacen: nombreProyecto, // Nombre del proyecto (no el ID)
+      trabajador: trabajadorSeleccionado, // Nombre del trabajador desde movil_persona
+      dni: dniTrabajador,
+      area: areaTrabajador, // Tipo de reserva
       fecha_salida: fechaSalida,
       observaciones: '',
       productos: productosAgregados
@@ -321,6 +340,7 @@ const SalidaMateriales = () => {
 
   const limpiarFormulario = () => {
     setProyectoSeleccionado('');
+    setNombreProyecto('');
     setTrabajadorSeleccionado('');
     setDniTrabajador('');
     setAreaTrabajador('');
@@ -449,7 +469,7 @@ const SalidaMateriales = () => {
                 />
               </div>
 
-              {/* Fecha */}
+              {/* Fecha - BLOQUEADO */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
                   📅 Fecha de Salida *
@@ -458,7 +478,8 @@ const SalidaMateriales = () => {
                   type="date"
                   className="salida-form-input"
                   value={fechaSalida}
-                  onChange={(e) => setFechaSalida(e.target.value)}
+                  disabled
+                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
                 />
               </div>
 
@@ -474,7 +495,7 @@ const SalidaMateriales = () => {
                 >
                   <option value="">-- Seleccione proyecto --</option>
                   {proyectos.map((proyecto) => (
-                    <option key={proyecto.id_proyecto} value={proyecto.nombre_proyecto}>
+                    <option key={proyecto.id_proyecto} value={proyecto.id_proyecto}>
                       {proyecto.nombre_proyecto}
                     </option>
                   ))}
@@ -485,26 +506,22 @@ const SalidaMateriales = () => {
 
             <div className="salida-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Trabajador */}
+              {/* Trabajador - BLOQUEADO (autocompletado desde movil_persona) */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
                   👤 Trabajador *
                 </label>
-                <select
-                  className="salida-form-select"
+                <input
+                  type="text"
+                  className="salida-form-input"
                   value={trabajadorSeleccionado}
-                  onChange={(e) => handleSeleccionTrabajador(e.target.value)}
-                >
-                  <option value="">-- Seleccione trabajador --</option>
-                  {trabajadores.map((trabajador) => (
-                    <option key={trabajador.id_personal} value={trabajador.id_personal}>
-                      {trabajador.nom_ape}
-                    </option>
-                  ))}
-                </select>
+                  disabled
+                  placeholder="Se autocompleta al seleccionar proyecto"
+                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
+                />
               </div>
 
-              {/* DNI */}
+              {/* DNI - BLOQUEADO (autocompletado desde movil_persona) */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
                   🆔 DNI
@@ -514,10 +531,12 @@ const SalidaMateriales = () => {
                   className="salida-form-input"
                   value={dniTrabajador}
                   disabled
+                  placeholder="Se autocompleta al seleccionar proyecto"
+                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
                 />
               </div>
 
-              {/* Área */}
+              {/* Área (Tipo Reserva) - BLOQUEADO (autocompletado desde reserva) */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
                   📂 Área
@@ -527,6 +546,8 @@ const SalidaMateriales = () => {
                   className="salida-form-input"
                   value={areaTrabajador}
                   disabled
+                  placeholder="EXTERNA / INTERNA / COMERCIAL"
+                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
                 />
               </div>
 

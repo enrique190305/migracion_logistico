@@ -232,9 +232,17 @@ select.form-input:focus {
 
 .form-input:disabled,
 .form-input[readonly] {
-  background-color: #f5f5f5;
+  background-color: #e9ecef;
   cursor: not-allowed;
-  color: #666;
+  color: #495057;
+  border-color: #ced4da;
+  font-weight: 500;
+  opacity: 1;
+}
+
+.form-input[readonly]:hover {
+  border-color: #ced4da;
+  box-shadow: none;
 }
 
 .form-textarea {
