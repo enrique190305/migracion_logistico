@@ -86,6 +86,22 @@ const ingresoMaterialesAPI = {
     },
 
     /**
+     * Obtener reservas disponibles para una bodega específica
+     * @param {number} idBodega - ID de la bodega
+     */
+    async obtenerReservasPorBodega(idBodega) {
+        try {
+            console.log('🔍 Obteniendo reservas para bodega:', idBodega);
+            const response = await axios.get(`${API_URL}/reservas/bodega/${idBodega}`);
+            console.log('✅ Reservas obtenidas:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Error al obtener reservas:', error);
+            return { success: false, data: [], message: 'Error al obtener reservas' };
+        }
+    },
+
+    /**
      * Guardar ingreso de material o conformidad de servicio
      * @param {Object} datos - Datos del ingreso
      * @param {string} datos.correlativo - Correlativo de OC o OS

@@ -91,6 +91,9 @@ Route::prefix('ingreso-materiales')->group(function () {
     Route::get('/productos', [IngresoMaterialController::class, 'listarProductos']);
     Route::get('/generar-numero', [IngresoMaterialController::class, 'generarNumeroIngreso']);
     
+    // Reservas por bodega
+    Route::get('/reservas/bodega/{id}', [IngresoMaterialController::class, 'obtenerReservasPorBodega']);
+    
     // Información de órdenes
     Route::post('/info-orden', [IngresoMaterialController::class, 'obtenerInfoOrden']);
     Route::post('/precargar-productos', [IngresoMaterialController::class, 'precargarProductos']);
@@ -132,6 +135,12 @@ Route::prefix('traslado-materiales')->group(function () {
     // Listar reservas disponibles (NUEVO)
     Route::get('/reservas', [TrasladoMaterialesController::class, 'listarReservas']);
     
+    // ✨ NUEVO: Listar bodegas con sus reservas (para traslado entre bodegas)
+    Route::get('/bodegas-con-reservas', [TrasladoMaterialesController::class, 'listarBodegasConReservas']);
+    
+    // ✨ NUEVO: Obtener productos disponibles en bodega+reserva
+    Route::get('/bodegas/{idBodega}/reservas/{idReserva}/productos', [TrasladoMaterialesController::class, 'obtenerProductosDisponibles']);
+    
     // Productos con stock por proyecto (LEGACY)
     Route::get('/proyectos/{id}/productos-stock', [TrasladoMaterialesController::class, 'productosConStock']);
     
@@ -144,8 +153,11 @@ Route::prefix('traslado-materiales')->group(function () {
     // Guardar traslado (LEGACY - entre proyectos)
     Route::post('/', [TrasladoMaterialesController::class, 'store']);
     
-    // Guardar traslado entre reservas (NUEVO)
+    // Guardar traslado entre reservas (LEGACY - mantener compatibilidad)
     Route::post('/con-reservas', [TrasladoMaterialesController::class, 'storeConReservas']);
+    
+    // ✨ NUEVO: Guardar traslado entre bodegas y reservas (FLUJO ACTUALIZADO)
+    Route::post('/guardar', [TrasladoMaterialesController::class, 'guardarTraslado']);
     
     // Historial de traslados
     Route::get('/historial', [TrasladoMaterialesController::class, 'historial']);

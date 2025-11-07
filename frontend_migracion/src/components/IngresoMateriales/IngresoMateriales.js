@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './IngresoMateriales.css';
 import ingresoMaterialesAPI from '../../services/ingresoMaterialesAPI';
-import { obtenerBodegas, obtenerReservasPorBodega } from '../../services/bodegasAPI';
+import { obtenerBodegas } from '../../services/bodegasAPI';
 
 const IngresoMateriales = ({ initialTab }) => {
   // ============================================
@@ -20,6 +20,7 @@ const IngresoMateriales = ({ initialTab }) => {
   const [fechaIngreso, setFechaIngreso] = useState(new Date().toISOString().split('T')[0]);
   const [proveedor, setProveedor] = useState('');
   const [razonSocial, setRazonSocial] = useState('');
+  const [idEmpresaOrden, setIdEmpresaOrden] = useState(''); // ID de la empresa de la orden
   const [estado, setEstado] = useState('');
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState('');
   const [reservaSeleccionada, setReservaSeleccionada] = useState('');
@@ -47,7 +48,8 @@ const IngresoMateriales = ({ initialTab }) => {
 
   // Catálogos
   const [ordenesPendientes, setOrdenesPendientes] = useState([]);
-  const [bodegas, setBodegas] = useState([]);
+  const [bodegas, setBodegas] = useState([]); // Todas las bodegas
+  const [bodegasFiltradas, setBodegasFiltradas] = useState([]); // Bodegas filtradas por empresa
   const [reservas, setReservas] = useState([]);
   const [productos, setProductos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
@@ -162,12 +164,18 @@ const IngresoMateriales = ({ initialTab }) => {
 
   const cargarReservasPorBodega = async (idBodega) => {
     try {
-      const respReservas = await obtenerReservasPorBodega(idBodega);
+      console.log('📍 Cargando reservas para bodega:', idBodega);
+      const respReservas = await ingresoMaterialesAPI.obtenerReservasPorBodega(idBodega);
+      console.log('📍 Respuesta de reservas:', respReservas);
       if (respReservas.success) {
+        console.log('✅ Reservas cargadas:', respReservas.data);
         setReservas(respReservas.data || []);
+      } else {
+        console.error('❌ Error en respuesta:', respReservas);
+        setReservas([]);
       }
     } catch (error) {
-      console.error('Error al cargar reservas:', error);
+      console.error('❌ Error al cargar reservas:', error);
       setReservas([]);
     }
   };
@@ -222,8 +230,18 @@ const IngresoMateriales = ({ initialTab }) => {
         const orden = respInfo.data;
         setProveedor(orden.proveedor);
         setRazonSocial(orden.razon_social);
+        setIdEmpresaOrden(orden.id_empresa); // Guardar ID de empresa
         setEstado(orden.estado);
         setFechaIngreso(orden.fecha);
+
+        // Filtrar bodegas por empresa
+        const bodegasPorEmpresa = bodegas.filter(b => b.empresa?.id_empresa === orden.id_empresa);
+        console.log('🏢 Bodegas filtradas para empresa', orden.razon_social, ':', bodegasPorEmpresa);
+        setBodegasFiltradas(bodegasPorEmpresa);
+        
+        // Reset bodega y reserva seleccionadas
+        setBodegaSeleccionada('');
+        setReservaSeleccionada('');
       }
 
     } catch (error) {
@@ -421,8 +439,10 @@ const IngresoMateriales = ({ initialTab }) => {
     setOrdenSeleccionada('');
     setProveedor('');
     setRazonSocial('');
+    setIdEmpresaOrden('');
     setEstado('');
     setBodegaSeleccionada('');
+    setBodegasFiltradas([]); // Limpiar bodegas filtradas
     setReservaSeleccionada('');
     setReservas([]);
     setNumGuia('');
@@ -629,14 +649,22 @@ const IngresoMateriales = ({ initialTab }) => {
                   className="ingreso-form-select"
                   value={bodegaSeleccionada}
                   onChange={(e) => setBodegaSeleccionada(e.target.value)}
+                  disabled={!ordenSeleccionada}
                 >
-                  <option value="">-- Seleccione bodega --</option>
-                  {bodegas.map((bodega) => (
+                  <option value="">
+                    {ordenSeleccionada ? '-- Seleccione bodega --' : '-- Primero seleccione orden --'}
+                  </option>
+                  {bodegasFiltradas.map((bodega) => (
                     <option key={bodega.id_bodega} value={bodega.id_bodega}>
                       {bodega.nombre}
                     </option>
                   ))}
                 </select>
+                {ordenSeleccionada && bodegasFiltradas.length === 0 && (
+                  <small style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>
+                    ⚠️ No hay bodegas disponibles para la empresa: {razonSocial}
+                  </small>
+                )}
               </div>
 
               <div className="ingreso-form-group">

@@ -11,8 +11,10 @@ const TrasladoMateriales = () => {
   
   // Información del Traslado
   const [numeroTraslado, setNumeroTraslado] = useState('NT-003');
-  const [reservaOrigen, setReservaOrigen] = useState('');           // CAMBIADO de proyectoOrigen
-  const [reservaDestino, setReservaDestino] = useState('');         // CAMBIADO de proyectoDestino
+  const [bodegaOrigen, setBodegaOrigen] = useState('');             // ✨ NUEVO
+  const [reservaOrigen, setReservaOrigen] = useState('');
+  const [bodegaDestino, setBodegaDestino] = useState('');           // ✨ NUEVO
+  const [reservaDestino, setReservaDestino] = useState('');
   const [fechaTraslado, setFechaTraslado] = useState(new Date().toISOString().split('T')[0]);
   const [observacionesGenerales, setObservacionesGenerales] = useState('');
 
@@ -28,7 +30,9 @@ const TrasladoMateriales = () => {
   const [productosATraslador, setProductosATraslador] = useState([]);
 
   // Catálogos
-  const [reservas, setReservas] = useState([]);                     // CAMBIADO de proyectos
+  const [bodegas, setBodegas] = useState([]);                       // ✨ NUEVO: Lista de bodegas con reservas
+  const [reservasOrigen, setReservasOrigen] = useState([]);         // ✨ NUEVO: Reservas de bodega origen
+  const [reservasDestino, setReservasDestino] = useState([]);       // ✨ NUEVO: Reservas de bodega destino
   const [productos, setProductos] = useState([]);
   const [descripcionesProductos, setDescripcionesProductos] = useState([]);
 
@@ -49,14 +53,15 @@ const TrasladoMateriales = () => {
     cargarDatosIniciales();
   }, []);
 
+  // ✨ NUEVO: Cargar productos cuando cambia bodega + reserva origen
   useEffect(() => {
-    if (reservaOrigen) {
-      cargarProductosDeLaReserva(reservaOrigen);  // CAMBIADO
+    if (bodegaOrigen && reservaOrigen) {
+      cargarProductosDisponibles(bodegaOrigen, reservaOrigen);
     } else {
       setDescripcionesProductos([]);
       limpiarDetalleProducto();
     }
-  }, [reservaOrigen]);  // CAMBIADO
+  }, [bodegaOrigen, reservaOrigen]);
 
   useEffect(() => {
     if (descripcionSeleccionada) {
@@ -74,12 +79,12 @@ const TrasladoMateriales = () => {
     try {
       setCargando(true);
 
-      // CAMBIADO: Cargar reservas en lugar de proyectos
-      const respReservas = await obtenerReservasParaTraslado();
-      if (respReservas.success) {
-        setReservas(respReservas.data || []);
+      // ✨ NUEVO: Cargar bodegas con reservas
+      const respBodegas = await trasladoMaterialesAPI.obtenerBodegasConReservas();
+      if (respBodegas.success) {
+        setBodegas(respBodegas.data || []);
       } else {
-        mostrarMensaje('error', respReservas.message || 'Error al cargar reservas');
+        mostrarMensaje('error', respBodegas.message || 'Error al cargar bodegas');
       }
 
       // Generar número de traslado
@@ -98,25 +103,21 @@ const TrasladoMateriales = () => {
     }
   };
 
-  // NUEVO: Cargar productos de una reserva
-  const cargarProductosDeLaReserva = async (idReserva) => {
+  // ✨ NUEVO: Cargar productos disponibles por bodega + reserva
+  const cargarProductosDisponibles = async (idBodega, idReserva) => {
     try {
       setCargando(true);
 
-      // Llamar al API para obtener productos con stock en la reserva
-      const respProductos = await obtenerProductosConStockReserva(idReserva);
+      const respProductos = await trasladoMaterialesAPI.obtenerProductosDisponibles(idBodega, idReserva);
       
-      // Validar si la bodega no tiene productos
       if (!respProductos.success) {
         setProductos([]);
         setDescripcionesProductos([]);
-        // Mostrar mensaje amigable al usuario
-        mostrarMensaje('warning', respProductos.message || 'Esta bodega no tiene productos disponibles para trasladar');
+        mostrarMensaje('warning', respProductos.message || 'No hay productos disponibles');
         return;
       }
 
       if (respProductos.data && respProductos.data.length > 0) {
-        // Formatear productos
         const productosFormateados = respProductos.data.map(p => ({
           codigo: p.codigo_producto,
           descripcion: p.descripcion,
@@ -130,12 +131,12 @@ const TrasladoMateriales = () => {
       } else {
         setProductos([]);
         setDescripcionesProductos([]);
-        mostrarMensaje('warning', 'No hay productos con stock en esta reserva');
+        mostrarMensaje('warning', 'No hay productos con stock en esta bodega/reserva');
       }
 
     } catch (error) {
-      console.error('Error al cargar productos de la reserva:', error);
-      mostrarMensaje('error', 'Error al cargar los productos de la reserva');
+      console.error('Error al cargar productos:', error);
+      mostrarMensaje('error', 'Error al cargar los productos disponibles');
       setProductos([]);
       setDescripcionesProductos([]);
     } finally {
@@ -156,6 +157,45 @@ const TrasladoMateriales = () => {
   // ============================================
   // MANEJADORES DE EVENTOS
   // ============================================
+
+  // ✨ NUEVO: Manejar cambio de bodega origen
+  const handleBodegaOrigenChange = (e) => {
+    const idBodega = e.target.value;
+    setBodegaOrigen(idBodega);
+    setReservaOrigen('');
+    setProductos([]);
+    setDescripcionesProductos([]);
+    limpiarDetalleProducto();
+    
+    // Cargar reservas de esta bodega
+    const bodega = bodegas.find(b => b.id_bodega === parseInt(idBodega));
+    setReservasOrigen(bodega?.reservas || []);
+  };
+
+  // ✨ NUEVO: Manejar cambio de bodega destino
+  const handleBodegaDestinoChange = (e) => {
+    const idBodega = e.target.value;
+    setBodegaDestino(idBodega);
+    setReservaDestino('');
+    
+    // Cargar reservas de esta bodega
+    const bodega = bodegas.find(b => b.id_bodega === parseInt(idBodega));
+    setReservasDestino(bodega?.reservas || []);
+  };
+
+  // ✨ NUEVO: Validar que destino sea diferente a origen
+  const handleReservaDestinoChange = (e) => {
+    const idReserva = e.target.value;
+    
+    // Validar que no sea igual al origen
+    if (bodegaOrigen === bodegaDestino && reservaOrigen === idReserva) {
+      mostrarMensaje('error', '❌ La bodega/reserva destino debe ser diferente al origen');
+      setReservaDestino('');
+      return;
+    }
+    
+    setReservaDestino(idReserva);
+  };
 
   const handleAgregarProducto = () => {
     // Validaciones
@@ -237,8 +277,12 @@ const TrasladoMateriales = () => {
 
   const handleLimpiar = () => {
     if (window.confirm('¿Está seguro que desea limpiar el formulario?')) {
-      setReservaOrigen('');      // CAMBIADO
-      setReservaDestino('');     // CAMBIADO
+      setBodegaOrigen('');              // ✨ NUEVO
+      setReservaOrigen('');
+      setBodegaDestino('');             // ✨ NUEVO
+      setReservaDestino('');
+      setReservasOrigen([]);            // ✨ NUEVO
+      setReservasDestino([]);           // ✨ NUEVO
       setFechaTraslado(new Date().toISOString().split('T')[0]);
       setObservacionesGenerales('');
       setProductosATraslador([]);
@@ -252,8 +296,18 @@ const TrasladoMateriales = () => {
 
   const handleGuardarYGenerarPDF = async () => {
     // Validaciones
+    if (!bodegaOrigen) {
+      mostrarMensaje('error', '❌ Debe seleccionar una bodega de origen');
+      return;
+    }
+
     if (!reservaOrigen) {
       mostrarMensaje('error', '❌ Debe seleccionar una reserva de origen');
+      return;
+    }
+
+    if (!bodegaDestino) {
+      mostrarMensaje('error', '❌ Debe seleccionar una bodega de destino');
       return;
     }
 
@@ -262,8 +316,9 @@ const TrasladoMateriales = () => {
       return;
     }
 
-    if (reservaOrigen === reservaDestino) {
-      mostrarMensaje('error', '❌ La reserva de origen y destino no pueden ser la misma');
+    // ✨ Validar que origen y destino sean diferentes
+    if (bodegaOrigen === bodegaDestino && reservaOrigen === reservaDestino) {
+      mostrarMensaje('error', '❌ La bodega/reserva de origen y destino deben ser diferentes');
       return;
     }
 
@@ -272,49 +327,28 @@ const TrasladoMateriales = () => {
       return;
     }
 
-    // NUEVO: Validar stock disponible antes de guardar
-    for (const producto of productosATraslador) {
-      try {
-        const validacion = await verificarDisponibilidad(
-          parseInt(reservaOrigen),
-          producto.codigo,
-          parseFloat(producto.cantidad)
-        );
-
-        if (!validacion.disponible) {
-          mostrarMensaje('error', 
-            `❌ Stock insuficiente para ${producto.descripcion}. ` +
-            `Disponible: ${validacion.cantidad_disponible}, Solicitado: ${producto.cantidad}`
-          );
-          return;
-        }
-      } catch (error) {
-        console.error('Error validando stock:', error);
-        mostrarMensaje('error', `❌ Error al validar stock de ${producto.descripcion}`);
-        return;
-      }
-    }
-
     try {
       setCargando(true);
 
-      // Preparar datos del traslado (NUEVO FORMATO)
+      // ✨ NUEVO: Preparar datos con bodegas + reservas
       const datosTraslado = {
         numero_traslado: numeroTraslado,
-        reserva_origen: parseInt(reservaOrigen),         // CAMBIADO
-        reserva_destino: parseInt(reservaDestino),       // CAMBIADO
+        id_bodega_origen: parseInt(bodegaOrigen),
+        id_reserva_origen: parseInt(reservaOrigen),
+        id_bodega_destino: parseInt(bodegaDestino),
+        id_reserva_destino: parseInt(reservaDestino),
         fecha_traslado: fechaTraslado,
         usuario: localStorage.getItem('userName') || 'Usuario',
         observaciones: observacionesGenerales || '',
         productos: productosATraslador.map(p => ({
           codigo_producto: p.codigo,
-          cantidad: parseFloat(p.cantidad),              // CAMBIADO a float
+          cantidad: parseFloat(p.cantidad),
           observaciones: p.observaciones || ''
         }))
       };
 
-      // Llamar al NUEVO endpoint para traslados con reservas
-      const response = await trasladoMaterialesAPI.guardarTrasladoConReservas(datosTraslado);
+      // ✨ NUEVO: Llamar al nuevo endpoint para traslados entre bodegas
+      const response = await trasladoMaterialesAPI.guardarTraslado(datosTraslado);
 
       if (response.success) {
         mostrarMensaje('success', `✅ ${response.message}`);
@@ -458,24 +492,93 @@ const TrasladoMateriales = () => {
         <div className="traslado-card-body">
           <div className="traslado-form-row">
             
-            {/* Reserva Origen (CAMBIADO) */}
+            {/* ✨ NUEVO: Bodega Origen */}
             <div className="traslado-form-group">
               <label className="traslado-form-label">
-                📍 Reserva Origen *
+                🏢 Bodega Origen *
+              </label>
+              <select
+                className="traslado-form-select"
+                value={bodegaOrigen}
+                onChange={handleBodegaOrigenChange}
+                disabled={cargando}
+              >
+                <option value="">-- Seleccione bodega origen --</option>
+                {bodegas.map((bodega) => (
+                  <option key={`bodega-origen-${bodega.id_bodega}`} value={bodega.id_bodega}>
+                    {bodega.nombre_bodega} {bodega.ubicacion && `- ${bodega.ubicacion}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* ✨ NUEVO: Reserva Origen */}
+            <div className="traslado-form-group">
+              <label className="traslado-form-label">
+                � Reserva Origen *
               </label>
               <select
                 className="traslado-form-select"
                 value={reservaOrigen}
                 onChange={(e) => setReservaOrigen(e.target.value)}
+                disabled={!bodegaOrigen || cargando}
               >
                 <option value="">-- Seleccione reserva origen --</option>
-                {reservas.map((reserva, index) => (
-                  <option key={`origen-${reserva.id_bodega}-${reserva.id_reserva}-${index}`} value={reserva.id_reserva}>
-                    {reserva.nombre_completo}
+                {reservasOrigen.map((reserva) => (
+                  <option key={`reserva-origen-${reserva.id_reserva}`} value={reserva.id_reserva}>
+                    {reserva.tipo_reserva}
                   </option>
                 ))}
               </select>
             </div>
+
+          </div>
+
+          <div className="traslado-form-row" style={{ marginTop: '15px' }}>
+            
+            {/* ✨ NUEVO: Bodega Destino */}
+            <div className="traslado-form-group">
+              <label className="traslado-form-label">
+                � Bodega Destino *
+              </label>
+              <select
+                className="traslado-form-select"
+                value={bodegaDestino}
+                onChange={handleBodegaDestinoChange}
+                disabled={cargando}
+              >
+                <option value="">-- Seleccione bodega destino --</option>
+                {bodegas.map((bodega) => (
+                  <option key={`bodega-destino-${bodega.id_bodega}`} value={bodega.id_bodega}>
+                    {bodega.nombre_bodega} {bodega.ubicacion && `- ${bodega.ubicacion}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* ✨ NUEVO: Reserva Destino */}
+            <div className="traslado-form-group">
+              <label className="traslado-form-label">
+                🎯 Reserva Destino *
+              </label>
+              <select
+                className="traslado-form-select"
+                value={reservaDestino}
+                onChange={handleReservaDestinoChange}
+                disabled={!bodegaDestino || cargando}
+              >
+                <option value="">-- Seleccione reserva destino --</option>
+                {reservasDestino.map((reserva) => (
+                  <option key={`reserva-destino-${reserva.id_reserva}`} value={reserva.id_reserva}>
+                    {reserva.tipo_reserva}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+          </div>
+
+          <div className="traslado-form-row" style={{ marginTop: '15px' }}>
 
             {/* Número de Traslado */}
             <div className="traslado-form-group">
@@ -488,31 +591,6 @@ const TrasladoMateriales = () => {
                 value={numeroTraslado}
                 disabled
               />
-            </div>
-
-          </div>
-
-          <div className="traslado-form-row" style={{ marginTop: '15px' }}>
-            
-            {/* Reserva Destino (CAMBIADO) */}
-            <div className="traslado-form-group">
-              <label className="traslado-form-label">
-                🎯 Reserva Destino *
-              </label>
-              <select
-                className="traslado-form-select"
-                value={reservaDestino}
-                onChange={(e) => setReservaDestino(e.target.value)}
-              >
-                <option value="">-- Seleccione reserva destino --</option>
-                {reservas
-                  .filter(r => r.id_reserva !== parseInt(reservaOrigen))
-                  .map((reserva, index) => (
-                    <option key={`destino-${reserva.id_bodega}-${reserva.id_reserva}-${index}`} value={reserva.id_reserva}>
-                      {reserva.nombre_completo}
-                    </option>
-                  ))}
-              </select>
             </div>
 
             {/* Fecha Traslado */}

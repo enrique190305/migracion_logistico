@@ -400,6 +400,19 @@ class IngresoMaterialController extends Controller
         // Generar ID de ingreso
         $numeroIngreso = $this->generarNumeroIngreso()->getData()->data->numero_ingreso;
 
+        // Obtener nombre del proyecto desde proyecto_almacen
+        $idBodega = $request->input('id_bodega');
+        $idReserva = $request->input('id_reserva');
+        
+        $proyectoInfo = DB::table('proyecto_almacen')
+            ->where('id_bodega', $idBodega)
+            ->where('id_reserva', $idReserva)
+            ->where('estado', 'ACTIVO')
+            ->select('nombre_proyecto')
+            ->first();
+        
+        $nombreProyecto = $proyectoInfo ? $proyectoInfo->nombre_proyecto : null;
+
         // Insertar ingreso de material
         DB::table('ingreso_material')->insert([
             'id_ingreso' => $numeroIngreso,
@@ -407,10 +420,11 @@ class IngresoMaterialController extends Controller
             'fecha_ingreso' => $request->input('fecha_ingreso'),
             'num_guia' => $request->input('num_guia'),
             'factura' => $request->input('factura'),
+            'proyecto_almacen' => $nombreProyecto,           // ✅ Agregar proyecto_almacen
             'observaciones' => $request->input('observaciones'),
             'usuario' => $request->input('usuario'),
-            'id_bodega' => $request->input('id_bodega'),      // Nueva columna
-            'id_reserva' => $request->input('id_reserva')     // Nueva columna
+            'id_bodega' => $idBodega,                        // Nueva columna
+            'id_reserva' => $idReserva                       // Nueva columna
         ]);
 
         // Insertar detalles y movimientos kardex
@@ -443,8 +457,8 @@ class IngresoMaterialController extends Controller
                 'descripcion' => $productoInfo->descripcion ?? '',
                 'unidad' => $productoInfo->unidad ?? '',
                 'cantidad' => $producto['cantidad_ingresar'],
-                'proyecto' => $request->input('proyecto_almacen'),
-                'id_bodega' => $request->input('id_bodega'), // ✅ Agregar id_bodega
+                'proyecto' => $nombreProyecto,                  // ✅ Nombre del proyecto
+                'id_bodega' => $idBodega,                       // ✅ ID de la bodega
                 'documento' => $numeroIngreso,
                 'precio_unitario' => $detalleOC->precio_unitario ?? 0,
                 'observaciones' => $producto['observaciones'] ?? ''
@@ -983,6 +997,58 @@ class IngresoMaterialController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al generar PDF',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener reservas disponibles para una bodega específica
+     * Retorna TODAS las reservas distintas asociadas a esa bodega
+     */
+    public function obtenerReservasPorBodega($idBodega)
+    {
+        try {
+            Log::info('=== INICIO obtenerReservasPorBodega ===');
+            Log::info('ID Bodega recibido: ' . $idBodega);
+
+            // Obtener TODAS las reservas distintas de la bodega desde proyecto_almacen
+            $reservas = DB::table('proyecto_almacen as pa')
+                ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
+                ->where('pa.id_bodega', $idBodega)
+                ->where('r.estado', 'ACTIVO')
+                ->select('r.id_reserva', 'r.tipo_reserva')
+                ->distinct() // DISTINCT para evitar duplicados
+                ->get();
+
+            Log::info('Reservas encontradas: ' . $reservas->count(), ['reservas' => $reservas]);
+
+            // Si no encuentra reservas, retornar las 3 opciones estándar
+            if ($reservas->isEmpty()) {
+                Log::warning('No se encontraron reservas específicas para bodega: ' . $idBodega);
+                $reservas = DB::table('reserva')
+                    ->select('id_reserva', 'tipo_reserva')
+                    ->whereIn('tipo_reserva', ['EXTERNA', 'INTERNA', 'COMERCIAL'])
+                    ->where('estado', 'ACTIVO')
+                    ->get();
+            }
+
+            Log::info('=== FIN obtenerReservasPorBodega ===');
+
+            return response()->json([
+                'success' => true,
+                'data' => $reservas
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('=== ERROR en obtenerReservasPorBodega ===');
+            Log::error('Mensaje: ' . $e->getMessage());
+            Log::error('Línea: ' . $e->getLine());
+            Log::error('Archivo: ' . $e->getFile());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener reservas',
                 'error' => $e->getMessage()
             ], 500);
         }

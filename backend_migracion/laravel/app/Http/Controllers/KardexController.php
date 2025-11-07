@@ -16,10 +16,10 @@ class KardexController extends Controller
         try {
             Log::info('=== Obteniendo inventario actual ===');
 
-            // ✅ Mostrar bodega en lugar de proyecto
+            // ✅ Mostrar bodega desde la tabla bodega usando id_bodega del kardex
             $inventario = DB::select("
                 SELECT 
-                    COALESCE(b.nombre, 'Sin bodega') as proyecto,
+                    COALESCE(b.nombre, mk.proyecto, 'Sin bodega') as proyecto,
                     mk.codigo_producto,
                     COALESCE(mk.descripcion, 'Sin descripción') as descripcion,
                     mk.unidad,
@@ -35,7 +35,7 @@ class KardexController extends Controller
                     'SOLES' as moneda
                 FROM movimiento_kardex mk
                 LEFT JOIN bodega b ON mk.id_bodega = b.id_bodega
-                GROUP BY mk.codigo_producto, b.nombre, mk.descripcion, mk.unidad
+                GROUP BY mk.codigo_producto, mk.id_bodega, b.nombre, mk.proyecto, mk.descripcion, mk.unidad
                 HAVING SUM(CASE 
                     WHEN mk.tipo_movimiento = 'INGRESO' THEN mk.cantidad 
                     ELSE -mk.cantidad 
@@ -68,7 +68,7 @@ class KardexController extends Controller
 
             Log::info("Rango de fechas: {$fechaInicio} - {$fechaFin}");
 
-            // ✅ Mostrar bodega en lugar de proyecto
+            // ✅ Mostrar bodega desde la tabla bodega usando id_bodega del kardex
             $historial = DB::select("
                 SELECT 
                     mk.fecha as fecha,
@@ -77,7 +77,7 @@ class KardexController extends Controller
                     COALESCE(mk.descripcion, 'Sin descripción') as descripcion,
                     mk.unidad,
                     mk.cantidad,
-                    COALESCE(b.nombre, 'Sin bodega') as proyecto,
+                    COALESCE(b.nombre, mk.proyecto, 'Sin bodega') as proyecto,
                     COALESCE(mk.documento, 'N/A') as documento,
                     COALESCE(mk.observaciones, 'N/A') as observaciones
                 FROM movimiento_kardex mk
@@ -101,13 +101,12 @@ class KardexController extends Controller
 
     /**
      * Obtener kardex de un producto específico
-     */
     public function getKardexProducto($codigoProducto)
     {
         try {
             Log::info("=== Obteniendo kardex del producto: {$codigoProducto} ===");
 
-            // ✅ Mostrar bodega en lugar de proyecto
+            // ✅ Mostrar bodega desde la tabla bodega usando id_bodega del kardex
             $kardex = DB::select("
                 SELECT 
                     mk.fecha as fecha_movimiento,
@@ -115,7 +114,7 @@ class KardexController extends Controller
                     mk.cantidad,
                     COALESCE(mk.precio_unitario, 0) as precio_unitario,
                     mk.cantidad * COALESCE(mk.precio_unitario, 0) as subtotal,
-                    COALESCE(b.nombre, 'Sin bodega') as proyecto,
+                    COALESCE(b.nombre, mk.proyecto, 'Sin bodega') as proyecto,
                     COALESCE(mk.documento, 'N/A') as documento,
                     COALESCE(mk.observaciones, 'N/A') as observaciones,
                     COALESCE(mk.descripcion, 'Sin descripción') as descripcion,
@@ -124,6 +123,7 @@ class KardexController extends Controller
                 LEFT JOIN bodega b ON mk.id_bodega = b.id_bodega
                 WHERE mk.codigo_producto = ?
                 ORDER BY mk.fecha DESC, mk.id_movimiento DESC
+            ", [$codigoProducto]);DESC, mk.id_movimiento DESC
             ", [$codigoProducto]);
 
             // Calcular saldo acumulado

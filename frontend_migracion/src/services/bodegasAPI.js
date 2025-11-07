@@ -141,13 +141,14 @@ export const obtenerReservas = async () => {
 };
 
 /**
- * Obtener reservas por bodega
+ * Obtener reservas disponibles para una bodega
+ * Obtiene las reservas desde proyecto_almacen
  */
 export const obtenerReservasPorBodega = async (idBodega) => {
   try {
     const token = localStorage.getItem('token');
-    // ✅ USAR URL COMPLETA Y CORRECTA
-    const response = await fetch(`http://127.0.0.1:8000/api/reservas/bodega/${idBodega}`, {
+    // Usar la ruta correcta del backend: ingreso-materiales/reservas/bodega/{id}
+    const response = await fetch(`http://127.0.0.1:8000/api/ingreso-materiales/reservas/bodega/${idBodega}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -155,13 +156,15 @@ export const obtenerReservasPorBodega = async (idBodega) => {
     });
 
     if (!response.ok) {
+      console.error('❌ Error HTTP al obtener reservas:', response.status);
       throw new Error('Error al obtener reservas');
     }
 
     const data = await response.json();
+    console.log('✅ Reservas obtenidas para bodega', idBodega, ':', data);
     return data;
   } catch (error) {
-    console.error('Error al obtener reservas:', error);
+    console.error('❌ Error al obtener reservas:', error);
     return { success: false, data: [], message: 'Error al obtener reservas' };
   }
 };

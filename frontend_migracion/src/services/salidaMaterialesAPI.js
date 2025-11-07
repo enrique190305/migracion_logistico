@@ -13,14 +13,11 @@ const salidaMaterialesAPI = {
     } catch (error) {
       console.error('Error al listar proyectos:', error);
       if (error.response) {
-        // El servidor respondió con un código de error
         console.error('Respuesta del servidor:', error.response.data);
         console.error('Código de estado:', error.response.status);
       } else if (error.request) {
-        // La solicitud se realizó pero no hubo respuesta
         console.error('No se recibió respuesta del servidor');
       } else {
-        // Algo sucedió al configurar la solicitud
         console.error('Error al configurar la solicitud:', error.message);
       }
       throw error;
