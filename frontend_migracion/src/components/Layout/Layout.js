@@ -14,12 +14,14 @@ import EliminarOCS from '../EliminarOCS/EliminarOCS';
 import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
+
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
 import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
 import StockBodegas from '../StockBodegas/StockBodegas';
 import Reporteria from '../Reporteria/Reporteria';
+import Prestamos from '../Prestamos/Prestamos_NEW';
 
 
 
@@ -104,6 +106,10 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <Kardex />;
       case 'registro-familia':
         return <RegistroFamilia />;
+        case 'prestamos':
+        return <Prestamos />;
+      case 'historial-prestamos':
+        return <Prestamos />;
       case 'aprobacion-ordenes':
         return <Aprobacion />;
       case 'reporteria':
@@ -416,6 +422,8 @@ const getModuleTitle = (moduleId) => {
     'registro-personal': 'Registro de Personal',
     'kardex': 'Kardex',
     'registro-familia': 'Registro de Familia',
+    'prestamos': 'Préstamos',
+    'historial-prestamos': 'Historial de Préstamos',
     'aprobacion-ordenes': 'Aprobación de Órdenes',
     'reporteria': 'Reportería'
   };

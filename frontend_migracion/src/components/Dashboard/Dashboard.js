@@ -18,6 +18,7 @@ import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import Reporteria from '../Reporteria/Reporteria';
+import Prestamos from '../Prestamos/Prestamos_NEW';
 
 
 
@@ -28,7 +29,7 @@ const Dashboard = ({ onLogout }) => {
 
   const menuItems = [
 
-{ 
+    { 
       title: 'Registro de Bodega', 
       icon: '📝', 
       color: '#fc8c4bff',
@@ -127,7 +128,21 @@ const Dashboard = ({ onLogout }) => {
       category: 'familia'
     },
     
-    // Fila 5 - Morado (Aprobación)
+    // Fila 5 - Naranja (Préstamos)
+    { 
+      title: 'Préstamo', 
+      icon: '💰', 
+      color: '#e67e22',
+      category: 'prestamo'
+    },
+    { 
+      title: 'Historial de Préstamos', 
+      icon: '📜', 
+      color: '#e67e22',
+      category: 'historial-prestamos'
+    },
+    
+    // Fila 6 - Morado (Aprobación)
     { 
       title: 'Aprobación de Órdenes', 
       icon: '✅', 
@@ -189,7 +204,7 @@ const Dashboard = ({ onLogout }) => {
 
         {/* Renderizar el módulo correspondiente */}
         <main className="dashboard-main-modulo">
-	  {moduloActivo === 'bodega' && <RegistroBodega />}
+          {moduloActivo === 'bodega' && <RegistroBodega />}
           {moduloActivo === 'reserva' && <RegistroReserva />}
           {moduloActivo === 'pedido' && <OrdenPedido />}
           {moduloActivo === 'compras' && <OrdenesCompraServicio />}
@@ -204,6 +219,8 @@ const Dashboard = ({ onLogout }) => {
           {moduloActivo === 'personal' && <RegistroPersonal />}
           {moduloActivo === 'kardex' && <Kardex />}
           {moduloActivo === 'familia' && <RegistroFamilia />}
+          {moduloActivo === 'prestamo' && <Prestamos />}
+          {moduloActivo === 'historial-prestamos' && <Prestamos />}
           {moduloActivo === 'aprobacion' && <Aprobacion />}
           {moduloActivo === 'reporteria' && <Reporteria />}
         </main>
@@ -266,10 +283,10 @@ const Dashboard = ({ onLogout }) => {
       {/* Footer */}
       <footer className="dashboard-footer">
         <div className="stats-container">
-          <span>?? 267 productos registrados</span>
-          <span>?? 9 proyectos activos</span>
-          <span>?? 27 movimientos este mes</span>
-          <span>?? Sistema operativo</span>
+          <span>📦 267 productos registrados</span>
+          <span>📊 9 proyectos activos</span>
+          <span>📈 27 movimientos este mes</span>
+          <span>✅ Sistema operativo</span>
         </div>
         <div className="session-info">
           <span>Usuario: {user.name || 'admin'} ({user.role || 'Administrador'}) | Sesión iniciada: 16/10/2025 19:41</span>

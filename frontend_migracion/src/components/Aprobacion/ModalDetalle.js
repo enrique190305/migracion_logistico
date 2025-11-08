@@ -69,17 +69,23 @@ const ModalDetalle = ({
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot>
-                    <tr className="detalle-total-row">
-                      <td colSpan="5" className="detalle-total-label">
-                        TOTAL GENERAL:
-                      </td>
-                      <td className="detalle-total-value">
-                        {formatCurrency(calcularTotalDetalles(), selectedOrden.moneda)}
-                      </td>
-                    </tr>
-                  </tfoot>
                 </table>
+                
+                {/* Resumen de totales */}
+                <div className="totales-resumen">
+                  <div className="total-row">
+                    <span className="total-label">SUBTOTAL:</span>
+                    <span className="total-value">{formatCurrency(calcularTotalDetalles(), selectedOrden.moneda)}</span>
+                  </div>
+                  <div className="total-row">
+                    <span className="total-label">IGV (18%):</span>
+                    <span className="total-value">{formatCurrency(calcularTotalDetalles() * 0.18, selectedOrden.moneda)}</span>
+                  </div>
+                  <div className="total-row total-general">
+                    <span className="total-label">TOTAL GENERAL:</span>
+                    <span className="total-value">{formatCurrency(calcularTotalDetalles() * 1.18, selectedOrden.moneda)}</span>
+                  </div>
+                </div>
               </div>
             </>
           ) : (

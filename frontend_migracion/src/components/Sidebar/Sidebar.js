@@ -8,6 +8,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     materiales: false,
     proveedores: false,
     personal: false,
+    prestamos: false,
     aprobacion: false,
     reporteria: false
   });
@@ -70,6 +71,16 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         { id: 'registro-personal', title: 'Registro de Personal', icon: '👤' },
         { id: 'kardex', title: 'Kardex', icon: '📝' },
         { id: 'registro-familia', title: 'Registro de Familia', icon: '👨‍👩‍👧' }
+      ]
+    },
+    {
+      id: 'prestamos',
+      title: 'Gestión de Préstamos',
+      icon: '💳',
+      color: '#e67e22',
+      items: [
+        { id: 'prestamos', title: 'Préstamos', icon: '💰' },
+        { id: 'historial-prestamos', title: 'Historial de Préstamos', icon: '📜' }
       ]
     },
     {
