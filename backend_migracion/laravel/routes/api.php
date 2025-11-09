@@ -576,3 +576,29 @@ Route::prefix('salida-materiales')->group(function () {
     // PDF
     Route::get('/pdf/{numeroSalida}', [SalidaMaterialController::class, 'generarPDF']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Ajuste de Inventario
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Api\AjusteInventarioController;
+
+Route::prefix('ajuste-inventario')->group(function () {
+    // Catálogos
+    Route::get('/bodegas', [AjusteInventarioController::class, 'obtenerBodegas']);
+    Route::get('/reservas', [AjusteInventarioController::class, 'obtenerReservas']);
+    
+    // Inventario
+    Route::get('/inventario', [AjusteInventarioController::class, 'obtenerInventario']);
+    Route::get('/detalle/{codigo_producto}/{id_bodega}', [AjusteInventarioController::class, 'obtenerDetalleProducto']);
+    
+    // Ajustes
+    Route::post('/ajustar', [AjusteInventarioController::class, 'realizarAjuste']);
+    
+    // Estadísticas
+    Route::get('/estadisticas', [AjusteInventarioController::class, 'obtenerEstadisticas']);
+    
+    // Exportar
+    Route::get('/exportar', [AjusteInventarioController::class, 'exportarInventario']);
+});

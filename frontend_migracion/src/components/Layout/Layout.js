@@ -20,6 +20,7 @@ import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
 import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
 import StockBodegas from '../StockBodegas/StockBodegas';
+import AjusteInventario from '../AjusteInventario/AjusteInventario';
 import Reporteria from '../Reporteria/Reporteria';
 import Prestamos from '../Prestamos/Prestamos_NEW';
 
@@ -94,6 +95,8 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <SalidaMateriales />;
       case 'stock-bodegas':
         return <StockBodegas />;
+      case 'ajuste-inventario':
+        return <AjusteInventario />;
       case 'registro-proveedores':
         return <RegistroProveedor />;
       case 'editar-proveedores':
@@ -416,6 +419,8 @@ const getModuleTitle = (moduleId) => {
     'ingreso-materiales': 'Ingreso de Materiales',
     'traslado-materiales': 'Traslado de Materiales',
     'salida-materiales': 'Salida de Materiales',
+    'stock-bodegas': 'Stock de Bodegas',
+    'ajuste-inventario': 'Ajuste de Inventario',
     'registro-proveedores': 'Registro de Proveedores',
     'editar-proveedores': 'Editar Proveedores',
     'registro-proyecto': 'Registro de Proyecto',

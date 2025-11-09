@@ -48,7 +48,8 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         { id: 'ingreso-materiales', title: 'Ingreso de Materiales', icon: '📥' },
         { id: 'traslado-materiales', title: 'Traslado de Materiales', icon: '🔄' },
         { id: 'salida-materiales', title: 'Salida de Materiales', icon: '📤' },
-        { id: 'stock-bodegas', title: 'Stock de Bodegas', icon: '📦' }
+        { id: 'stock-bodegas', title: 'Stock de Bodegas', icon: '📦' },
+        { id: 'ajuste-inventario', title: 'Ajuste de Inventario', icon: '⚖️' }
       ]
     },
     {
