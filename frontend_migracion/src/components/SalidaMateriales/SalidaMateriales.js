@@ -16,7 +16,8 @@ const SalidaMateriales = () => {
   const [numeroSalida, setNumeroSalida] = useState('');
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState('');
   const [reservaSeleccionada, setReservaSeleccionada] = useState('');
-  const [responsableSalida, setResponsableSalida] = useState(''); // ID del responsable (id_movil_persona)
+  const [idMovilPersonaSeleccionada, setIdMovilPersonaSeleccionada] = useState(''); // ID para el combobox
+  const [responsableSalida, setResponsableSalida] = useState(''); // ID del proyecto_almacen (para guardar)
   const [nombreResponsable, setNombreResponsable] = useState(''); // Nombre del responsable
   const [dniResponsable, setDniResponsable] = useState(''); // DNI del responsable
   const [fechaSalida, setFechaSalida] = useState(new Date().toISOString().split('T')[0]);
@@ -155,6 +156,7 @@ const SalidaMateriales = () => {
       setReservas([]);
       setReservaSeleccionada('');
       setResponsablesDisponibles([]);
+      setIdMovilPersonaSeleccionada('');
       setResponsableSalida('');
       setNombreResponsable('');
       setDniResponsable('');
@@ -180,6 +182,7 @@ const SalidaMateriales = () => {
       // Limpiar selecciones dependientes
       setReservaSeleccionada('');
       setResponsablesDisponibles([]);
+      setIdMovilPersonaSeleccionada('');
       setResponsableSalida('');
       setNombreResponsable('');
       setDniResponsable('');
@@ -232,6 +235,7 @@ const SalidaMateriales = () => {
       }
       
       // Limpiar selecciones dependientes
+      setIdMovilPersonaSeleccionada('');
       setResponsableSalida('');
       setNombreResponsable('');
       setDniResponsable('');
@@ -248,6 +252,7 @@ const SalidaMateriales = () => {
 
   const handleSeleccionResponsable = (idMovilPersona) => {
     if (!idMovilPersona) {
+      setIdMovilPersonaSeleccionada('');
       setResponsableSalida('');
       setNombreResponsable('');
       setDniResponsable('');
@@ -258,7 +263,8 @@ const SalidaMateriales = () => {
     const responsable = responsablesDisponibles.find(r => r.id_movil_persona == idMovilPersona);
     
     if (responsable) {
-      setResponsableSalida(responsable.id_proyecto_almacen);
+      setIdMovilPersonaSeleccionada(idMovilPersona); // Para el combobox
+      setResponsableSalida(responsable.id_proyecto_almacen); // Para guardar
       setNombreResponsable(responsable.nom_ape);
       setDniResponsable(responsable.dni);
     }
@@ -367,6 +373,11 @@ const SalidaMateriales = () => {
       return;
     }
 
+    if (!nombreResponsable || !dniResponsable) {
+      mostrarMensaje('error', '❌ Datos del responsable incompletos');
+      return;
+    }
+
     if (productosAgregados.length === 0) {
       mostrarMensaje('error', '❌ Debe agregar al menos un producto');
       return;
@@ -377,17 +388,29 @@ const SalidaMateriales = () => {
       return;
     }
 
+    // Obtener el tipo de reserva
+    const tipoReserva = reservas.find(r => r.id_reserva == reservaSeleccionada)?.tipo_reserva;
+    
+    if (!tipoReserva) {
+      mostrarMensaje('error', '❌ No se pudo obtener el tipo de reserva');
+      return;
+    }
+
     // Preparar datos
     const datosSalida = {
       numero_salida: numeroSalida,
+      id_bodega: bodegaSeleccionada,
+      id_reserva: reservaSeleccionada,
       proyecto_almacen: nombreResponsable,
       trabajador: nombreResponsable,
       dni: dniResponsable,
-      area: reservas.find(r => r.id_reserva == reservaSeleccionada)?.tipo_reserva || '',
+      area: tipoReserva,
       fecha_salida: fechaSalida,
       observaciones: '',
       productos: productosAgregados
     };
+
+    console.log('=== Datos a enviar ===', datosSalida);
 
     try {
       setCargando(true);
@@ -428,6 +451,7 @@ const SalidaMateriales = () => {
     setReservas([]);
     setReservaSeleccionada('');
     setResponsablesDisponibles([]);
+    setIdMovilPersonaSeleccionada('');
     setResponsableSalida('');
     setNombreResponsable('');
     setDniResponsable('');
@@ -622,7 +646,7 @@ const SalidaMateriales = () => {
                 </label>
                 <select
                   className="salida-form-select"
-                  value={responsableSalida}
+                  value={idMovilPersonaSeleccionada}
                   onChange={(e) => handleSeleccionResponsable(e.target.value)}
                   disabled={!reservaSeleccionada}
                 >

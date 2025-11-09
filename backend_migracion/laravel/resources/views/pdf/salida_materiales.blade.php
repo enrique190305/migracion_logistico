@@ -183,25 +183,39 @@
 
         .firma-box {
             display: table-cell;
-            width: 33.33%;
+            width: 50%;
             text-align: center;
             padding: 10px;
+            vertical-align: top;
+        }
+
+        .firma-signature {
+            font-family: 'Brush Script MT', cursive;
+            font-size: 24px;
+            color: #333;
+            margin: 20px 0 10px 0;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .firma-linea {
             border-top: 2px solid #333;
-            margin: 60px 20px 5px 20px;
+            margin: 5px 20px 5px 20px;
         }
 
         .firma-label {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: bold;
             color: #555;
+            margin-top: 5px;
         }
 
         .firma-sublabel {
-            font-size: 9px;
-            color: #999;
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
         }
 
         /* FOOTER */
@@ -241,19 +255,23 @@
             <div class="info-section-title">📋 INFORMACIÓN GENERAL</div>
             <div class="info-grid">
                 <div class="info-row">
-                    <div class="info-label">📅 Fecha de Salida:</div>
+                    <div class="info-label">Fecha de Salida:</div>
                     <div class="info-value">{{ \Carbon\Carbon::parse($salida->fecha_salida)->format('d/m/Y') }}</div>
                 </div>
                 <div class="info-row">
-                    <div class="info-label">🏭 Proyecto:</div>
-                    <div class="info-value">{{ $salida->proyecto_almacen }}</div>
+                    <div class="info-label">Bodega:</div>
+                    <div class="info-value">{{ $salida->bodega }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">Reserva:</div>
+                    <div class="info-value">{{ $salida->reserva }}</div>
                 </div>
             </div>
         </div>
 
-        <!-- INFORMACIÓN DEL TRABAJADOR -->
+        <!-- INFORMACIÓN DEL RESPONSABLE DE LA SALIDA -->
         <div class="info-section">
-            <div class="info-section-title">👤 INFORMACIÓN DEL TRABAJADOR</div>
+            <div class="info-section-title">👤 INFORMACIÓN DEL RESPONSABLE DE LA SALIDA</div>
             <div class="info-grid">
                 <div class="info-row">
                     <div class="info-label">Nombre Completo:</div>
@@ -262,10 +280,6 @@
                 <div class="info-row">
                     <div class="info-label">DNI:</div>
                     <div class="info-value">{{ $salida->dni ?? 'N/A' }}</div>
-                </div>
-                <div class="info-row">
-                    <div class="info-label">Área:</div>
-                    <div class="info-value">{{ $salida->area ?? 'N/A' }}</div>
                 </div>
             </div>
         </div>
@@ -315,26 +329,28 @@
         <!-- FIRMAS -->
         <div class="firmas-section">
             <div class="firma-box">
+                <div class="firma-signature"></div>
                 <div class="firma-linea"></div>
-                <div class="firma-label">ENTREGADO POR</div>
-                <div class="firma-sublabel">Almacén</div>
+                <div class="firma-label">Responsable Recepcion</div>
+                <div class="firma-sublabel">admin</div>
             </div>
             <div class="firma-box">
+                <div class="firma-signature">
+                    @if($salida->firma)
+                        <img src="data:image/png;base64,{{ $salida->firma }}" alt="Firma" style="max-width: 100%; max-height: 80px; object-fit: contain;">
+                    @else
+                        <span style="font-style: italic;">{{ $salida->trabajador }}</span>
+                    @endif
+                </div>
                 <div class="firma-linea"></div>
-                <div class="firma-label">RECIBIDO POR</div>
-                <div class="firma-sublabel">{{ $salida->trabajador }}</div>
-            </div>
-            <div class="firma-box">
-                <div class="firma-linea"></div>
-                <div class="firma-label">AUTORIZADO POR</div>
-                <div class="firma-sublabel">Jefe de Proyecto</div>
+                <div class="firma-label">Responsable Entrega</div>
+                <div class="firma-sublabel">{{ strtoupper($salida->trabajador) }}</div>
             </div>
         </div>
 
         <!-- FOOTER -->
         <div class="footer">
             <p>
-                <strong>Usuario que registró:</strong> {{ $salida->usuario_registro ?? 'Sistema' }} |
                 <strong>Fecha de registro:</strong> {{ \Carbon\Carbon::parse($salida->fecha_registro)->format('d/m/Y H:i:s') }}
             </p>
             <p style="margin-top: 5px;">

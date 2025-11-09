@@ -322,9 +322,14 @@ class SalidaMaterialController extends Controller
     public function guardarSalida(Request $request)
     {
         try {
+            Log::info("=== Guardando salida de materiales ===");
+            Log::info("Datos recibidos: " . json_encode($request->all()));
+            
             // Validación
             $validator = Validator::make($request->all(), [
                 'numero_salida' => 'required|string',
+                'id_bodega' => 'required|integer',
+                'id_reserva' => 'required|integer',
                 'proyecto_almacen' => 'required|string',
                 'trabajador' => 'required|string',
                 'dni' => 'required|string',
@@ -336,6 +341,7 @@ class SalidaMaterialController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::error("Errores de validación: " . json_encode($validator->errors()));
                 return response()->json([
                     'success' => false,
                     'message' => 'Errores de validación',
@@ -352,7 +358,7 @@ class SalidaMaterialController extends Controller
                 'nom_ape' => $request->trabajador,
                 'dni' => $request->dni,
                 'area' => $request->area, // Tipo de reserva: EXTERNA, INTERNA, COMERCIAL
-                'id_personal' => 0, // No se usa, pero requerido por la tabla
+                'id_personal' => null, // NULL en lugar de 0
                 'fecha_registro' => now()
             ]);
 
@@ -368,45 +374,42 @@ class SalidaMaterialController extends Controller
                     'observacion_general' => $producto['observaciones'] ?? null
                 ]);
 
-                // Obtener stock actual
-                $stockActual = DB::select("
-                    SELECT SUM(CASE 
-                        WHEN tipo_movimiento = 'INGRESO' THEN cantidad 
-                        ELSE -cantidad 
-                    END) as stock
-                    FROM movimiento_kardex
-                    WHERE codigo_producto = ?
-                    AND proyecto_almacen = ?
-                ", [$producto['codigo_producto'], $request->proyecto_almacen]);
+                // Obtener stock actual desde bodega_stock
+                $stockBodega = DB::table('bodega_stock')
+                    ->where('id_bodega', $request->id_bodega)
+                    ->where('codigo_producto', $producto['codigo_producto'])
+                    ->first();
 
-                $stock = $stockActual[0]->stock ?? 0;
-
-                // Validar stock suficiente
-                if ($stock < $producto['cantidad']) {
-                    throw new Exception("Stock insuficiente para {$producto['descripcion']}");
+                if (!$stockBodega) {
+                    throw new Exception("El producto {$producto['descripcion']} no existe en esta bodega");
                 }
 
-                // Insertar movimiento en kardex (SALIDA)
+                $stockActual = $stockBodega->cantidad_disponible;
+
+                // Validar stock suficiente
+                if ($stockActual < $producto['cantidad']) {
+                    throw new Exception("Stock insuficiente para {$producto['descripcion']}. Stock disponible: {$stockActual}");
+                }
+
+                // Insertar movimiento en kardex (SALIDA) - usando estructura real de la tabla
                 DB::table('movimiento_kardex')->insert([
+                    'fecha' => $request->fecha_salida,
+                    'tipo_movimiento' => 'SALIDA',
                     'codigo_producto' => $producto['codigo_producto'],
                     'descripcion' => $producto['descripcion'],
                     'unidad' => $producto['unidad'],
-                    'tipo_movimiento' => 'SALIDA',
                     'cantidad' => $producto['cantidad'],
-                    'stock_anterior' => $stock,
-                    'stock_nuevo' => $stock - $producto['cantidad'],
-                    'fecha_movimiento' => $request->fecha_salida,
-                    'proyecto_almacen' => $request->proyecto_almacen,
-                    'documento_referencia' => $request->numero_salida,
-                    'observaciones' => "Salida de material - {$request->numero_salida}",
-                    'usuario_registro' => 'admin',
-                    'fecha_registro' => now()
+                    'proyecto' => $request->proyecto_almacen,
+                    'documento' => $request->numero_salida,
+                    'precio_unitario' => 0,
+                    'observaciones' => "Salida de material - Bodega: {$request->id_bodega} - Reserva: {$request->area}"
                 ]);
 
-                // Actualizar stock del producto
-                DB::table('producto')
+                // Actualizar stock en bodega_stock
+                DB::table('bodega_stock')
+                    ->where('id_bodega', $request->id_bodega)
                     ->where('codigo_producto', $producto['codigo_producto'])
-                    ->decrement('stock_actual', $producto['cantidad']);
+                    ->decrement('cantidad_disponible', $producto['cantidad']);
             }
 
             DB::commit();
@@ -421,6 +424,9 @@ class SalidaMaterialController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
+            Log::error("Error al guardar salida: " . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar la salida',
@@ -532,11 +538,14 @@ class SalidaMaterialController extends Controller
     public function generarPDF($numeroSalida)
     {
         try {
+            Log::info("=== Generando PDF para salida: {$numeroSalida} ===");
+            
             // Obtener datos de la salida (sin JOIN, datos ya están en la tabla)
             $salida = DB::table('salidas_materiales as sm')
                 ->select(
                     'sm.numero_salida',
-                    'sm.proyecto',
+                    'sm.proyecto as proyecto_almacen',
+                    'sm.fecha_registro',
                     'sm.fecha_registro as fecha_salida',
                     'sm.nom_ape as trabajador',
                     'sm.dni',
@@ -545,7 +554,10 @@ class SalidaMaterialController extends Controller
                 ->where('sm.numero_salida', $numeroSalida)
                 ->first();
 
+            Log::info("Salida encontrada: " . ($salida ? "SI" : "NO"));
+
             if (!$salida) {
+                Log::error("Salida no encontrada: {$numeroSalida}");
                 return response()->json([
                     'success' => false,
                     'message' => 'Salida no encontrada'
@@ -557,6 +569,46 @@ class SalidaMaterialController extends Controller
                 ->where('numero_salida', $numeroSalida)
                 ->get();
 
+            Log::info("Detalles encontrados: " . count($detalles));
+
+            // Obtener información de bodega y reserva (simplificado)
+            // Usar el campo area que almacena el tipo de reserva (EXTERNA, INTERNA, COMERCIAL)
+            $salida->reserva = $salida->area; // Ya tenemos el tipo de reserva en 'area'
+            
+            // Buscar bodega desde bodega_stock del primer producto
+            $bodega = 'N/A';
+            if (count($detalles) > 0) {
+                $primerProducto = $detalles[0];
+                $bodegaInfo = DB::table('bodega_stock as bs')
+                    ->join('bodega as b', 'bs.id_bodega', '=', 'b.id_bodega')
+                    ->where('bs.codigo_producto', $primerProducto->codigo_producto)
+                    ->select('b.nombre')
+                    ->first();
+                
+                if ($bodegaInfo) {
+                    $bodega = $bodegaInfo->nombre;
+                }
+            }
+
+            // Obtener firma del responsable desde movil_persona
+            $firma = null;
+            $personaInfo = DB::table('movil_persona')
+                ->where('nom_ape', $salida->trabajador)
+                ->where('dni', $salida->dni)
+                ->where('estado', 'ACTIVO')
+                ->select('firma')
+                ->first();
+            
+            if ($personaInfo && $personaInfo->firma) {
+                // Convertir el blob a base64 para mostrarlo en el PDF
+                $firma = base64_encode($personaInfo->firma);
+            }
+
+            // Agregar información adicional al objeto salida
+            $salida->observaciones = '';
+            $salida->bodega = $bodega;
+            $salida->firma = $firma;
+
             // Preparar datos para la vista
             $data = [
                 'salida' => $salida,
@@ -564,14 +616,20 @@ class SalidaMaterialController extends Controller
                 'fecha_generacion' => now()->format('d/m/Y H:i:s')
             ];
 
+            Log::info("Generando PDF con Dompdf...");
+
             // Generar PDF
             $pdf = Pdf::loadView('pdf.salida_materiales', $data);
             $pdf->setPaper('letter', 'portrait');
+
+            Log::info("PDF generado exitosamente");
 
             // Retornar PDF como descarga
             return $pdf->download("Salida_Materiales_{$numeroSalida}.pdf");
 
         } catch (Exception $e) {
+            Log::error("Error al generar PDF: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al generar PDF',
