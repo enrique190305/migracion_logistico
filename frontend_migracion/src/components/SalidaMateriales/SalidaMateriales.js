@@ -14,12 +14,12 @@ const SalidaMateriales = () => {
 
   // Estados del formulario principal
   const [numeroSalida, setNumeroSalida] = useState('');
-  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(''); // ID del proyecto
-  const [nombreProyecto, setNombreProyecto] = useState(''); // Nombre del proyecto para mostrar
-  const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState('');
+  const [bodegaSeleccionada, setBodegaSeleccionada] = useState('');
+  const [reservaSeleccionada, setReservaSeleccionada] = useState('');
+  const [responsableSalida, setResponsableSalida] = useState(''); // ID del responsable (id_movil_persona)
+  const [nombreResponsable, setNombreResponsable] = useState(''); // Nombre del responsable
+  const [dniResponsable, setDniResponsable] = useState(''); // DNI del responsable
   const [fechaSalida, setFechaSalida] = useState(new Date().toISOString().split('T')[0]);
-  const [dniTrabajador, setDniTrabajador] = useState('');
-  const [areaTrabajador, setAreaTrabajador] = useState('');
 
   // Estados para agregar productos
   const [productoSeleccionado, setProductoSeleccionado] = useState('');
@@ -31,8 +31,10 @@ const SalidaMateriales = () => {
   const [observacionProducto, setObservacionProducto] = useState('');
 
   // Estados de catálogos
-  const [proyectos, setProyectos] = useState([]);
-  const [trabajadores, setTrabajadores] = useState([]);
+  const [bodegas, setBodegas] = useState([]);
+  const [reservas, setReservas] = useState([]);
+  const [responsablesDisponibles, setResponsablesDisponibles] = useState([]); // Lista de personas responsables por reserva
+  const [responsables, setResponsables] = useState([]); // Lista de proyectos para filtro de historial
   const [productosDisponibles, setProductosDisponibles] = useState([]);
 
   // Estado de productos agregados (tabla)
@@ -66,10 +68,16 @@ const SalidaMateriales = () => {
     try {
       setCargando(true);
 
-      // Cargar proyectos
+      // Cargar bodegas
+      const respBodegas = await salidaMaterialesAPI.listarBodegas();
+      if (respBodegas.success) {
+        setBodegas(respBodegas.data);
+      }
+
+      // Cargar proyectos para el historial (todos los proyectos SIN_PROYECTO)
       const respProyectos = await salidaMaterialesAPI.listarProyectos();
       if (respProyectos.success) {
-        setProyectos(respProyectos.data);
+        setResponsables(respProyectos.data);
       }
 
       // Generar número de salida
@@ -141,43 +149,118 @@ const SalidaMateriales = () => {
   // MANEJADORES DE EVENTOS
   // ============================================
 
-  const handleSeleccionProyecto = async (idProyecto) => {
-    if (!idProyecto) {
-      setProyectoSeleccionado('');
-      setNombreProyecto('');
-      setTrabajadorSeleccionado('');
-      setDniTrabajador('');
-      setAreaTrabajador('');
+  const handleSeleccionBodega = async (idBodega) => {
+    if (!idBodega) {
+      setBodegaSeleccionada('');
+      setReservas([]);
+      setReservaSeleccionada('');
+      setResponsablesDisponibles([]);
+      setResponsableSalida('');
+      setNombreResponsable('');
+      setDniResponsable('');
       setProductosDisponibles([]);
       return;
     }
 
     try {
       setCargando(true);
+      setBodegaSeleccionada(idBodega);
       
-      // Obtener información del proyecto (incluye datos de movil_persona)
-      const response = await salidaMaterialesAPI.obtenerInfoProyecto(idProyecto);
+      // Cargar reservas de la bodega seleccionada
+      const response = await salidaMaterialesAPI.obtenerReservasPorBodega(idBodega);
       
-      if (response.success && response.data) {
-        const proyecto = response.data;
+      if (response.success) {
+        setReservas(response.data);
         
-        // Establecer proyecto seleccionado (ID y nombre)
-        setProyectoSeleccionado(idProyecto);
-        setNombreProyecto(proyecto.nombre_proyecto);
-        
-        // Autocompletar datos del trabajador (de movil_persona)
-        setTrabajadorSeleccionado(proyecto.trabajador || '');
-        setDniTrabajador(proyecto.dni || '');
-        setAreaTrabajador(proyecto.area || ''); // Tipo de reserva: EXTERNA, INTERNA, COMERCIAL
-        
-        // Cargar productos del proyecto
-        await cargarProductosPorProyecto(proyecto.nombre_proyecto);
+        if (response.data.length === 0) {
+          mostrarMensaje('warning', 'La bodega seleccionada no tiene reservas activas');
+        }
       }
+      
+      // Limpiar selecciones dependientes
+      setReservaSeleccionada('');
+      setResponsablesDisponibles([]);
+      setResponsableSalida('');
+      setNombreResponsable('');
+      setDniResponsable('');
+      setProductosDisponibles([]);
+      
     } catch (error) {
-      console.error('Error al seleccionar proyecto:', error);
-      mostrarMensaje('error', 'Error al cargar información del proyecto');
+      console.error('Error al seleccionar bodega:', error);
+      mostrarMensaje('error', 'Error al cargar reservas de la bodega');
+      setReservas([]);
     } finally {
       setCargando(false);
+    }
+  };
+
+  const handleSeleccionReserva = async (idReserva) => {
+    if (!idReserva || !bodegaSeleccionada) {
+      setReservaSeleccionada('');
+      setResponsablesDisponibles([]);
+      setResponsableSalida('');
+      setNombreResponsable('');
+      setDniResponsable('');
+      setProductosDisponibles([]);
+      return;
+    }
+
+    try {
+      setCargando(true);
+      setReservaSeleccionada(idReserva);
+      
+      // Cargar responsables disponibles para esta bodega y reserva
+      const responseResponsables = await salidaMaterialesAPI.obtenerResponsablesPorBodegaReserva(bodegaSeleccionada, idReserva);
+      
+      if (responseResponsables.success) {
+        setResponsablesDisponibles(responseResponsables.data);
+        
+        if (responseResponsables.data.length === 0) {
+          mostrarMensaje('warning', 'No hay responsables disponibles para esta reserva');
+        }
+      }
+      
+      // Cargar productos disponibles para esta bodega y reserva
+      const responseProductos = await salidaMaterialesAPI.obtenerProductosPorBodegaReserva(bodegaSeleccionada, idReserva);
+      
+      if (responseProductos.success) {
+        setProductosDisponibles(responseProductos.data);
+        
+        if (responseProductos.data.length === 0) {
+          mostrarMensaje('warning', 'No hay productos con stock disponible para esta reserva');
+        }
+      }
+      
+      // Limpiar selecciones dependientes
+      setResponsableSalida('');
+      setNombreResponsable('');
+      setDniResponsable('');
+      
+    } catch (error) {
+      console.error('Error al seleccionar reserva:', error);
+      mostrarMensaje('error', 'Error al cargar información de la reserva');
+      setResponsablesDisponibles([]);
+      setProductosDisponibles([]);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const handleSeleccionResponsable = (idMovilPersona) => {
+    if (!idMovilPersona) {
+      setResponsableSalida('');
+      setNombreResponsable('');
+      setDniResponsable('');
+      return;
+    }
+    
+    // Buscar el responsable seleccionado
+    const responsable = responsablesDisponibles.find(r => r.id_movil_persona == idMovilPersona);
+    
+    if (responsable) {
+      setResponsableSalida(responsable.id_proyecto_almacen);
+      setNombreResponsable(responsable.nom_ape);
+      setDniResponsable(responsable.dni);
     }
     
     // Limpiar productos seleccionados
@@ -187,9 +270,6 @@ const SalidaMateriales = () => {
     setUnidadProducto('');
     setStockDisponible('');
   };
-
-  // Función removida: Los datos del trabajador ahora se cargan automáticamente desde movil_persona
-  // al seleccionar el proyecto
 
   const handleSeleccionProducto = (descripcion) => {
     setProductoSeleccionado(descripcion);
@@ -212,7 +292,7 @@ const SalidaMateriales = () => {
 
   const handleAgregarProducto = () => {
     // Validaciones
-    if (!proyectoSeleccionado) {
+    if (!responsableSalida) {
       mostrarMensaje('error', '❌ Debe seleccionar un proyecto');
       return;
     }
@@ -272,13 +352,18 @@ const SalidaMateriales = () => {
 
   const handleGuardarSalida = async () => {
     // Validaciones
-    if (!proyectoSeleccionado) {
-      mostrarMensaje('error', '❌ Debe seleccionar un proyecto');
+    if (!bodegaSeleccionada) {
+      mostrarMensaje('error', '❌ Debe seleccionar una bodega');
       return;
     }
 
-    if (!trabajadorSeleccionado) {
-      mostrarMensaje('error', '❌ Debe seleccionar un trabajador');
+    if (!reservaSeleccionada) {
+      mostrarMensaje('error', '❌ Debe seleccionar una reserva');
+      return;
+    }
+
+    if (!responsableSalida) {
+      mostrarMensaje('error', '❌ Debe seleccionar un responsable');
       return;
     }
 
@@ -295,10 +380,10 @@ const SalidaMateriales = () => {
     // Preparar datos
     const datosSalida = {
       numero_salida: numeroSalida,
-      proyecto_almacen: nombreProyecto, // Nombre del proyecto (no el ID)
-      trabajador: trabajadorSeleccionado, // Nombre del trabajador desde movil_persona
-      dni: dniTrabajador,
-      area: areaTrabajador, // Tipo de reserva
+      proyecto_almacen: nombreResponsable,
+      trabajador: nombreResponsable,
+      dni: dniResponsable,
+      area: reservas.find(r => r.id_reserva == reservaSeleccionada)?.tipo_reserva || '',
       fecha_salida: fechaSalida,
       observaciones: '',
       productos: productosAgregados
@@ -339,11 +424,13 @@ const SalidaMateriales = () => {
   };
 
   const limpiarFormulario = () => {
-    setProyectoSeleccionado('');
-    setNombreProyecto('');
-    setTrabajadorSeleccionado('');
-    setDniTrabajador('');
-    setAreaTrabajador('');
+    setBodegaSeleccionada('');
+    setReservas([]);
+    setReservaSeleccionada('');
+    setResponsablesDisponibles([]);
+    setResponsableSalida('');
+    setNombreResponsable('');
+    setDniResponsable('');
     setFechaSalida(new Date().toISOString().split('T')[0]);
     setProductoSeleccionado('');
     setDescripcionProducto('');
@@ -483,20 +570,20 @@ const SalidaMateriales = () => {
                 />
               </div>
 
-              {/* Proyecto */}
+              {/* NUEVO: Bodega */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
-                  🏭 Proyecto *
+                  � Bodega *
                 </label>
                 <select
                   className="salida-form-select"
-                  value={proyectoSeleccionado}
-                  onChange={(e) => handleSeleccionProyecto(e.target.value)}
+                  value={bodegaSeleccionada}
+                  onChange={(e) => handleSeleccionBodega(e.target.value)}
                 >
-                  <option value="">-- Seleccione proyecto --</option>
-                  {proyectos.map((proyecto) => (
-                    <option key={proyecto.id_proyecto} value={proyecto.id_proyecto}>
-                      {proyecto.nombre_proyecto}
+                  <option value="">-- Seleccione bodega --</option>
+                  {bodegas.map((bodega) => (
+                    <option key={bodega.id_bodega} value={bodega.id_bodega}>
+                      {bodega.nombre} - {bodega.ubicacion}
                     </option>
                   ))}
                 </select>
@@ -506,22 +593,51 @@ const SalidaMateriales = () => {
 
             <div className="salida-form-row" style={{ marginTop: '15px' }}>
               
-              {/* Trabajador - BLOQUEADO (autocompletado desde movil_persona) */}
+              {/* NUEVO: Reserva (depende de Bodega) */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
-                  👤 Trabajador *
+                  📦 Reserva *
                 </label>
-                <input
-                  type="text"
-                  className="salida-form-input"
-                  value={trabajadorSeleccionado}
-                  disabled
-                  placeholder="Se autocompleta al seleccionar proyecto"
-                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
-                />
+                <select
+                  className="salida-form-select"
+                  value={reservaSeleccionada}
+                  onChange={(e) => handleSeleccionReserva(e.target.value)}
+                  disabled={!bodegaSeleccionada}
+                >
+                  <option value="">
+                    {bodegaSeleccionada ? '-- Seleccione reserva --' : '-- Primero seleccione una bodega --'}
+                  </option>
+                  {reservas.map((reserva) => (
+                    <option key={reserva.id_reserva} value={reserva.id_reserva}>
+                      {reserva.tipo_reserva}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* DNI - BLOQUEADO (autocompletado desde movil_persona) */}
+              {/* NUEVO: Responsable de la Salida (combobox) */}
+              <div className="salida-form-group">
+                <label className="salida-form-label">
+                  👨‍💼 Responsable de la Salida *
+                </label>
+                <select
+                  className="salida-form-select"
+                  value={responsableSalida}
+                  onChange={(e) => handleSeleccionResponsable(e.target.value)}
+                  disabled={!reservaSeleccionada}
+                >
+                  <option value="">
+                    {reservaSeleccionada ? '-- Seleccione responsable --' : '-- Primero seleccione una reserva --'}
+                  </option>
+                  {responsablesDisponibles.map((responsable) => (
+                    <option key={responsable.id_movil_persona} value={responsable.id_movil_persona}>
+                      {responsable.nom_ape}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* DNI - BLOQUEADO (autocompletado desde responsable) */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
                   🆔 DNI
@@ -529,24 +645,9 @@ const SalidaMateriales = () => {
                 <input
                   type="text"
                   className="salida-form-input"
-                  value={dniTrabajador}
+                  value={dniResponsable}
                   disabled
-                  placeholder="Se autocompleta al seleccionar proyecto"
-                  style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
-                />
-              </div>
-
-              {/* Área (Tipo Reserva) - BLOQUEADO (autocompletado desde reserva) */}
-              <div className="salida-form-group">
-                <label className="salida-form-label">
-                  📂 Área
-                </label>
-                <input
-                  type="text"
-                  className="salida-form-input"
-                  value={areaTrabajador}
-                  disabled
-                  placeholder="EXTERNA / INTERNA / COMERCIAL"
+                  placeholder="Se autocompleta al seleccionar responsable"
                   style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
                 />
               </div>
@@ -575,7 +676,7 @@ const SalidaMateriales = () => {
                   className="salida-form-select"
                   value={productoSeleccionado}
                   onChange={(e) => handleSeleccionProducto(e.target.value)}
-                  disabled={!proyectoSeleccionado}
+                  disabled={!responsableSalida}
                 >
                   <option value="">-- Seleccione producto --</option>
                   {productosDisponibles.map((producto, index) => (
@@ -810,7 +911,7 @@ const SalidaMateriales = () => {
                   onChange={(e) => setProyectoFiltro(e.target.value)}
                 >
                   <option value="">Todos los proyectos</option>
-                  {proyectos.map((proyecto) => (
+                  {responsables.map((proyecto) => (
                     <option key={proyecto.id_proyecto} value={proyecto.nombre_proyecto}>
                       {proyecto.nombre_proyecto}
                     </option>

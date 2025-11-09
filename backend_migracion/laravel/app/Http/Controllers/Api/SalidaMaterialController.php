@@ -39,6 +39,120 @@ class SalidaMaterialController extends Controller
     }
 
     /**
+     * Listar bodegas activas
+     */
+    public function listarBodegas()
+    {
+        try {
+            $bodegas = DB::table('bodega')
+                ->join('empresa', 'bodega.id_empresa', '=', 'empresa.id_empresa')
+                ->where('bodega.estado', 'ACTIVO')
+                ->select(
+                    'bodega.id_bodega',
+                    'bodega.nombre',
+                    'bodega.ubicacion',
+                    'empresa.razon_social'
+                )
+                ->orderBy('bodega.nombre')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $bodegas
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener bodegas',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener reservas por bodega (SOLO tipo de reserva)
+     */
+    public function obtenerReservasPorBodega($idBodega)
+    {
+        try {
+            Log::info("=== Obteniendo reservas por bodega: {$idBodega} ===");
+            
+            // Obtener solo los tipos de reserva únicos de la bodega
+            $reservas = DB::table('proyecto_almacen as pa')
+                ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
+                ->where('pa.id_bodega', $idBodega)
+                ->where('r.estado', 'ACTIVO')
+                ->where('pa.estado', 'ACTIVO')
+                ->where('pa.tipo_movil', 'SIN_PROYECTO')
+                ->select(
+                    'r.id_reserva',
+                    'r.tipo_reserva'
+                )
+                ->distinct()
+                ->orderBy('r.tipo_reserva')
+                ->get();
+
+            Log::info("Reservas encontradas: " . $reservas->count());
+
+            return response()->json([
+                'success' => true,
+                'data' => $reservas
+            ]);
+        } catch (Exception $e) {
+            Log::error("Error al obtener reservas: " . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener reservas',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener responsables (personas) por bodega y reserva
+     */
+    public function obtenerResponsablesPorBodegaReserva($idBodega, $idReserva)
+    {
+        try {
+            Log::info("=== Obteniendo responsables: Bodega={$idBodega}, Reserva={$idReserva} ===");
+            
+            $responsables = DB::table('proyecto_almacen as pa')
+                ->join('movil_persona as mp', 'pa.id_referencia', '=', 'mp.id_movil_persona')
+                ->where('pa.id_bodega', $idBodega)
+                ->where('pa.id_reserva', $idReserva)
+                ->where('pa.estado', 'ACTIVO')
+                ->where('pa.tipo_movil', 'SIN_PROYECTO')
+                ->select(
+                    'mp.id_movil_persona',
+                    'mp.nom_ape',
+                    'mp.dni',
+                    'pa.id_proyecto_almacen',
+                    'pa.nombre_proyecto'
+                )
+                ->orderBy('mp.nom_ape')
+                ->get();
+
+            Log::info("Responsables encontrados: " . $responsables->count());
+
+            return response()->json([
+                'success' => true,
+                'data' => $responsables
+            ]);
+        } catch (Exception $e) {
+            Log::error("Error al obtener responsables: " . $e->getMessage());
+            Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener responsables',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Obtener información del proyecto incluyendo datos de movil_persona ÚNICAMENTE
      * IMPORTANTE: Solo se usa movil_persona, se ignora movil_proyecto
      */
@@ -90,7 +204,46 @@ class SalidaMaterialController extends Controller
     }
 
     /**
-     * Obtener productos con stock disponible por proyecto
+     * Obtener productos con stock disponible por bodega y reserva
+     */
+    public function obtenerProductosPorBodegaReserva($idBodega, $idReserva)
+    {
+        try {
+            Log::info("=== Obteniendo productos: Bodega={$idBodega}, Reserva={$idReserva} ===");
+
+            $productos = DB::table('bodega_stock as bs')
+                ->join('producto as p', 'bs.codigo_producto', '=', 'p.codigo_producto')
+                ->where('bs.id_bodega', $idBodega)
+                ->where('bs.id_reserva', $idReserva)
+                ->where('bs.cantidad_disponible', '>', 0)
+                ->select(
+                    'p.codigo_producto',
+                    'p.descripcion',
+                    'p.unidad',
+                    'bs.cantidad_disponible as stock_actual'
+                )
+                ->orderBy('p.descripcion')
+                ->get();
+
+            Log::info("Productos encontrados: " . $productos->count());
+
+            return response()->json([
+                'success' => true,
+                'data' => $productos
+            ]);
+        } catch (Exception $e) {
+            Log::error("Error al obtener productos: " . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener productos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener productos con stock disponible por proyecto (LEGACY - mantener compatibilidad)
      */
     public function obtenerProductosPorProyecto(Request $request)
     {

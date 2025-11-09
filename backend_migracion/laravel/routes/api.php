@@ -558,6 +558,10 @@ use App\Http\Controllers\Api\SalidaMaterialController;
 Route::prefix('salida-materiales')->group(function () {
     // Catálogos
     Route::get('/proyectos', [SalidaMaterialController::class, 'listarProyectos']);
+    Route::get('/bodegas', [SalidaMaterialController::class, 'listarBodegas']);
+    Route::get('/reservas/{idBodega}', [SalidaMaterialController::class, 'obtenerReservasPorBodega']);
+    Route::get('/responsables/{idBodega}/{idReserva}', [SalidaMaterialController::class, 'obtenerResponsablesPorBodegaReserva']);
+    Route::get('/productos/{idBodega}/{idReserva}', [SalidaMaterialController::class, 'obtenerProductosPorBodegaReserva']);
     Route::get('/proyecto/{id}', [SalidaMaterialController::class, 'obtenerInfoProyecto']);
     Route::get('/productos-por-proyecto', [SalidaMaterialController::class, 'obtenerProductosPorProyecto']);
     

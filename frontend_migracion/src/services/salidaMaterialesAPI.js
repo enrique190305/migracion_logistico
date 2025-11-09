@@ -4,6 +4,63 @@ const API_URL = 'http://localhost:8000/api/salida-materiales';
 
 const salidaMaterialesAPI = {
   /**
+   * Listar bodegas activas
+   */
+  listarBodegas: async () => {
+    try {
+      const response = await axios.get(`${API_URL}/bodegas`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al listar bodegas:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener reservas por bodega
+   * @param {number} idBodega - ID de la bodega
+   */
+  obtenerReservasPorBodega: async (idBodega) => {
+    try {
+      const response = await axios.get(`${API_URL}/reservas/${idBodega}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener reservas:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener responsables (personas) por bodega y reserva
+   * @param {number} idBodega - ID de la bodega
+   * @param {number} idReserva - ID de la reserva
+   */
+  obtenerResponsablesPorBodegaReserva: async (idBodega, idReserva) => {
+    try {
+      const response = await axios.get(`${API_URL}/responsables/${idBodega}/${idReserva}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener responsables:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener productos por bodega y reserva
+   * @param {number} idBodega - ID de la bodega
+   * @param {number} idReserva - ID de la reserva
+   */
+  obtenerProductosPorBodegaReserva: async (idBodega, idReserva) => {
+    try {
+      const response = await axios.get(`${API_URL}/productos/${idBodega}/${idReserva}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener productos:', error);
+      throw error;
+    }
+  },
+
+  /**
    * Listar proyectos disponibles
    */
   listarProyectos: async () => {
