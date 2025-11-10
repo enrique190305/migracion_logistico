@@ -30,22 +30,18 @@ import {
   Tooltip,
   InputAdornment,
   CircularProgress,
-  Divider,
-  Tab,
-  Tabs
+  Divider
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Edit as EditIcon,
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  Assessment as AssessmentIcon,
-  History as HistoryIcon,
-  AttachMoney as MoneyIcon,
   Inventory as InventoryIcon,
+  Close as CloseIcon,
+  AttachMoney as MoneyIcon,
   TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-  Close as CloseIcon
+  TrendingDown as TrendingDownIcon
 } from '@mui/icons-material';
 
 const API_BASE_URL = 'http://localhost:8000/api';
@@ -54,7 +50,6 @@ function AjusteInventario() {
   // Estados principales
   const [inventario, setInventario] = useState([]);
   const [bodegas, setBodegas] = useState([]);
-  const [estadisticas, setEstadisticas] = useState(null);
   
   // Estados de filtros
   const [filtros, setFiltros] = useState({
@@ -66,7 +61,6 @@ function AjusteInventario() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [tabActual, setTabActual] = useState(0);
 
   // Estados del modal de ajuste
   const [modalAjuste, setModalAjuste] = useState(false);
@@ -89,7 +83,6 @@ function AjusteInventario() {
   useEffect(() => {
     cargarBodegas();
     cargarInventario();
-    cargarEstadisticas();
   }, []);
 
   // Cargar catálogos
@@ -122,18 +115,6 @@ function AjusteInventario() {
       setError('Error al cargar inventario');
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Cargar estadísticas
-  const cargarEstadisticas = async () => {
-    try {
-      const response = await axios.get(`${API_BASE_URL}/ajuste-inventario/estadisticas`);
-      if (response.data.success) {
-        setEstadisticas(response.data.estadisticas);
-      }
-    } catch (error) {
-      console.error('Error al cargar estadísticas:', error);
     }
   };
 
@@ -223,7 +204,6 @@ function AjusteInventario() {
         setSuccess(`Ajuste realizado exitosamente: ${response.data.message}`);
         cerrarModalAjuste();
         cargarInventario();
-        cargarEstadisticas();
         setTimeout(() => setSuccess(''), 5000);
       }
     } catch (error) {
@@ -346,34 +326,23 @@ function AjusteInventario() {
         </Alert>
       )}
 
-      {/* Tabs */}
+      {/* Filtros */}
       <Card sx={{ mb: 3 }}>
-        <Tabs value={tabActual} onChange={(e, newValue) => setTabActual(newValue)}>
-          <Tab label="Inventario" icon={<InventoryIcon />} iconPosition="start" />
-          <Tab label="Estadísticas" icon={<AssessmentIcon />} iconPosition="start" />
-        </Tabs>
-      </Card>
-
-      {/* Tab de Inventario */}
-      {tabActual === 0 && (
-        <>
-          {/* Filtros */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} md={5} sx={{ minWidth: '300px' }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Bodega</InputLabel>
-                    <Select
-                      value={filtros.id_bodega}
-                      onChange={(e) => setFiltros({ ...filtros, id_bodega: e.target.value })}
-                      label="Bodega"
-                    >
-                      <MenuItem value="">Todas las bodegas</MenuItem>
-                      {bodegas.map((bodega) => (
-                        <MenuItem key={bodega.id_bodega} value={bodega.id_bodega}>
-                          {bodega.nombre}
-                        </MenuItem>
+        <CardContent>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={5} sx={{ minWidth: '300px' }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Bodega</InputLabel>
+                <Select
+                  value={filtros.id_bodega}
+                  onChange={(e) => setFiltros({ ...filtros, id_bodega: e.target.value })}
+                  label="Bodega"
+                >
+                  <MenuItem value="">Todas las bodegas</MenuItem>
+                  {bodegas.map((bodega) => (
+                    <MenuItem key={bodega.id_bodega} value={bodega.id_bodega}>
+                      {bodega.nombre}
+                    </MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -506,18 +475,6 @@ function AjusteInventario() {
                                   <EditIcon />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Ver Historial">
-                                <IconButton
-                                  size="small"
-                                  color="secondary"
-                                  onClick={() => {
-                                    setProductoSeleccionado(item);
-                                    setModalHistorial(true);
-                                  }}
-                                >
-                                  <HistoryIcon />
-                                </IconButton>
-                              </Tooltip>
                             </TableCell>
                           </TableRow>
                         ))
@@ -528,170 +485,6 @@ function AjusteInventario() {
               )}
             </CardContent>
           </Card>
-        </>
-      )}
-
-      {/* Tab de Estadísticas */}
-      {tabActual === 1 && estadisticas && (
-        <Grid container spacing={3}>
-          {/* Tarjetas de resumen */}
-          <Grid item xs={12} md={3}>
-            <Card sx={{ bgcolor: '#e3f2fd' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#1976d2' }}>
-                      {estadisticas.total_productos}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Productos Totales
-                    </Typography>
-                  </Box>
-                  <InventoryIcon sx={{ fontSize: 50, color: '#1976d2', opacity: 0.5 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card sx={{ bgcolor: '#e8f5e9' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
-                      {formatearMoneda(estadisticas.valor_total)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Valor Total Inventario
-                    </Typography>
-                  </Box>
-                  <MoneyIcon sx={{ fontSize: 50, color: '#2e7d32', opacity: 0.5 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card sx={{ bgcolor: '#fff3e0' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#f57c00' }}>
-                      {estadisticas.productos_stock_bajo}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Stock Bajo (&lt;10)
-                    </Typography>
-                  </Box>
-                  <TrendingDownIcon sx={{ fontSize: 50, color: '#f57c00', opacity: 0.5 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <Card sx={{ bgcolor: '#f3e5f5' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#7b1fa2' }}>
-                      {bodegas.length}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Bodegas Activas
-                    </Typography>
-                  </Box>
-                  <AssessmentIcon sx={{ fontSize: 50, color: '#7b1fa2', opacity: 0.5 }} />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Productos por bodega */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Distribución por Bodega
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Bodega</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Productos</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {estadisticas.productos_por_bodega.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{item.nombre}</TableCell>
-                          <TableCell align="right">
-                            <Chip label={item.cantidad} color="primary" size="small" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Últimos ajustes */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2 }}>
-                  Últimos Ajustes Realizados
-                </Typography>
-                <TableContainer>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Fecha</TableCell>
-                        <TableCell sx={{ fontWeight: 'bold' }}>Producto</TableCell>
-                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>Cantidad</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {estadisticas.ultimos_ajustes.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={3} align="center">
-                            <Typography variant="body2" color="text.secondary">
-                              No hay ajustes recientes
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        estadisticas.ultimos_ajustes.map((ajuste, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              <Typography variant="caption">
-                                {new Date(ajuste.fecha).toLocaleDateString()}
-                              </Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2">{ajuste.descripcion}</Typography>
-                            </TableCell>
-                            <TableCell align="right">
-                              <Chip
-                                label={formatearNumero(ajuste.cantidad)}
-                                size="small"
-                                color={ajuste.tipo_movimiento === 'INGRESO' ? 'success' : 'error'}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
 
       {/* Modal de Ajuste */}
       <Dialog

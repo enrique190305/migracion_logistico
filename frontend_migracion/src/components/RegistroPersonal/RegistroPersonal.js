@@ -1,6 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import './RegistroPersonal.css';
 
+// ============================================
+// COMPONENTE: Modal de Confirmación
+// ============================================
+const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' }) => {
+  return (
+    <div className="modal-overlay-personal" onClick={onCancel}>
+      <div className="modal-confirm-personal" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-confirm-personal-header ${type}`}>
+          <span className="modal-confirm-personal-icon">
+            {type === 'warning' ? '⚠️' : type === 'danger' ? '🗑️' : '❓'}
+          </span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-confirm-personal-body">
+          <p>{message}</p>
+        </div>
+        <div className="modal-confirm-personal-footer">
+          <button className="btn-personal-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button className={`btn-personal-confirm btn-personal-${type}`} onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RegistroPersonal = () => {
   // Estados
   const [personal, setPersonal] = useState([]);
@@ -9,6 +38,7 @@ const RegistroPersonal = () => {
   const [loading, setLoading] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
   
   // Formulario
   const [formData, setFormData] = useState({
@@ -212,30 +242,37 @@ const cargarAreas = async () => {
   };
 
   const confirmarEliminar = async (id, nombre) => {
-    if (window.confirm(`¿Está seguro de eliminar a ${nombre}?`)) {
-      try {
-        setLoading(true);
+    setConfirmModal({
+      title: '¿Eliminar personal?',
+      message: `¿Está seguro de eliminar a ${nombre}?`,
+      type: 'danger',
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          setConfirmModal(null);
 
-        const response = await fetch(`http://localhost:8000/api/personal/${id}`, {
-          method: 'DELETE'
-        });
+          const response = await fetch(`http://localhost:8000/api/personal/${id}`, {
+            method: 'DELETE'
+          });
 
-        const data = await response.json();
+          const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.message || 'Error al eliminar');
+          if (!response.ok) {
+            throw new Error(data.message || 'Error al eliminar');
+          }
+
+          mostrarNotificacion('success', '✅ Personal Eliminado', `${nombre} ha sido eliminado`);
+          cargarPersonal();
+
+        } catch (error) {
+          console.error('Error:', error);
+          mostrarNotificacion('error', 'Error al eliminar', error.message);
+        } finally {
+          setLoading(false);
         }
-
-        mostrarNotificacion('success', '✅ Personal Eliminado', `${nombre} ha sido eliminado`);
-        cargarPersonal();
-
-      } catch (error) {
-        console.error('Error:', error);
-        mostrarNotificacion('error', 'Error al eliminar', error.message);
-      } finally {
-        setLoading(false);
-      }
-    }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   const cerrarModal = () => {
@@ -579,6 +616,19 @@ const cargarAreas = async () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal de Confirmación */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText="Sí, eliminar"
+          cancelText="Cancelar"
+        />
       )}
     </div>
   );

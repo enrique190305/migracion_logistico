@@ -5,6 +5,33 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import './Kardex.css';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-kardex toast-kardex-${type}`}>
+      <span className="toast-kardex-icon">{icons[type]}</span>
+      <span className="toast-kardex-message">{message}</span>
+      <button className="toast-kardex-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
 const API_BASE_URL = 'http://localhost:8000/api';
 
 const Kardex = () => {
@@ -14,6 +41,7 @@ const Kardex = () => {
   const [historialData, setHistorialData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState(null);
 
   // Estados de búsqueda
   const [searchInventario, setSearchInventario] = useState('');
@@ -42,6 +70,15 @@ const Kardex = () => {
   // Cache de datos
   const [inventarioCache, setInventarioCache] = useState([]);
   const [historialCache, setHistorialCache] = useState([]);
+
+  // Función para mostrar toast
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -140,7 +177,7 @@ const Kardex = () => {
 
   const aplicarFiltroFechas = async () => {
     if (new Date(fechaInicio) > new Date(fechaFin)) {
-      alert('❌ La fecha de inicio no puede ser mayor que la fecha de fin');
+      showToast('La fecha de inicio no puede ser mayor que la fecha de fin', 'error');
       return;
     }
     await cargarHistorial(fechaInicio, fechaFin);
@@ -207,7 +244,7 @@ const Kardex = () => {
       const nombre = tipo === 'inventario' ? 'InventarioActual' : `Historial_${fechaInicio}_${fechaFin}`;
       
       if (data.length === 0) {
-        alert('❌ No hay datos para exportar');
+        showToast('No hay datos para exportar', 'warning');
         return;
       }
 
@@ -292,7 +329,7 @@ const Kardex = () => {
       mostrarMensajeTemporal(`✅ ${tipo} exportado a Excel exitosamente`, 'success');
     } catch (error) {
       console.error('Error al exportar Excel:', error);
-      alert('❌ Error al exportar a Excel: ' + error.message);
+      showToast('Error al exportar a Excel: ' + error.message, 'error');
     }
   };
 
@@ -302,7 +339,7 @@ const Kardex = () => {
       const nombre = tipo === 'inventario' ? 'InventarioActual' : `Historial_${fechaInicio}_${fechaFin}`;
       
       if (data.length === 0) {
-        alert('❌ No hay datos para exportar');
+        showToast('No hay datos para exportar', 'warning');
         return;
       }
 
@@ -471,7 +508,7 @@ const Kardex = () => {
       mostrarMensajeTemporal(`✅ ${tipo} exportado a PDF exitosamente`, 'success');
     } catch (error) {
       console.error('Error al exportar PDF:', error);
-      alert('❌ Error al exportar a PDF: ' + error.message);
+      showToast('Error al exportar a PDF: ' + error.message, 'error');
     }
   };
 
@@ -777,6 +814,15 @@ const Kardex = () => {
             </table>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
       )}
     </div>
   );

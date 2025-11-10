@@ -11,12 +11,40 @@ import {
   eliminarProducto
 } from '../../services/productosAPI';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-productos toast-productos-${type}`}>
+      <span className="toast-productos-icon">{icons[type]}</span>
+      <span className="toast-productos-message">{message}</span>
+      <button className="toast-productos-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
 const RegistroProductos = () => {
   // Estados de datos
   const [productos, setProductos] = useState([]);
   const [familias, setFamilias] = useState([]);
   const [unidades, setUnidades] = useState([]);
   const [estadisticas, setEstadisticas] = useState(null);
+  const [toast, setToast] = useState(null);
   
   // Estados de filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,6 +77,14 @@ const RegistroProductos = () => {
     consumible: 'NO',
     observacion: ''
   });
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -159,7 +195,7 @@ const RegistroProductos = () => {
       setFormulario({ ...formulario, codigo_producto: codigo });
     } catch (err) {
       console.error('Error al generar código:', err);
-      alert('❌ Error al generar código automático');
+      showToast('Error al generar código automático', 'error');
     }
   };
 
@@ -848,6 +884,15 @@ const RegistroProductos = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
       )}
     </div>
   );

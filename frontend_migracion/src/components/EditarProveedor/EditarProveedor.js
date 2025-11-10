@@ -2,12 +2,72 @@ import React, { useState, useEffect } from 'react';
 import './EditarProveedor.css';
 import * as proveedorAPI from '../../services/proveedorAPI';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-editar toast-editar-${type}`}>
+      <span className="toast-editar-icon">{icons[type]}</span>
+      <span className="toast-editar-message">{message}</span>
+      <button className="toast-editar-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
+// ============================================
+// COMPONENTE: Modal de Confirmación
+// ============================================
+const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'danger' }) => {
+  return (
+    <div className="modal-overlay-editar" onClick={onCancel}>
+      <div className="modal-confirm-editar" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-confirm-editar-header ${type}`}>
+          <span className="modal-confirm-editar-icon">
+            {type === 'danger' ? '🗑️' : type === 'warning' ? '⚠️' : 'ℹ️'}
+          </span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-confirm-editar-body">
+          <p style={{ whiteSpace: 'pre-line' }}>{message}</p>
+        </div>
+        <div className="modal-confirm-editar-footer">
+          <button className="btn-editar-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button className={`btn-editar-confirm btn-editar-${type}`} onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EditarProveedor = () => {
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [panelMinimizado, setPanelMinimizado] = useState(false);
   const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Estados para Toast y Modal
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
 
   const [formulario, setFormulario] = useState({
     proveedor: '',
@@ -19,6 +79,15 @@ const EditarProveedor = () => {
     formaPago: '',
     servicios: ''
   });
+
+  // Función para mostrar toast
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   // Cargar proveedores al montar el componente
   useEffect(() => {
@@ -33,11 +102,11 @@ const EditarProveedor = () => {
       if (response.success) {
         setProveedores(response.data);
       } else {
-        alert('❌ Error al cargar proveedores');
+        showToast('Error al cargar proveedores', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error de conexión con el servidor');
+      showToast('Error de conexión con el servidor', 'error');
     } finally {
       setLoading(false);
     }
@@ -67,22 +136,22 @@ const EditarProveedor = () => {
 
   const handleActualizar = async () => {
     if (!proveedorSeleccionado) {
-      alert('⚠️ Por favor seleccione un proveedor de la lista');
+      showToast('Por favor seleccione un proveedor de la lista', 'warning');
       return;
     }
 
     if (!formulario.proveedor || !formulario.ruc) {
-      alert('⚠️ Por favor complete los campos obligatorios (Proveedor y RUC)');
+      showToast('Por favor complete los campos obligatorios (Proveedor y RUC)', 'warning');
       return;
     }
 
     if (formulario.ruc.length !== 11 || !/^\d+$/.test(formulario.ruc)) {
-      alert('⚠️ El RUC debe tener 11 dígitos numéricos');
+      showToast('El RUC debe tener 11 dígitos numéricos', 'warning');
       return;
     }
 
     if (formulario.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
-      alert('⚠️ Por favor ingrese un email válido');
+      showToast('Por favor ingrese un email válido', 'warning');
       return;
     }
 
@@ -101,7 +170,7 @@ const EditarProveedor = () => {
       });
       
       if (response.success) {
-        alert(`✅ Proveedor actualizado correctamente\n\nProveedor: ${formulario.proveedor}\nRUC: ${formulario.ruc}`);
+        showToast(`Proveedor actualizado correctamente: ${formulario.proveedor}`, 'success');
         await cargarProveedores(); // Recargar lista
         
         // Actualizar el proveedor seleccionado con los nuevos datos
@@ -119,11 +188,11 @@ const EditarProveedor = () => {
           });
         }
       } else {
-        alert(`❌ Error: ${response.message}`);
+        showToast(`Error: ${response.message}`, 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al actualizar el proveedor: ' + error.message);
+      showToast('Error al actualizar el proveedor: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -131,7 +200,7 @@ const EditarProveedor = () => {
 
   const handleRefrescar = async () => {
     if (!proveedorSeleccionado) {
-      alert('⚠️ Seleccione un proveedor primero');
+      showToast('Seleccione un proveedor primero', 'warning');
       return;
     }
 
@@ -151,13 +220,13 @@ const EditarProveedor = () => {
           formaPago: proveedorActualizado.formaPago || '',
           servicios: proveedorActualizado.servicios || ''
         });
-        alert('🔄 Datos refrescados desde la base de datos');
+        showToast('Datos refrescados desde la base de datos', 'success');
       } else {
-        alert('❌ Error al refrescar datos');
+        showToast('Error al refrescar datos', 'error');
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('❌ Error al refrescar datos del proveedor');
+      showToast('Error al refrescar datos del proveedor', 'error');
     } finally {
       setLoading(false);
     }
@@ -179,29 +248,39 @@ const EditarProveedor = () => {
 
   const handleEliminar = async () => {
     if (!proveedorSeleccionado) {
-      alert('⚠️ Por favor seleccione un proveedor de la lista');
+      showToast('Por favor seleccione un proveedor de la lista', 'warning');
       return;
     }
 
-    if (window.confirm(`¿Está seguro de eliminar el proveedor "${proveedorSeleccionado.proveedor}"?\n\nEsta acción no se puede deshacer.`)) {
-      try {
-        setLoading(true);
-        const response = await proveedorAPI.eliminarProveedor(proveedorSeleccionado.id);
+    setConfirmModal({
+      title: 'Eliminar Proveedor',
+      message: `¿Está seguro de eliminar el proveedor "${proveedorSeleccionado.proveedor}"?\n\nEsta acción no se puede deshacer.`,
+      type: 'danger',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(null);
         
-        if (response.success) {
-          alert(`🗑️ Proveedor eliminado: ${proveedorSeleccionado.proveedor}`);
-          await cargarProveedores(); // Recargar lista
-          handleLimpiar();
-        } else {
-          alert(`❌ Error: ${response.message}`);
+        try {
+          setLoading(true);
+          const response = await proveedorAPI.eliminarProveedor(proveedorSeleccionado.id);
+          
+          if (response.success) {
+            showToast(`Proveedor eliminado: ${proveedorSeleccionado.proveedor}`, 'success');
+            await cargarProveedores(); // Recargar lista
+            handleLimpiar();
+          } else {
+            showToast(`Error: ${response.message}`, 'error');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          showToast('Error al eliminar el proveedor', 'error');
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Error al eliminar el proveedor');
-      } finally {
-        setLoading(false);
-      }
-    }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   const filteredProveedores = proveedores.filter(prov =>
@@ -445,6 +524,28 @@ const EditarProveedor = () => {
           </table>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
+
+      {/* Modal de Confirmación */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText={confirmModal.confirmText}
+          cancelText={confirmModal.cancelText}
+        />
+      )}
     </div>
   );
 };

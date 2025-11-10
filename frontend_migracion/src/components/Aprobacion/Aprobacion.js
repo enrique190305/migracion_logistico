@@ -6,6 +6,113 @@ import ModalDetalle from './ModalDetalle';
 // ✅ CAMBIAR de 5000 a 8000
 const API_BASE_URL = 'http://localhost:8000/api';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast toast-${type}`}>
+      <span className="toast-icon">{icons[type]}</span>
+      <span className="toast-message">{message}</span>
+      <button className="toast-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
+// ============================================
+// COMPONENTE: Modal de Confirmación
+// ============================================
+const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' }) => {
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-confirm" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-confirm-header ${type}`}>
+          <span className="modal-confirm-icon">
+            {type === 'warning' ? '⚠️' : type === 'danger' ? '🗑️' : '❓'}
+          </span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-confirm-body">
+          <p>{message}</p>
+        </div>
+        <div className="modal-confirm-footer">
+          <button className="btn-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button className={`btn-confirm btn-${type}`} onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// COMPONENTE: Modal de Input (para motivo de rechazo)
+// ============================================
+const InputModal = ({ title, message, placeholder, onConfirm, onCancel, confirmText = 'Aceptar', cancelText = 'Cancelar' }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleConfirm = () => {
+    if (inputValue.trim() === '') {
+      return;
+    }
+    onConfirm(inputValue);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-input" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-input-header">
+          <span className="modal-input-icon">✍️</span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-input-body">
+          {message && <p className="modal-input-message">{message}</p>}
+          <textarea
+            className="modal-input-textarea"
+            placeholder={placeholder}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            rows="4"
+            autoFocus
+          />
+          {inputValue.trim() === '' && (
+            <span className="modal-input-hint">* Campo obligatorio</span>
+          )}
+        </div>
+        <div className="modal-input-footer">
+          <button className="btn-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button 
+            className="btn-confirm btn-primary" 
+            onClick={handleConfirm}
+            disabled={inputValue.trim() === ''}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Aprobacion = () => {
   const [ordenesCompra, setOrdenesCompra] = useState([]);
   const [ordenesServicio, setOrdenesServicio] = useState([]);
@@ -18,7 +125,21 @@ const Aprobacion = () => {
   const [detallesOrden, setDetallesOrden] = useState([]);
   const [loadingDetalles, setLoadingDetalles] = useState(false);
 
+  // Estados para Toast y Modals
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [inputModal, setInputModal] = useState(null);
+
   const token = localStorage.getItem('token');
+
+  // Función para mostrar toast
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   // Cargar órdenes de compra
   const fetchOrdenesCompra = async () => {
@@ -90,76 +211,87 @@ const Aprobacion = () => {
   const aprobarOrden = async () => {
     if (!selectedOrden) return;
 
-    const confirmacion = window.confirm('¿Está seguro que desea aprobar esta orden?');
-    if (!confirmacion) return;
-
-    try {
-      const id = activeTab === 'compra' ? selectedOrden.id_oc : selectedOrden.id_os;
-      const endpoint = activeTab === 'compra'
-        ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/estado`
-        : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/estado`;
-      
-      console.log('🔄 Aprobando orden:', endpoint);
-      
-      await axios.put(
-        endpoint,
-        { estado: 'APROBADO' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      alert('✅ Orden aprobada correctamente');
-      setShowModal(false);
-      
-      if (activeTab === 'compra') {
-        await fetchOrdenesCompra();
-      } else {
-        await fetchOrdenesServicio();
-      }
-    } catch (err) {
-      console.error('❌ Error al aprobar orden:', err.response || err);
-      alert('❌ Error al aprobar la orden: ' + (err.response?.data?.message || err.message));
-    }
+    setConfirmModal({
+      title: '¿Aprobar esta orden?',
+      message: `¿Está seguro que desea aprobar la orden ${activeTab === 'compra' ? selectedOrden.codigo_oc : selectedOrden.codigo_os}?`,
+      type: 'warning',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        
+        try {
+          const id = activeTab === 'compra' ? selectedOrden.id_oc : selectedOrden.id_os;
+          const endpoint = activeTab === 'compra'
+            ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/estado`
+            : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/estado`;
+          
+          console.log('🔄 Aprobando orden:', endpoint);
+          
+          await axios.put(
+            endpoint,
+            { estado: 'APROBADO' },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          
+          showToast('Orden aprobada correctamente', 'success');
+          setShowModal(false);
+          
+          if (activeTab === 'compra') {
+            await fetchOrdenesCompra();
+          } else {
+            await fetchOrdenesServicio();
+          }
+        } catch (err) {
+          console.error('❌ Error al aprobar orden:', err.response || err);
+          showToast('Error al aprobar la orden: ' + (err.response?.data?.message || err.message), 'error');
+        }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   // Rechazar orden
   const rechazarOrden = async () => {
     if (!selectedOrden) return;
 
-    const motivo = prompt('Ingrese el motivo del rechazo:');
-    if (!motivo || motivo.trim() === '') {
-      alert('Debe ingresar un motivo para rechazar la orden');
-      return;
-    }
-
-    try {
-      const id = activeTab === 'compra' ? selectedOrden.id_oc : selectedOrden.id_os;
-      const endpoint = activeTab === 'compra'
-        ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/estado`
-        : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/estado`;
-      
-      console.log('🔄 Rechazando orden:', endpoint);
-      
-      await axios.put(
-        endpoint,
-        { 
-          estado: 'RECHAZADO',
-          observaciones: motivo 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      alert('✅ Orden rechazada correctamente');
-      setShowModal(false);
-      
-      if (activeTab === 'compra') {
-        await fetchOrdenesCompra();
-      } else {
-        await fetchOrdenesServicio();
-      }
-    } catch (err) {
-      console.error('❌ Error al rechazar orden:', err.response || err);
-      alert('❌ Error al rechazar la orden: ' + (err.response?.data?.message || err.message));
-    }
+    setInputModal({
+      title: 'Rechazar Orden',
+      message: `Ingrese el motivo del rechazo para la orden ${activeTab === 'compra' ? selectedOrden.codigo_oc : selectedOrden.codigo_os}:`,
+      placeholder: 'Describa el motivo del rechazo...',
+      onConfirm: async (motivo) => {
+        setInputModal(null);
+        
+        try {
+          const id = activeTab === 'compra' ? selectedOrden.id_oc : selectedOrden.id_os;
+          const endpoint = activeTab === 'compra'
+            ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/estado`
+            : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/estado`;
+          
+          console.log('🔄 Rechazando orden:', endpoint);
+          
+          await axios.put(
+            endpoint,
+            { 
+              estado: 'RECHAZADO',
+              observaciones: motivo 
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          
+          showToast('Orden rechazada correctamente', 'success');
+          setShowModal(false);
+          
+          if (activeTab === 'compra') {
+            await fetchOrdenesCompra();
+          } else {
+            await fetchOrdenesServicio();
+          }
+        } catch (err) {
+          console.error('❌ Error al rechazar orden:', err.response || err);
+          showToast('Error al rechazar la orden: ' + (err.response?.data?.message || err.message), 'error');
+        }
+      },
+      onCancel: () => setInputModal(null)
+    });
   };
 
   // Cargar datos al montar
@@ -356,6 +488,41 @@ const Aprobacion = () => {
           onRechazar={rechazarOrden}
           formatCurrency={formatCurrency}
           calcularTotalDetalles={calcularTotalDetalles}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
+
+      {/* Modal de Confirmación */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText="Sí, aprobar"
+          cancelText="Cancelar"
+        />
+      )}
+
+      {/* Modal de Input */}
+      {inputModal && (
+        <InputModal
+          title={inputModal.title}
+          message={inputModal.message}
+          placeholder={inputModal.placeholder}
+          onConfirm={inputModal.onConfirm}
+          onCancel={inputModal.onCancel}
+          confirmText="Rechazar"
+          cancelText="Cancelar"
         />
       )}
     </div>

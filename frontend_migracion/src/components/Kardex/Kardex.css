@@ -432,6 +432,86 @@
   font-size: 16px;
 }
 
+/* ============================================
+   TOAST NOTIFICATIONS KARDEX
+   ============================================ */
+.toast-kardex {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 500px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10000;
+  animation: slideInRightKardex 0.3s ease-out;
+}
+
+@keyframes slideInRightKardex {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-kardex-success {
+  border-left: 4px solid #28a745;
+}
+
+.toast-kardex-error {
+  border-left: 4px solid #dc3545;
+}
+
+.toast-kardex-warning {
+  border-left: 4px solid #ffc107;
+}
+
+.toast-kardex-info {
+  border-left: 4px solid #17a2b8;
+}
+
+.toast-kardex-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.toast-kardex-message {
+  flex: 1;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-kardex-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toast-kardex-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .kardex-container {

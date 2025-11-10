@@ -10,7 +10,6 @@ const SalidaMateriales = () => {
   // Estados de UI
   const [cargando, setCargando] = useState(false);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
-  const [tabActivo, setTabActivo] = useState('nueva'); // 'nueva' o 'historial'
 
   // Estados del formulario principal
   const [numeroSalida, setNumeroSalida] = useState('');
@@ -35,17 +34,11 @@ const SalidaMateriales = () => {
   const [bodegas, setBodegas] = useState([]);
   const [reservas, setReservas] = useState([]);
   const [responsablesDisponibles, setResponsablesDisponibles] = useState([]); // Lista de personas responsables por reserva
-  const [responsables, setResponsables] = useState([]); // Lista de proyectos para filtro de historial
+  const [responsables, setResponsables] = useState([]); // Lista de proyectos disponibles
   const [productosDisponibles, setProductosDisponibles] = useState([]);
 
   // Estado de productos agregados (tabla)
   const [productosAgregados, setProductosAgregados] = useState([]);
-
-  // Estados para historial
-  const [historialSalidas, setHistorialSalidas] = useState([]);
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
-  const [proyectoFiltro, setProyectoFiltro] = useState('');
 
   // ============================================
   // EFECTOS
@@ -54,12 +47,6 @@ const SalidaMateriales = () => {
   useEffect(() => {
     cargarDatosIniciales();
   }, []);
-
-  useEffect(() => {
-    if (tabActivo === 'historial') {
-      cargarHistorial();
-    }
-  }, [tabActivo]);
 
   // Efecto para actualizar el stock disponible cuando cambian los productos agregados
   useEffect(() => {
@@ -91,7 +78,7 @@ const SalidaMateriales = () => {
         setBodegas(respBodegas.data);
       }
 
-      // Cargar proyectos para el historial (todos los proyectos SIN_PROYECTO)
+      // Cargar proyectos disponibles
       const respProyectos = await salidaMaterialesAPI.listarProyectos();
       if (respProyectos.success) {
         setResponsables(respProyectos.data);
@@ -135,28 +122,6 @@ const SalidaMateriales = () => {
       console.error('Error al cargar productos:', error);
       mostrarMensaje('error', 'Error al cargar productos del proyecto');
       setProductosDisponibles([]);
-    } finally {
-      setCargando(false);
-    }
-  };
-
-  const cargarHistorial = async () => {
-    try {
-      setCargando(true);
-
-      const filtros = {};
-      if (fechaDesde) filtros.fecha_desde = fechaDesde;
-      if (fechaHasta) filtros.fecha_hasta = fechaHasta;
-      if (proyectoFiltro) filtros.proyecto = proyectoFiltro;
-
-      const response = await salidaMaterialesAPI.obtenerHistorial(filtros);
-      
-      if (response.success) {
-        setHistorialSalidas(response.data);
-      }
-    } catch (error) {
-      console.error('Error al cargar historial:', error);
-      mostrarMensaje('error', 'Error al cargar el historial de salidas');
     } finally {
       setCargando(false);
     }
@@ -495,13 +460,6 @@ const SalidaMateriales = () => {
     setProductosDisponibles([]);
   };
 
-  const handleLimpiarFiltros = () => {
-    setFechaDesde('');
-    setFechaHasta('');
-    setProyectoFiltro('');
-    cargarHistorial();
-  };
-
   const handleDescargarPDF = async (numeroSalida) => {
     try {
       setCargando(true);
@@ -543,26 +501,9 @@ const SalidaMateriales = () => {
         </div>
       )}
 
-      {/* TABS PRINCIPALES */}
-      <div className="salida-tabs">
-        <button
-          className={`salida-tab ${tabActivo === 'nueva' ? 'activo' : ''}`}
-          onClick={() => setTabActivo('nueva')}
-        >
-          📝 Nueva Salida
-        </button>
-        <button
-          className={`salida-tab ${tabActivo === 'historial' ? 'activo' : ''}`}
-          onClick={() => setTabActivo('historial')}
-        >
-          📋 Historial de Salidas
-        </button>
-      </div>
-
-      {/* CONTENIDO SEGÚN TAB ACTIVO */}
+      {/* CONTENIDO */}
       <div className="salida-content">
-        {tabActivo === 'nueva' && renderNuevaSalida()}
-        {tabActivo === 'historial' && renderHistorial()}
+        {renderNuevaSalida()}
       </div>
 
       {/* LOADER */}
@@ -914,143 +855,6 @@ const SalidaMateriales = () => {
               </button>
 
             </div>
-          </div>
-        </div>
-
-      </div>
-    );
-  }
-
-  function renderHistorial() {
-    return (
-      <div className="historial-container">
-        
-        {/* FILTROS */}
-        <div className="salida-card">
-          <div className="salida-card-header">
-            <span className="salida-icon">🔍</span>
-            <h3 className="salida-card-title">Filtros de Búsqueda</h3>
-          </div>
-          <div className="salida-card-body">
-            
-            <div className="salida-form-row">
-              
-              <div className="salida-form-group">
-                <label className="salida-form-label">📅 Fecha Desde</label>
-                <input
-                  type="date"
-                  className="salida-form-input"
-                  value={fechaDesde}
-                  onChange={(e) => setFechaDesde(e.target.value)}
-                />
-              </div>
-
-              <div className="salida-form-group">
-                <label className="salida-form-label">📅 Fecha Hasta</label>
-                <input
-                  type="date"
-                  className="salida-form-input"
-                  value={fechaHasta}
-                  onChange={(e) => setFechaHasta(e.target.value)}
-                />
-              </div>
-
-              <div className="salida-form-group">
-                <label className="salida-form-label">🏭 Proyecto</label>
-                <select
-                  className="salida-form-select"
-                  value={proyectoFiltro}
-                  onChange={(e) => setProyectoFiltro(e.target.value)}
-                >
-                  <option value="">Todos los proyectos</option>
-                  {responsables.map((proyecto) => (
-                    <option key={proyecto.id_proyecto} value={proyecto.nombre_proyecto}>
-                      {proyecto.nombre_proyecto}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '15px' }}>
-              <button
-                className="salida-btn salida-btn-secondary"
-                onClick={handleLimpiarFiltros}
-              >
-                <span className="salida-btn-icon">🔄</span>
-                Limpiar
-              </button>
-              <button
-                className="salida-btn salida-btn-primary"
-                onClick={cargarHistorial}
-              >
-                <span className="salida-btn-icon">🔍</span>
-                Buscar
-              </button>
-            </div>
-
-          </div>
-        </div>
-
-        {/* TABLA DE HISTORIAL */}
-        <div className="salida-card">
-          <div className="salida-card-header">
-            <span className="salida-icon">📋</span>
-            <h3 className="salida-card-title">
-              Historial de Salidas
-              {historialSalidas.length > 0 && (
-                <span className="tab-badge">{historialSalidas.length}</span>
-              )}
-            </h3>
-          </div>
-          <div className="salida-card-body">
-            
-            {historialSalidas.length > 0 ? (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="salida-table">
-                  <thead>
-                    <tr>
-                      <th>N° Salida</th>
-                      <th>Fecha</th>
-                      <th>Proyecto</th>
-                      <th>Trabajador</th>
-                      <th>Usuario Registro</th>
-                      <th>Fecha Registro</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {historialSalidas.map((salida, index) => (
-                      <tr key={index}>
-                        <td style={{ fontWeight: '600', color: '#667eea' }}>
-                          {salida.numero_salida}
-                        </td>
-                        <td>{new Date(salida.fecha_salida).toLocaleDateString('es-ES')}</td>
-                        <td>{salida.proyecto_almacen}</td>
-                        <td>{salida.trabajador}</td>
-                        <td>{salida.usuario_registro}</td>
-                        <td>{new Date(salida.fecha_registro).toLocaleString('es-ES')}</td>
-                        <td style={{ textAlign: 'center' }}>
-                          <button
-                            className="salida-table-btn salida-table-btn-pdf"
-                            onClick={() => handleDescargarPDF(salida.numero_salida)}
-                            title="Descargar PDF"
-                          >
-                            📄 PDF
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#999', fontSize: '16px' }}>
-                📭 No hay registros de salidas
-              </div>
-            )}
-
           </div>
         </div>
 

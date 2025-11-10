@@ -4,6 +4,35 @@ import './RegistroProyecto.css';
 import * as proyectosAPI from '../../services/proyectosAPI';
 import Notificacion from './Notificacion';
 
+// ============================================
+// COMPONENTE: Modal de Confirmación
+// ============================================
+const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'danger' }) => {
+  return (
+    <div className="modal-overlay-confirm" onClick={onCancel}>
+      <div className="modal-confirm-box" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-confirm-box-header ${type}`}>
+          <span className="modal-confirm-box-icon">
+            {type === 'danger' ? '⚠️' : type === 'warning' ? '❓' : 'ℹ️'}
+          </span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-confirm-box-body">
+          <p style={{ whiteSpace: 'pre-line' }}>{message}</p>
+        </div>
+        <div className="modal-confirm-box-footer">
+          <button className="btn-modal-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button className={`btn-modal-confirm btn-modal-${type}`} onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RegistroProyecto = () => {
   // Estados principales
   const [paso, setPaso] = useState(1); // Control de pasos del wizard
@@ -17,6 +46,9 @@ const RegistroProyecto = () => {
   
   // Estado para notificaciones personalizadas
   const [notificacion, setNotificacion] = useState(null);
+
+  // Estado para modal de confirmación
+  const [confirmModal, setConfirmModal] = useState(null);
 
   /**
    * Mostrar notificación personalizada
@@ -912,40 +944,41 @@ const RegistroProyecto = () => {
 
   // Función para eliminar (desactivar) subproyecto
   const eliminarSubproyectoHandler = async (sub) => {
-    const confirmar = window.confirm(
-      `¿Está seguro de eliminar el subproyecto "${sub.nombre || sub.nombre_proyecto}"?\n\n` +
-      `Código: ${sub.codigo_proyecto || 'N/A'}\n` +
-      `Esta acción desactivará el subproyecto y no se podrá revertir.`
-    );
+    setConfirmModal({
+      title: 'Eliminar Subproyecto',
+      message: `¿Está seguro de eliminar el subproyecto "${sub.nombre || sub.nombre_proyecto}"?\n\nCódigo: ${sub.codigo_proyecto || 'N/A'}\n\nEsta acción desactivará el subproyecto y no se podrá revertir.`,
+      type: 'danger',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setLoading(true);
+        
+        try {
+          await proyectosAPI.eliminarSubproyecto(
+            proyectoSeleccionado.id_proyecto_almacen,
+            sub.id_proyecto_almacen || sub.id
+          );
 
-    if (!confirmar) return;
+          mostrarNotificacion(
+            'success',
+            'Subproyecto Eliminado',
+            'El subproyecto ha sido desactivado exitosamente.',
+            [
+              { label: '📋 Subproyecto', valor: sub.nombre || sub.nombre_proyecto },
+              { label: '🗑️ Acción', valor: 'Desactivado' }
+            ]
+          );
 
-    setLoading(true);
-    try {
-      await proyectosAPI.eliminarSubproyecto(
-        proyectoSeleccionado.id_proyecto_almacen,
-        sub.id_proyecto_almacen || sub.id
-      );
+          // Recargar subproyectos
+          const subs = await proyectosAPI.obtenerSubproyectos(proyectoSeleccionado.id_proyecto_almacen);
+          setSubproyectos(subs);
 
-      mostrarNotificacion(
-        'success',
-        'Subproyecto Eliminado',
-        'El subproyecto ha sido desactivado exitosamente.',
-        [
-          { label: '📋 Subproyecto', valor: sub.nombre || sub.nombre_proyecto },
-          { label: '🗑️ Acción', valor: 'Desactivado' }
-        ]
-      );
+          setTimeout(() => {
+            cerrarNotificacion();
+          }, 3000);
 
-      // Recargar subproyectos
-      const subs = await proyectosAPI.obtenerSubproyectos(proyectoSeleccionado.id_proyecto_almacen);
-      setSubproyectos(subs);
-
-      setTimeout(() => {
-        cerrarNotificacion();
-      }, 3000);
-
-    } catch (error) {
+        } catch (error) {
       console.error('Error al eliminar subproyecto:', error);
       mostrarNotificacion(
         'error',
@@ -958,6 +991,9 @@ const RegistroProyecto = () => {
     } finally {
       setLoading(false);
     }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   // ========================================
@@ -1094,48 +1130,52 @@ const RegistroProyecto = () => {
 
   // Función para eliminar (desactivar) móvil sin proyecto
   const eliminarPersonaHandler = async (persona) => {
-    const confirmar = window.confirm(
-      `¿Está seguro de eliminar el móvil sin proyecto "${persona.nombre_proyecto}"?\n\n` +
-      `Código: ${persona.codigo_proyecto || 'N/A'}\n` +
-      `Esta acción desactivará el registro y no se podrá revertir.`
-    );
+    setConfirmModal({
+      title: 'Eliminar Móvil sin Proyecto',
+      message: `¿Está seguro de eliminar el móvil sin proyecto "${persona.nombre_proyecto}"?\n\nCódigo: ${persona.codigo_proyecto || 'N/A'}\n\nEsta acción desactivará el registro y no se podrá revertir.`,
+      type: 'danger',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setLoading(true);
+        
+        try {
+          await proyectosAPI.eliminarProyecto(persona.id_proyecto_almacen);
 
-    if (!confirmar) return;
+          mostrarNotificacion(
+            'success',
+            'Móvil sin Proyecto Eliminado',
+            'El registro ha sido desactivado exitosamente.',
+            [
+              { label: '👤 Persona', valor: persona.nombre_proyecto },
+              { label: '🗑️ Acción', valor: 'Desactivado' }
+            ]
+          );
 
-    setLoading(true);
-    try {
-      await proyectosAPI.eliminarProyecto(persona.id_proyecto_almacen);
+          // Recargar proyectos para reflejar los cambios
+          await cargarProyectos();
 
-      mostrarNotificacion(
-        'success',
-        'Móvil sin Proyecto Eliminado',
-        'El registro ha sido desactivado exitosamente.',
-        [
-          { label: '👤 Persona', valor: persona.nombre_proyecto },
-          { label: '🗑️ Acción', valor: 'Desactivado' }
-        ]
-      );
+          setTimeout(() => {
+            cerrarNotificacion();
+          }, 3000);
 
-      // Recargar proyectos para reflejar los cambios
-      await cargarProyectos();
-
-      setTimeout(() => {
-        cerrarNotificacion();
-      }, 3000);
-
-    } catch (error) {
-      console.error('Error al eliminar persona:', error);
-      mostrarNotificacion(
-        'error',
-        'Error al Eliminar',
-        'Ocurrió un error al intentar eliminar el registro.',
-        [
-          { label: '❌ Error', valor: error.message || 'Error desconocido' }
-        ]
-      );
-    } finally {
-      setLoading(false);
-    }
+        } catch (error) {
+          console.error('Error al eliminar persona:', error);
+          mostrarNotificacion(
+            'error',
+            'Error al Eliminar',
+            'Ocurrió un error al intentar eliminar el registro.',
+            [
+              { label: '❌ Error', valor: error.message || 'Error desconocido' }
+            ]
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   // ========================================
@@ -1251,48 +1291,52 @@ const RegistroProyecto = () => {
       return;
     }
 
-    const confirmar = window.confirm(
-      `¿Está seguro de eliminar el proyecto "${proyecto.nombre_proyecto}"?\n\n` +
-      `Código: ${proyecto.codigo_proyecto || 'N/A'}\n` +
-      `Esta acción desactivará el proyecto y no se podrá revertir.`
-    );
+    setConfirmModal({
+      title: 'Eliminar Proyecto',
+      message: `¿Está seguro de eliminar el proyecto "${proyecto.nombre_proyecto}"?\n\nCódigo: ${proyecto.codigo_proyecto || 'N/A'}\n\nEsta acción desactivará el proyecto y no se podrá revertir.`,
+      type: 'danger',
+      confirmText: 'Sí, eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setLoading(true);
+        
+        try {
+          await proyectosAPI.eliminarProyecto(proyecto.id_proyecto_almacen);
 
-    if (!confirmar) return;
+          mostrarNotificacion(
+            'success',
+            'Proyecto Eliminado',
+            'El proyecto ha sido desactivado exitosamente.',
+            [
+              { label: '📋 Proyecto', valor: proyecto.nombre_proyecto },
+              { label: '🗑️ Acción', valor: 'Desactivado' }
+            ]
+          );
 
-    setLoading(true);
-    try {
-      await proyectosAPI.eliminarProyecto(proyecto.id_proyecto_almacen);
+          // Recargar proyectos
+          await cargarProyectos();
 
-      mostrarNotificacion(
-        'success',
-        'Proyecto Eliminado',
-        'El proyecto ha sido desactivado exitosamente.',
-        [
-          { label: '📋 Proyecto', valor: proyecto.nombre_proyecto },
-          { label: '🗑️ Acción', valor: 'Desactivado' }
-        ]
-      );
+          setTimeout(() => {
+            cerrarNotificacion();
+          }, 3000);
 
-      // Recargar proyectos
-      await cargarProyectos();
-
-      setTimeout(() => {
-        cerrarNotificacion();
-      }, 3000);
-
-    } catch (error) {
-      console.error('Error al eliminar proyecto:', error);
-      mostrarNotificacion(
-        'error',
-        'Error al Eliminar',
-        'Ocurrió un error al intentar eliminar el proyecto.',
-        [
-          { label: '❌ Error', valor: error.message || 'Error desconocido' }
-        ]
-      );
-    } finally {
-      setLoading(false);
-    }
+        } catch (error) {
+          console.error('Error al eliminar proyecto:', error);
+          mostrarNotificacion(
+            'error',
+            'Error al Eliminar',
+            'Ocurrió un error al intentar eliminar el proyecto.',
+            [
+              { label: '❌ Error', valor: error.message || 'Error desconocido' }
+            ]
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   // Renderizado condicional según la vista
@@ -2678,6 +2722,19 @@ const RegistroProyecto = () => {
             )}
           </div>
         </div>
+      )}
+
+      {/* Modal de Confirmación */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText={confirmModal.confirmText}
+          cancelText={confirmModal.cancelText}
+        />
       )}
     </div>
   );

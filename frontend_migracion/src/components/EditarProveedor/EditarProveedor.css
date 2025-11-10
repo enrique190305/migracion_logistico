@@ -473,6 +473,225 @@
   background: #ecf0f1;
 }
 
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+.toast-editar {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 500px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10000;
+  animation: slideInRightEditar 0.3s ease-out;
+}
+
+@keyframes slideInRightEditar {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-editar-success {
+  border-left: 4px solid #28a745;
+}
+
+.toast-editar-error {
+  border-left: 4px solid #dc3545;
+}
+
+.toast-editar-warning {
+  border-left: 4px solid #ffc107;
+}
+
+.toast-editar-info {
+  border-left: 4px solid #17a2b8;
+}
+
+.toast-editar-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.toast-editar-message {
+  flex: 1;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-editar-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toast-editar-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* ============================================
+   MODAL DE CONFIRMACIÓN
+   ============================================ */
+.modal-overlay-editar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeInEditar 0.2s ease-out;
+}
+
+@keyframes fadeInEditar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-confirm-editar {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideUpEditar 0.3s ease-out;
+}
+
+@keyframes slideUpEditar {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-confirm-editar-header {
+  padding: 24px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-confirm-editar-header.danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.modal-confirm-editar-header.warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.modal-confirm-editar-icon {
+  font-size: 32px;
+}
+
+.modal-confirm-editar-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.modal-confirm-editar-body {
+  padding: 24px;
+}
+
+.modal-confirm-editar-body p {
+  color: #333;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-confirm-editar-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-editar-cancel,
+.btn-editar-confirm {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-editar-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-editar-cancel:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+.btn-editar-confirm {
+  color: white;
+}
+
+.btn-editar-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.btn-editar-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.btn-editar-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.btn-editar-warning:hover {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.4);
+}
+
 /* Responsive */
 @media (max-width: 1400px) {
   .datos-grid-horizontal-editar-prov {

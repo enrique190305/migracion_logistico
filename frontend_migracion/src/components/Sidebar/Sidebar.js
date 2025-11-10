@@ -1,6 +1,33 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-sidebar toast-sidebar-${type}`}>
+      <span className="toast-sidebar-icon">{icons[type]}</span>
+      <span className="toast-sidebar-message">{message}</span>
+      <button className="toast-sidebar-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
 const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin, user }) => {
   const [expandedCategories, setExpandedCategories] = useState({
     activos: false,
@@ -12,6 +39,15 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     aprobacion: false,
     reporteria: false
   });
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   console.log('🔍 Sidebar: Usuario es admin?', isAdmin);
 
@@ -48,7 +84,6 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         { id: 'ingreso-materiales', title: 'Ingreso de Materiales', icon: '📥' },
         { id: 'traslado-materiales', title: 'Traslado de Materiales', icon: '🔄' },
         { id: 'salida-materiales', title: 'Salida de Materiales', icon: '📤' },
-        { id: 'stock-bodegas', title: 'Stock de Bodegas', icon: '📦' },
         { id: 'ajuste-inventario', title: 'Ajuste de Inventario', icon: '⚖️' }
       ]
     },
@@ -118,7 +153,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     const restrictedModules = ['aprobacion-ordenes'];
     
     if (restrictedModules.includes(itemId) && !isAdmin) {
-      alert('🚫 Acceso Denegado\n\nEste módulo está disponible únicamente para usuarios con rol de Administrador.\n\nContacte al administrador del sistema si necesita acceso.');
+      showToast('🚫 Acceso Denegado\n\nEste módulo está disponible únicamente para usuarios con rol de Administrador.\n\nContacte al administrador del sistema si necesita acceso.', 'error');
       return;
     }
     
@@ -252,6 +287,15 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
           {!isCollapsed && <span className="menu-title">Ayuda</span>}
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
     </div>
   );
 };

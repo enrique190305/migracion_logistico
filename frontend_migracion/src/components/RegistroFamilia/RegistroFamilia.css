@@ -493,6 +493,224 @@
   box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
 }
 
+/* ============================================
+   TOAST Y MODAL FAMILIA
+   ============================================ */
+.toast-familia {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 500px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10000;
+  animation: slideInRightFamilia 0.3s ease-out;
+  white-space: pre-wrap;
+}
+
+@keyframes slideInRightFamilia {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-familia-success {
+  border-left: 4px solid #28a745;
+}
+
+.toast-familia-error {
+  border-left: 4px solid #dc3545;
+}
+
+.toast-familia-warning {
+  border-left: 4px solid #ffc107;
+}
+
+.toast-familia-info {
+  border-left: 4px solid #17a2b8;
+}
+
+.toast-familia-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.toast-familia-message {
+  flex: 1;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-familia-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.toast-familia-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.modal-overlay-familia {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  animation: fadeInFamilia 0.2s ease-out;
+}
+
+@keyframes fadeInFamilia {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-confirm-familia {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 520px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideUpFamilia 0.3s ease-out;
+}
+
+@keyframes slideUpFamilia {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-confirm-familia-header {
+  padding: 24px;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-confirm-familia-header.danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.modal-confirm-familia-header.warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.modal-confirm-familia-icon {
+  font-size: 32px;
+}
+
+.modal-confirm-familia-header h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.modal-confirm-familia-body {
+  padding: 24px;
+  white-space: pre-wrap;
+}
+
+.modal-confirm-familia-body p {
+  color: #333;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.modal-confirm-familia-footer {
+  padding: 20px 24px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.btn-familia-cancel,
+.btn-familia-confirm {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-familia-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-familia-cancel:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+}
+
+.btn-familia-confirm {
+  color: white;
+}
+
+.btn-familia-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.btn-familia-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.4);
+}
+
+.btn-familia-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+}
+
+.btn-familia-warning:hover {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.4);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .registro-familia-container-new {

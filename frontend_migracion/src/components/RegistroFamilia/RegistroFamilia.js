@@ -1,6 +1,62 @@
 import React, { useState } from 'react';
 import './RegistroFamilia.css';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-familia toast-familia-${type}`}>
+      <span className="toast-familia-icon">{icons[type]}</span>
+      <span className="toast-familia-message">{message}</span>
+      <button className="toast-familia-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
+// ============================================
+// COMPONENTE: Modal de Confirmación
+// ============================================
+const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' }) => {
+  return (
+    <div className="modal-overlay-familia" onClick={onCancel}>
+      <div className="modal-confirm-familia" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-confirm-familia-header ${type}`}>
+          <span className="modal-confirm-familia-icon">
+            {type === 'warning' ? '⚠️' : type === 'danger' ? '🗑️' : '❓'}
+          </span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-confirm-familia-body">
+          <p>{message}</p>
+        </div>
+        <div className="modal-confirm-familia-footer">
+          <button className="btn-familia-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button className={`btn-familia-confirm btn-familia-${type}`} onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RegistroFamilia = () => {
   const [familias, setFamilias] = useState([
     {
@@ -38,6 +94,16 @@ const RegistroFamilia = () => {
   const [familiaSeleccionada, setFamiliaSeleccionada] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [toast, setToast] = useState(null);
+  const [confirmModal, setConfirmModal] = useState(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   const [formulario, setFormulario] = useState({
     tipoFamilia: '',
@@ -79,7 +145,7 @@ const RegistroFamilia = () => {
 
   const handleGuardar = () => {
     if (!formulario.tipoFamilia || !formulario.equivalencia) {
-      alert('⚠️ Por favor complete todos los campos obligatorios');
+      showToast('Por favor complete todos los campos obligatorios', 'warning');
       return;
     }
 
@@ -91,19 +157,26 @@ const RegistroFamilia = () => {
     };
 
     setFamilias([...familias, nuevaFamilia]);
-    alert(`✅ Familia creada correctamente\n\nTipo: ${nuevaFamilia.tipoFamilia}\nEquivalencia: ${nuevaFamilia.equivalencia}`);
+    showToast(`Familia creada correctamente\n\nTipo: ${nuevaFamilia.tipoFamilia}\nEquivalencia: ${nuevaFamilia.equivalencia}`, 'success');
     handleCerrarModal();
   };
 
   const handleEliminar = (id) => {
     const familia = familias.find(f => f.id === id);
-    if (window.confirm(`¿Está seguro de eliminar la familia "${familia.tipoFamilia}"?\n\nEsta acción no se puede deshacer.`)) {
-      setFamilias(familias.filter(fam => fam.id !== id));
-      alert(`🗑️ Familia eliminada: ${familia.tipoFamilia}`);
-      if (familiaSeleccionada?.id === id) {
-        setFamiliaSeleccionada(null);
-      }
-    }
+    setConfirmModal({
+      title: '¿Eliminar familia?',
+      message: `¿Está seguro de eliminar la familia "${familia.tipoFamilia}"?\n\nEsta acción no se puede deshacer.`,
+      type: 'danger',
+      onConfirm: () => {
+        setFamilias(familias.filter(fam => fam.id !== id));
+        showToast(`Familia eliminada: ${familia.tipoFamilia}`, 'success');
+        if (familiaSeleccionada?.id === id) {
+          setFamiliaSeleccionada(null);
+        }
+        setConfirmModal(null);
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   const handleEditar = (familia) => {
@@ -117,7 +190,7 @@ const RegistroFamilia = () => {
 
   const handleActualizar = () => {
     if (!formulario.tipoFamilia || !formulario.equivalencia) {
-      alert('⚠️ Por favor complete todos los campos obligatorios');
+      showToast('Por favor complete todos los campos obligatorios', 'warning');
       return;
     }
 
@@ -127,7 +200,7 @@ const RegistroFamilia = () => {
         : fam
     ));
 
-    alert(`✅ Familia actualizada correctamente\n\nTipo: ${formulario.tipoFamilia}\nEquivalencia: ${formulario.equivalencia}`);
+    showToast(`Familia actualizada correctamente\n\nTipo: ${formulario.tipoFamilia}\nEquivalencia: ${formulario.equivalencia}`, 'success');
     handleCerrarModal();
   };
 
@@ -314,6 +387,28 @@ const RegistroFamilia = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
+
+      {/* Modal de Confirmación */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText="Sí, eliminar"
+          cancelText="Cancelar"
+        />
       )}
     </div>
   );

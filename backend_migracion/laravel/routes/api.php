@@ -191,31 +191,6 @@ Route::prefix('kardex')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - STOCK DE BODEGAS (NUEVO)
-|--------------------------------------------------------------------------
-*/
-
-use App\Http\Controllers\Api\BodegaStockController;
-
-Route::prefix('stock')->group(function () {
-    // Obtener stock por bodega
-    Route::get('/bodega/{idBodega}', [BodegaStockController::class, 'getStockPorBodega']);
-    
-    // Obtener stock por reserva
-    Route::get('/reserva/{idReserva}', [BodegaStockController::class, 'getStockPorReserva']);
-    
-    // Obtener stock de un producto específico en todas las ubicaciones
-    Route::get('/producto/{codigoProducto}', [BodegaStockController::class, 'getStockProducto']);
-    
-    // Obtener resumen general de stock
-    Route::get('/resumen', [BodegaStockController::class, 'getResumenStock']);
-    
-    // Verificar disponibilidad para traslado
-    Route::post('/verificar-disponibilidad', [BodegaStockController::class, 'verificarDisponibilidad']);
-});
-
-/*
-|--------------------------------------------------------------------------
 | API Routes - PRODUCTOS (NUEVO)
 |--------------------------------------------------------------------------
 */
@@ -595,6 +570,9 @@ Route::prefix('ajuste-inventario')->group(function () {
     
     // Ajustes
     Route::post('/ajustar', [AjusteInventarioController::class, 'realizarAjuste']);
+    
+    // Historial de ajustes
+    Route::get('/historial-ajustes', [AjusteInventarioController::class, 'obtenerHistorialAjustes']);
     
     // Estadísticas
     Route::get('/estadisticas', [AjusteInventarioController::class, 'obtenerEstadisticas']);

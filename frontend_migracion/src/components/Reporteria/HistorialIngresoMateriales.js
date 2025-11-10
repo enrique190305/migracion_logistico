@@ -1,6 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import './HistorialComun.css';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-historial toast-historial-${type}`}>
+      <span className="toast-historial-icon">{icons[type]}</span>
+      <span className="toast-historial-message">{message}</span>
+      <button className="toast-historial-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
 const HistorialIngresoMateriales = () => {
   const [ingresos, setIngresos] = useState([]);
   const [proyectos, setProyectos] = useState([]);
@@ -10,6 +37,15 @@ const HistorialIngresoMateriales = () => {
   const [filtroTipo, setFiltroTipo] = useState('TODOS');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   useEffect(() => {
     cargarHistorial();
@@ -85,7 +121,7 @@ const HistorialIngresoMateriales = () => {
   };
 
   const verDetalles = (ingreso) => {
-    alert(`📥 DETALLES DE INGRESO\n\nCorrelativo: ${ingreso.correlativo}\nProyecto: ${ingreso.proyecto}\nBodega: ${ingreso.bodega}\nFecha: ${new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE')}\nProductos: ${ingreso.total_productos}\n\n(Modal de detalles en desarrollo)`);
+    showToast(`📥 DETALLES DE INGRESO\n\nCorrelativo: ${ingreso.correlativo}\nProyecto: ${ingreso.proyecto}\nBodega: ${ingreso.bodega}\nFecha: ${new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE')}\nProductos: ${ingreso.total_productos}\n\n(Modal de detalles en desarrollo)`, 'info');
   };
 
   const descargarPDF = async (idIngreso) => {
@@ -104,12 +140,12 @@ const HistorialIngresoMateriales = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error al descargar PDF:', error);
-      alert('Error al generar el PDF. Por favor, intente nuevamente.');
+      showToast('Error al generar el PDF. Por favor, intente nuevamente.', 'error');
     }
   };
 
   const exportarExcel = () => {
-    alert('📊 Exportación a Excel en desarrollo');
+    showToast('📊 Exportación a Excel en desarrollo', 'warning');
   };
 
   return (
@@ -311,6 +347,15 @@ const HistorialIngresoMateriales = () => {
           Total de productos: <strong>{ingresosFiltrados.reduce((sum, i) => sum + (parseInt(i.total_productos) || 0), 0)}</strong>
         </p>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
     </div>
   );
 };

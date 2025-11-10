@@ -1,6 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import './HistorialComun.css';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-historial toast-historial-${type}`}>
+      <span className="toast-historial-icon">{icons[type]}</span>
+      <span className="toast-historial-message">{message}</span>
+      <button className="toast-historial-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
 const HistorialOrdenesServicio = () => {
   const [ordenes, setOrdenes] = useState([]);
   const [proveedores, setProveedores] = useState([]);
@@ -12,6 +39,16 @@ const HistorialOrdenesServicio = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [toast, setToast] = useState(null);
+
+  // Función para mostrar toast
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   useEffect(() => {
     cargarHistorial();
@@ -85,16 +122,16 @@ const HistorialOrdenesServicio = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error al descargar PDF:', error);
-      alert('Error al descargar el PDF');
+      showToast('Error al descargar el PDF', 'error');
     }
   };
 
   const verDetalles = (orden) => {
-    alert(`🔧 DETALLES DE ORDEN DE SERVICIO\n\nN° OS: ${orden.correlativo}\nEmpresa: ${orden.empresa?.razon_social}\nProveedor: ${orden.proveedor?.nombre}\nDestino: ${orden.destino || 'N/A'}\nTotal: S/ ${parseFloat(orden.total_general).toFixed(2)}\nEstado: ${orden.estado}\n\n(Modal de detalles en desarrollo)`);
+    showToast(`🔧 DETALLES DE ORDEN DE SERVICIO\n\nN° OS: ${orden.correlativo}\nEmpresa: ${orden.empresa?.razon_social}\nProveedor: ${orden.proveedor?.nombre}\nDestino: ${orden.destino || 'N/A'}\nTotal: S/ ${parseFloat(orden.total_general).toFixed(2)}\nEstado: ${orden.estado}\n\n(Modal de detalles en desarrollo)`, 'info');
   };
 
   const exportarExcel = () => {
-    alert('📊 Exportación a Excel en desarrollo');
+    showToast('📊 Exportación a Excel en desarrollo', 'warning');
   };
 
   const obtenerColorEstado = (estado) => {
@@ -320,6 +357,15 @@ const HistorialOrdenesServicio = () => {
           Total: <strong>S/ {ordenesFiltradas.reduce((sum, o) => sum + parseFloat(o.total_general || 0), 0).toFixed(2)}</strong>
         </p>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
     </div>
   );
 };

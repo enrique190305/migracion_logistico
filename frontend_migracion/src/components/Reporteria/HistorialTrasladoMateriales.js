@@ -1,6 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import './HistorialComun.css';
 
+// ============================================
+// COMPONENTE: Toast Notification
+// ============================================
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  return (
+    <div className={`toast-historial toast-historial-${type}`}>
+      <span className="toast-historial-icon">{icons[type]}</span>
+      <span className="toast-historial-message">{message}</span>
+      <button className="toast-historial-close" onClick={onClose}>×</button>
+    </div>
+  );
+};
+
 const HistorialTrasladoMateriales = () => {
   const [traslados, setTraslados] = useState([]);
   const [proyectos, setProyectos] = useState([]);
@@ -10,6 +37,15 @@ const HistorialTrasladoMateriales = () => {
   const [filtroProyectoDestino, setFiltroProyectoDestino] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   useEffect(() => {
     cargarHistorial();
@@ -83,16 +119,16 @@ const HistorialTrasladoMateriales = () => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error al descargar PDF:', error);
-      alert('Error al descargar el PDF');
+      showToast('Error al descargar el PDF', 'error');
     }
   };
 
   const verDetalles = (traslado) => {
-    alert(`🔄 DETALLES DE TRASLADO\n\nCorrelativo: ${traslado.correlativo}\nOrigen: ${traslado.proyecto_origen}\nDestino: ${traslado.proyecto_destino}\nFecha: ${new Date(traslado.fecha_traslado).toLocaleDateString('es-PE')}\nProductos: ${traslado.total_productos}\n\n(Modal de detalles en desarrollo)`);
+    showToast(`🔄 DETALLES DE TRASLADO\n\nCorrelativo: ${traslado.correlativo}\nOrigen: ${traslado.proyecto_origen}\nDestino: ${traslado.proyecto_destino}\nFecha: ${new Date(traslado.fecha_traslado).toLocaleDateString('es-PE')}\nProductos: ${traslado.total_productos}\n\n(Modal de detalles en desarrollo)`, 'info');
   };
 
   const exportarExcel = () => {
-    alert('📊 Exportación a Excel en desarrollo');
+    showToast('📊 Exportación a Excel en desarrollo', 'warning');
   };
 
   return (
@@ -294,6 +330,15 @@ const HistorialTrasladoMateriales = () => {
           Total de productos trasladados: <strong>{trasladosFiltrados.reduce((sum, t) => sum + (parseInt(t.total_productos) || 0), 0)}</strong>
         </p>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={closeToast} 
+        />
+      )}
     </div>
   );
 };

@@ -580,4 +580,89 @@ class AjusteInventarioController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener historial de todos los ajustes realizados
+     */
+    public function obtenerHistorialAjustes()
+    {
+        try {
+            $historial = DB::table('movimiento_kardex as mk')
+                ->leftJoin('producto as p', 'mk.codigo_producto', '=', 'p.codigo')
+                ->leftJoin('bodega as b', 'mk.id_bodega', '=', 'b.id_bodega')
+                ->select(
+                    'mk.id_movimiento',
+                    'mk.fecha',
+                    'mk.codigo_producto',
+                    'mk.id_bodega',
+                    DB::raw('COALESCE(p.descripcion, mk.descripcion) as descripcion'),
+                    'mk.tipo_movimiento',
+                    'mk.cantidad',
+                    'mk.precio_unitario',
+                    DB::raw('COALESCE(b.nombre, "Sin bodega") as nombre_bodega')
+                )
+                ->where('mk.tipo_movimiento', 'LIKE', 'AJUSTE%')
+                ->orderBy('mk.fecha', 'desc')
+                ->limit(100)
+                ->get();
+
+            // Transformar datos para el frontend
+            $historialFormateado = [];
+            
+            foreach ($historial as $item) {
+                // Calcular stock acumulado hasta este movimiento para obtener la cantidad anterior
+                $stockAcumulado = DB::table('movimiento_kardex')
+                    ->where('codigo_producto', $item->codigo_producto)
+                    ->where('id_bodega', $item->id_bodega)
+                    ->where('fecha', '<', $item->fecha)
+                    ->select(
+                        DB::raw('SUM(CASE 
+                            WHEN tipo_movimiento IN ("INGRESO", "AJUSTE_POSITIVO") THEN cantidad 
+                            WHEN tipo_movimiento IN ("SALIDA", "AJUSTE_NEGATIVO") THEN -cantidad 
+                            ELSE 0 
+                        END) as stock_anterior')
+                    )
+                    ->first();
+                
+                $cantidadAnterior = $stockAcumulado->stock_anterior ?? 0;
+                
+                // La cantidad nueva es la anterior más/menos el ajuste actual
+                $cantidadNueva = $cantidadAnterior;
+                if (in_array($item->tipo_movimiento, ['INGRESO', 'AJUSTE_POSITIVO'])) {
+                    $cantidadNueva += $item->cantidad;
+                } else {
+                    $cantidadNueva -= $item->cantidad;
+                }
+                
+                $historialFormateado[] = [
+                    'fecha' => $item->fecha,
+                    'codigo_producto' => $item->codigo_producto,
+                    'descripcion' => $item->descripcion,
+                    'nombre_bodega' => $item->nombre_bodega,
+                    'tipo_ajuste' => $item->tipo_movimiento === 'AJUSTE_POSITIVO' ? 'INGRESO' : 
+                                   ($item->tipo_movimiento === 'AJUSTE_NEGATIVO' ? 'SALIDA' : 'CANTIDAD'),
+                    'cantidad_anterior' => floatval($cantidadAnterior),
+                    'cantidad_nueva' => floatval($cantidadNueva),
+                    'motivo' => 'Ajuste de inventario',
+                    'observaciones' => '',
+                    'documento_referencia' => '',
+                    'usuario' => 'admin'
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'historial' => $historialFormateado
+            ]);
+
+        } catch (Exception $e) {
+            Log::error("Error al obtener historial de ajustes: " . $e->getMessage());
+            Log::error("Stack trace: " . $e->getTraceAsString());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener historial de ajustes: ' . $e->getMessage(),
+                'historial' => []
+            ], 500);
+        }
+    }
 }

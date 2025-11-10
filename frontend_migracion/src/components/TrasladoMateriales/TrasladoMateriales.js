@@ -4,6 +4,35 @@ import trasladoMaterialesAPI from '../../services/trasladoMaterialesAPI';
 import { obtenerReservasParaTraslado } from '../../services/bodegasAPI';
 import { obtenerProductosConStockReserva, verificarDisponibilidad } from '../../services/stockAPI';
 
+// ============================================
+// COMPONENTE: Modal de Confirmación
+// ============================================
+const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar', type = 'warning' }) => {
+  return (
+    <div className="modal-overlay-traslado" onClick={onCancel}>
+      <div className="modal-confirm-traslado" onClick={(e) => e.stopPropagation()}>
+        <div className={`modal-confirm-traslado-header ${type}`}>
+          <span className="modal-confirm-traslado-icon">
+            {type === 'warning' ? '⚠️' : type === 'danger' ? '🗑️' : '❓'}
+          </span>
+          <h3>{title}</h3>
+        </div>
+        <div className="modal-confirm-traslado-body">
+          <p>{message}</p>
+        </div>
+        <div className="modal-confirm-traslado-footer">
+          <button className="btn-traslado-cancel" onClick={onCancel}>
+            {cancelText}
+          </button>
+          <button className={`btn-traslado-confirm btn-traslado-${type}`} onClick={onConfirm}>
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const TrasladoMateriales = () => {
   // ============================================
   // ESTADOS PRINCIPALES
@@ -17,6 +46,7 @@ const TrasladoMateriales = () => {
   const [reservaDestino, setReservaDestino] = useState('');
   const [fechaTraslado, setFechaTraslado] = useState(new Date().toISOString().split('T')[0]);
   const [observacionesGenerales, setObservacionesGenerales] = useState('');
+  const [confirmModal, setConfirmModal] = useState(null);
 
   // Detalle del Producto
   const [descripcionSeleccionada, setDescripcionSeleccionada] = useState('');
@@ -276,22 +306,29 @@ const TrasladoMateriales = () => {
   };
 
   const handleLimpiar = () => {
-    if (window.confirm('¿Está seguro que desea limpiar el formulario?')) {
-      setBodegaOrigen('');              // ✨ NUEVO
-      setReservaOrigen('');
-      setBodegaDestino('');             // ✨ NUEVO
-      setReservaDestino('');
-      setReservasOrigen([]);            // ✨ NUEVO
-      setReservasDestino([]);           // ✨ NUEVO
-      setFechaTraslado(new Date().toISOString().split('T')[0]);
-      setObservacionesGenerales('');
-      setProductosATraslador([]);
-      limpiarDetalleProducto();
-      setDescripcionSeleccionada('');
-      setBusquedaProducto('');
-      setDropdownAbiertoProducto(false);
-      mostrarMensaje('info', 'ℹ️ Formulario limpiado');
-    }
+    setConfirmModal({
+      title: '¿Limpiar formulario?',
+      message: '¿Está seguro que desea limpiar el formulario? Se perderán todos los datos ingresados.',
+      type: 'warning',
+      onConfirm: () => {
+        setBodegaOrigen('');              // ✨ NUEVO
+        setReservaOrigen('');
+        setBodegaDestino('');             // ✨ NUEVO
+        setReservaDestino('');
+        setReservasOrigen([]);            // ✨ NUEVO
+        setReservasDestino([]);           // ✨ NUEVO
+        setFechaTraslado(new Date().toISOString().split('T')[0]);
+        setObservacionesGenerales('');
+        setProductosATraslador([]);
+        limpiarDetalleProducto();
+        setDescripcionSeleccionada('');
+        setBusquedaProducto('');
+        setDropdownAbiertoProducto(false);
+        mostrarMensaje('info', 'ℹ️ Formulario limpiado');
+        setConfirmModal(null);
+      },
+      onCancel: () => setConfirmModal(null)
+    });
   };
 
   const handleGuardarYGenerarPDF = async () => {
@@ -920,6 +957,19 @@ const TrasladoMateriales = () => {
             </div>
           )}
         </div>
+      )}
+
+      {/* Modal de Confirmación */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText="Sí, limpiar"
+          cancelText="Cancelar"
+        />
       )}
     </div>
   );
