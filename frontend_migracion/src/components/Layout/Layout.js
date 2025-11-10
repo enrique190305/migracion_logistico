@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../Sidebar/Sidebar';
+import ProfileModal from '../ProfileModal/ProfileModal';
 import OrdenesCompraServicio from '../OrdenesCompraServicio';
 import OrdenPedido from '../OrdenPedido/OrdenPedido';
 import Aprobacion from '../Aprobacion/Aprobacion';
@@ -31,9 +32,10 @@ const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [ingresoMaterialesTab, setIngresoMaterialesTab] = useState(null); // Para controlar el tab de Ingreso Materiales
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // ✅ Estado del modal de perfil
   
   // Usar el usuario de props si está disponible, sino del localStorage
-  const user = propUser || JSON.parse(localStorage.getItem('user') || '{}');
+  const [user, setUser] = useState(propUser || JSON.parse(localStorage.getItem('user') || '{}'));
   
   // Verificar si el usuario es administrador
   const isAdmin = user?.permissions?.is_admin || user?.id_rol === 1 || false;
@@ -46,6 +48,24 @@ const Layout = ({ onLogout, user: propUser }) => {
     setActiveModule(moduleId);
     // Resetear el tab cuando se cambia de módulo manualmente
     setIngresoMaterialesTab(null);
+  };
+
+  // ✅ Manejar apertura del modal de perfil
+  const handleOpenProfileModal = () => {
+    setIsProfileModalOpen(true);
+  };
+
+  // ✅ Manejar cierre del modal de perfil
+  const handleCloseProfileModal = () => {
+    setIsProfileModalOpen(false);
+  };
+
+  // ✅ Manejar actualización de perfil
+  const handleProfileUpdated = (updatedUser) => {
+    setUser(updatedUser);
+    // Actualizar también el localStorage para persistir los cambios
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+    console.log('✅ Perfil actualizado en Layout y localStorage:', updatedUser);
   };
 
   // Escuchar evento personalizado para cambiar de módulo desde otros componentes
@@ -160,6 +180,13 @@ const Layout = ({ onLogout, user: propUser }) => {
                 </span>
               </div>
             </div>
+            
+            {/* ✅ Botón de Editar Perfil */}
+            <button className="profile-edit-btn" onClick={handleOpenProfileModal} title="Editar Perfil">
+              <span className="profile-edit-icon">⚙️</span>
+              <span className="profile-edit-text">Mi Perfil</span>
+            </button>
+
             <button className="logout-btn" onClick={onLogout}>
               <span className="logout-icon">🚪</span>
               <span className="logout-text">Cerrar Sesión</span>
@@ -190,6 +217,14 @@ const Layout = ({ onLogout, user: propUser }) => {
           </div>
         </footer>
       </div>
+
+      {/* ✅ Modal de Perfil */}
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={handleCloseProfileModal}
+        user={user}
+        onProfileUpdated={handleProfileUpdated}
+      />
     </div>
   );
 };

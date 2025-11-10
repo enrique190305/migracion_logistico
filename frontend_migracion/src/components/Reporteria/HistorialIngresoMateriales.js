@@ -90,7 +90,16 @@ const HistorialIngresoMateriales = () => {
 
   const descargarPDF = async (idIngreso) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/ingreso-materiales/${idIngreso}/pdf`);
+      // Obtener token JWT del localStorage
+      const token = localStorage.getItem('jwt_token');
+      
+      const response = await fetch(`http://localhost:8000/api/ingreso-materiales/${idIngreso}/pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf'
+        }
+      });
+      
       if (!response.ok) throw new Error('Error al generar PDF');
 
       const blob = await response.blob();

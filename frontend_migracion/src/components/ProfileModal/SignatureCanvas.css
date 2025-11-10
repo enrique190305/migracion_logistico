@@ -1,0 +1,170 @@
+/* Container del Canvas de Firma */
+.signature-canvas-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px solid #dee2e6;
+}
+
+/* Header del Canvas */
+.signature-canvas-header {
+  text-align: center;
+}
+
+.signature-canvas-header h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.signature-help {
+  margin: 0;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+/* Wrapper del Canvas */
+.canvas-wrapper {
+  background: white;
+  border: 3px solid #667eea;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Canvas */
+.signature-canvas {
+  display: block;
+  width: 100%;
+  max-width: 500px;
+  height: 200px;
+  cursor: crosshair;
+  background: white;
+  border-radius: 4px;
+  touch-action: none; /* Prevenir scroll en dispositivos táctiles */
+}
+
+/* Acciones del Canvas */
+.signature-canvas-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-clear-canvas,
+.btn-cancel-canvas,
+.btn-save-canvas {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-clear-canvas {
+  background: #f39c12;
+  color: white;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-clear-canvas:hover {
+  background: #e67e22;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+}
+
+.btn-cancel-canvas {
+  background: #95a5a6;
+  color: white;
+  flex: 1;
+  justify-content: center;
+}
+
+.btn-cancel-canvas:hover {
+  background: #7f8c8d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+}
+
+.btn-save-canvas {
+  background: linear-gradient(135deg, #27ae60, #229954);
+  color: white;
+  flex: 2;
+  justify-content: center;
+}
+
+.btn-save-canvas:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.4);
+}
+
+.btn-save-canvas:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-save-canvas:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .signature-canvas-container {
+    padding: 15px;
+  }
+
+  .signature-canvas {
+    max-width: 100%;
+    height: 150px;
+  }
+
+  .signature-canvas-actions {
+    flex-direction: column;
+  }
+
+  .btn-clear-canvas,
+  .btn-cancel-canvas,
+  .btn-save-canvas {
+    width: 100%;
+    flex: none;
+  }
+}
+
+/* Animación de entrada */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.signature-canvas-container {
+  animation: slideInUp 0.3s ease;
+}

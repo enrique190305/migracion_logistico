@@ -433,6 +433,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('/refresh', [AuthController::class, 'refresh']);
         Route::get('/me', [AuthController::class, 'me']);
         Route::get('/check-admin', [AuthController::class, 'checkAdminPermissions']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']); // ✅ NUEVO: actualizar perfil
     });
 
     // Rutas del Dashboard (para todos los usuarios autenticados)

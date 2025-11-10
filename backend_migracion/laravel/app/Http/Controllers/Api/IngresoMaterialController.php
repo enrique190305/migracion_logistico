@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 use Exception;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -937,6 +938,16 @@ class IngresoMaterialController extends Controller
     public function generarPDF($idIngreso)
     {
         try {
+            // Intentar obtener usuario autenticado (opcional)
+            $firma_usuario = null;
+            try {
+                $user = JWTAuth::parseToken()->authenticate();
+                $firma_usuario = $user->firma ?? null;
+            } catch (\Exception $e) {
+                // Si no hay token o falla la autenticación, continuar sin firma
+                Log::info('PDF generado sin firma - Usuario no autenticado');
+            }
+            
             // Obtener datos del ingreso
             $ingreso = DB::table('ingreso_material as im')
                 ->leftJoin('orden_compra as oc', 'im.id_oc', '=', 'oc.id_oc')
@@ -986,14 +997,18 @@ class IngresoMaterialController extends Controller
                 'detalles' => $detalles,
                 'subtotal' => $subtotal,
                 'igv' => $igv,
-                'total' => $total
+                'total' => $total,
+                'firma_usuario' => $firma_usuario // Firma del usuario logueado (puede ser null)
             ];
 
             $pdf = PDF::loadView('pdf.ingreso_material', $data);
             return $pdf->stream("Ingreso_Material_{$idIngreso}.pdf");
 
         } catch (Exception $e) {
-            Log::error('Error al generar PDF de ingreso:', ['error' => $e->getMessage()]);
+            Log::error('Error al generar PDF de ingreso:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Error al generar PDF',

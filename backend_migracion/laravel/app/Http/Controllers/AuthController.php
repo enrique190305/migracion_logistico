@@ -61,6 +61,7 @@ class AuthController extends Controller
                         'usuario' => $user->usuario,
                         'id_rol' => $user->id_rol,
                         'role' => $user->role ? $user->role->descripcion : null,
+                        'firma' => $user->firma,
                         'permissions' => $user->getPermissions()
                     ],
                     'token' => $token,
@@ -103,6 +104,7 @@ class AuthController extends Controller
                         'usuario' => $user->usuario,
                         'id_rol' => $user->id_rol,
                         'role' => $user->role ? $user->role->descripcion : null,
+                        'firma' => $user->firma,
                         'permissions' => $user->getPermissions()
                     ]
                 ]
@@ -203,6 +205,95 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al verificar permisos'
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar perfil del usuario (nombre, contraseña, firma)
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Validar datos
+            $validatedData = $request->validate([
+                'nombre' => 'nullable|string|max:255',
+                'contraseña' => 'nullable|string|min:6',
+                'firma' => 'nullable|string', // Base64 de la imagen
+            ]);
+
+            // Actualizar campos solo si se proporcionan
+            $updated = false;
+
+            if (isset($validatedData['nombre']) && !empty($validatedData['nombre'])) {
+                $user->nombre = $validatedData['nombre'];
+                $updated = true;
+            }
+
+            if (isset($validatedData['contraseña']) && !empty($validatedData['contraseña'])) {
+                $user->contraseña = $validatedData['contraseña'];
+                $updated = true;
+            }
+
+            if (isset($validatedData['firma'])) {
+                // La firma viene como base64, la guardamos tal cual
+                $user->firma = $validatedData['firma'];
+                $updated = true;
+            }
+
+            if ($updated) {
+                $user->save();
+
+                // Recargar usuario con relaciones
+                $user->load('role');
+
+                // Actualizar datos en localStorage del frontend
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Perfil actualizado exitosamente',
+                    'data' => [
+                        'user' => [
+                            'id' => $user->id,
+                            'nombre' => $user->nombre,
+                            'usuario' => $user->usuario,
+                            'id_rol' => $user->id_rol,
+                            'role' => $user->role ? $user->role->descripcion : null,
+                            'firma' => $user->firma,
+                            'permissions' => $user->getPermissions()
+                        ]
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se proporcionaron datos para actualizar'
+            ], 400);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos de validación incorrectos',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (JWTException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token inválido'
+            ], 401);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar perfil: ' . $e->getMessage()
             ], 500);
         }
     }
