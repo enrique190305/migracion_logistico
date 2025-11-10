@@ -277,13 +277,6 @@ const RegistroFamilia = () => {
                   <td>
                     <div className="acciones-familia-new">
                       <button 
-                        className="btn-accion-familia ver-familia"
-                        onClick={() => handleFamiliaClick(familia)}
-                        title="Ver detalles"
-                      >
-                        👁️
-                      </button>
-                      <button 
                         className="btn-accion-familia editar-familia"
                         onClick={() => handleEditar(familia)}
                         title="Editar familia"
