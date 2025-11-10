@@ -706,7 +706,7 @@ const Kardex = () => {
               <span className="search-icon-kardex">🔍</span>
               <input
                 type="text"
-                placeholder="Buscar por código, descripción, documento o proyecto..."
+                placeholder="Buscar por código, descripción, documento o bodega..."
                 value={searchHistorial}
                 onChange={(e) => aplicarFiltroHistorial(e.target.value)}
                 className="search-input-kardex"
@@ -738,7 +738,7 @@ const Kardex = () => {
                   <th>Descripción</th>
                   <th>Unidad</th>
                   <th>Cantidad</th>
-                  <th>Proyecto</th>
+                  <th>Bodega</th>
                   <th>Documento</th>
                   <th>Observaciones</th>
                 </tr>

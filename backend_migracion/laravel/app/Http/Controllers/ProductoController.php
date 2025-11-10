@@ -48,6 +48,7 @@ class ProductoController extends Controller
                     'tipo_producto_nombre' => $producto->familia ? $producto->familia->equivalencia : $producto->tipo_producto,
                     'descripcion' => $producto->descripcion,
                     'unidad' => $producto->unidad,
+                    'consumible' => $producto->consumible ?? 'NO',
                     'observacion' => $producto->observacion
                 ];
             });
@@ -235,6 +236,7 @@ class ProductoController extends Controller
             'tipo_producto' => 'required|string|max:20|exists:familia,tipo_producto',
             'descripcion' => 'required|string|max:255',
             'unidad' => 'required|string|max:10',
+            'consumible' => 'nullable|in:SI,NO',
             'observacion' => 'nullable|string'
         ], [
             'codigo_producto.required' => 'El código del producto es obligatorio',
@@ -242,7 +244,8 @@ class ProductoController extends Controller
             'tipo_producto.required' => 'El tipo de producto es obligatorio',
             'tipo_producto.exists' => 'El tipo de producto no es válido',
             'descripcion.required' => 'La descripción es obligatoria',
-            'unidad.required' => 'La unidad de medida es obligatoria'
+            'unidad.required' => 'La unidad de medida es obligatoria',
+            'consumible.in' => 'El valor de consumible debe ser SI o NO'
         ]);
 
         DB::beginTransaction();
@@ -253,6 +256,7 @@ class ProductoController extends Controller
                 'tipo_producto' => strtoupper(trim($request->tipo_producto)),
                 'descripcion' => trim($request->descripcion),
                 'unidad' => strtoupper(trim($request->unidad)),
+                'consumible' => $request->consumible ?? 'NO',
                 'observacion' => $request->observacion ? trim($request->observacion) : null
             ]);
 
@@ -267,6 +271,7 @@ class ProductoController extends Controller
                     'tipo_producto' => $producto->tipo_producto,
                     'descripcion' => $producto->descripcion,
                     'unidad' => $producto->unidad,
+                    'consumible' => $producto->consumible,
                     'observacion' => $producto->observacion
                 ]
             ], 201);
@@ -292,12 +297,14 @@ class ProductoController extends Controller
             'tipo_producto' => 'required|string|max:20|exists:familia,tipo_producto',
             'descripcion' => 'required|string|max:255',
             'unidad' => 'required|string|max:10',
+            'consumible' => 'nullable|in:SI,NO',
             'observacion' => 'nullable|string'
         ], [
             'tipo_producto.required' => 'El tipo de producto es obligatorio',
             'tipo_producto.exists' => 'El tipo de producto no es válido',
             'descripcion.required' => 'La descripción es obligatoria',
-            'unidad.required' => 'La unidad de medida es obligatoria'
+            'unidad.required' => 'La unidad de medida es obligatoria',
+            'consumible.in' => 'El valor de consumible debe ser SI o NO'
         ]);
 
         DB::beginTransaction();
@@ -316,6 +323,7 @@ class ProductoController extends Controller
                 'tipo_producto' => strtoupper(trim($request->tipo_producto)),
                 'descripcion' => trim($request->descripcion),
                 'unidad' => strtoupper(trim($request->unidad)),
+                'consumible' => $request->consumible ?? 'NO',
                 'observacion' => $request->observacion ? trim($request->observacion) : null
             ]);
 
@@ -330,6 +338,7 @@ class ProductoController extends Controller
                     'tipo_producto' => $producto->tipo_producto,
                     'descripcion' => $producto->descripcion,
                     'unidad' => $producto->unidad,
+                    'consumible' => $producto->consumible,
                     'observacion' => $producto->observacion
                 ]
             ], 200);
@@ -411,12 +420,12 @@ class ProductoController extends Controller
                 'total_familias' => Familia::count(),
                 'por_familia' => Producto::select('tipo_producto', DB::raw('count(*) as total'))
                     ->groupBy('tipo_producto')
-                    ->with('familia:tipo_producto,descripcion')
+                    ->with('familia:tipo_producto,equivalencia')
                     ->get()
                     ->map(function($item) {
                         return [
                             'tipo' => $item->tipo_producto,
-                            'nombre' => $item->familia->descripcion ?? $item->tipo_producto,
+                            'nombre' => $item->familia->equivalencia ?? $item->tipo_producto,
                             'total' => $item->total
                         ];
                     }),

@@ -46,6 +46,7 @@ const RegistroProductos = () => {
     descripcion: '',
     codigo_producto: '',
     unidad: '',
+    consumible: 'NO',
     observacion: ''
   });
 
@@ -193,6 +194,7 @@ const RegistroProductos = () => {
           tipo_producto: formulario.tipo_producto,
           descripcion: formulario.descripcion,
           unidad: formulario.unidad,
+          consumible: formulario.consumible,
           observacion: formulario.observacion
         });
         
@@ -211,6 +213,7 @@ const RegistroProductos = () => {
           tipo_producto: formulario.tipo_producto,
           descripcion: formulario.descripcion,
           unidad: formulario.unidad,
+          consumible: formulario.consumible,
           observacion: formulario.observacion
         });
         
@@ -249,6 +252,7 @@ const RegistroProductos = () => {
       descripcion: '',
       codigo_producto: '',
       unidad: '',
+      consumible: 'NO',
       observacion: ''
     });
     setModoEdicion(false);
@@ -281,6 +285,7 @@ const RegistroProductos = () => {
       descripcion: producto.descripcion,
       codigo_producto: producto.codigo_producto,
       unidad: producto.unidad,
+      consumible: producto.consumible || 'NO',
       observacion: producto.observacion || ''
     });
     setModoEdicion(true);
@@ -514,6 +519,7 @@ const RegistroProductos = () => {
                   <th>Tipo</th>
                   <th>Descripción</th>
                   <th>Unidad</th>
+                  <th>Consumible</th>
                   <th>Observaciones</th>
                   <th className="text-center-productos">Acciones</th>
                 </tr>
@@ -529,6 +535,11 @@ const RegistroProductos = () => {
                     </td>
                     <td>{producto.descripcion}</td>
                     <td className="text-center-productos">{producto.unidad}</td>
+                    <td className="text-center-productos">
+                      <span className={`badge-productos ${producto.consumible === 'SI' ? 'consumible-si-productos' : 'consumible-no-productos'}`}>
+                        {producto.consumible || 'NO'}
+                      </span>
+                    </td>
                     <td className="observaciones-cell-productos">{producto.observacion || '-'}</td>
                     <td>
                       <div className="action-buttons-productos">
@@ -671,7 +682,37 @@ const RegistroProductos = () => {
               </div>
 
               <div className="form-group-productos">
-                <label>📋 Observaciones:</label>
+                <label>� ¿Es Consumible?: *</label>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="consumible"
+                      value="SI"
+                      checked={formulario.consumible === 'SI'}
+                      onChange={handleInputChange}
+                      disabled={loadingModal}
+                      style={{ marginRight: '5px' }}
+                    />
+                    <span>SÍ</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <input
+                      type="radio"
+                      name="consumible"
+                      value="NO"
+                      checked={formulario.consumible === 'NO'}
+                      onChange={handleInputChange}
+                      disabled={loadingModal}
+                      style={{ marginRight: '5px' }}
+                    />
+                    <span>NO</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group-productos">
+                <label>�📋 Observaciones:</label>
                 <textarea
                   name="observacion"
                   value={formulario.observacion}

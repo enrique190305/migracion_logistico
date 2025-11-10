@@ -374,14 +374,15 @@ class SalidaMaterialController extends Controller
                     'observacion_general' => $producto['observaciones'] ?? null
                 ]);
 
-                // Obtener stock actual desde bodega_stock
+                // Obtener stock actual desde bodega_stock (incluyendo id_reserva)
                 $stockBodega = DB::table('bodega_stock')
                     ->where('id_bodega', $request->id_bodega)
+                    ->where('id_reserva', $request->id_reserva)
                     ->where('codigo_producto', $producto['codigo_producto'])
                     ->first();
 
                 if (!$stockBodega) {
-                    throw new Exception("El producto {$producto['descripcion']} no existe en esta bodega");
+                    throw new Exception("El producto {$producto['descripcion']} no existe en esta bodega con la reserva seleccionada");
                 }
 
                 $stockActual = $stockBodega->cantidad_disponible;
@@ -405,9 +406,10 @@ class SalidaMaterialController extends Controller
                     'observaciones' => "Salida de material - Bodega: {$request->id_bodega} - Reserva: {$request->area}"
                 ]);
 
-                // Actualizar stock en bodega_stock
+                // Actualizar stock en bodega_stock (incluyendo id_reserva)
                 DB::table('bodega_stock')
                     ->where('id_bodega', $request->id_bodega)
+                    ->where('id_reserva', $request->id_reserva)
                     ->where('codigo_producto', $producto['codigo_producto'])
                     ->decrement('cantidad_disponible', $producto['cantidad']);
             }

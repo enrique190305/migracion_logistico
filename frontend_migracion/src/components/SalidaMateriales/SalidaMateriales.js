@@ -61,6 +61,22 @@ const SalidaMateriales = () => {
     }
   }, [tabActivo]);
 
+  // Efecto para actualizar el stock disponible cuando cambian los productos agregados
+  useEffect(() => {
+    if (productoSeleccionado && codigoProducto) {
+      const producto = productosDisponibles.find(p => p.codigo_producto === codigoProducto);
+      if (producto) {
+        // Calcular stock disponible restando las cantidades ya agregadas
+        const cantidadYaAgregada = productosAgregados
+          .filter(p => p.codigo_producto === codigoProducto)
+          .reduce((total, p) => total + parseFloat(p.cantidad), 0);
+        
+        const stockReal = parseFloat(producto.stock_actual) - cantidadYaAgregada;
+        setStockDisponible(stockReal);
+      }
+    }
+  }, [productosAgregados, productoSeleccionado, codigoProducto, productosDisponibles]);
+
   // ============================================
   // FUNCIONES DE CARGA DE DATOS
   // ============================================
@@ -286,7 +302,14 @@ const SalidaMateriales = () => {
         setDescripcionProducto(producto.descripcion);
         setCodigoProducto(producto.codigo_producto);
         setUnidadProducto(producto.unidad);
-        setStockDisponible(producto.stock_actual);
+        
+        // Calcular stock disponible restando las cantidades ya agregadas
+        const cantidadYaAgregada = productosAgregados
+          .filter(p => p.codigo_producto === producto.codigo_producto)
+          .reduce((total, p) => total + parseFloat(p.cantidad), 0);
+        
+        const stockReal = parseFloat(producto.stock_actual) - cantidadYaAgregada;
+        setStockDisponible(stockReal);
       }
     } else {
       setDescripcionProducto('');
@@ -414,7 +437,9 @@ const SalidaMateriales = () => {
 
     try {
       setCargando(true);
+      console.log('>>> Enviando petición al backend...');
       const response = await salidaMaterialesAPI.guardarSalida(datosSalida);
+      console.log('>>> Respuesta del backend:', response);
 
       if (response.success) {
         mostrarMensaje('success', `✅ ${response.message}`);
@@ -436,10 +461,13 @@ const SalidaMateriales = () => {
           setNumeroSalida(respNumero.numero_salida);
         }
       } else {
+        console.error('>>> Error en la respuesta:', response.message);
         mostrarMensaje('error', `❌ ${response.message}`);
       }
     } catch (error) {
       console.error('Error al guardar salida:', error);
+      console.error('Error detallado:', error.response?.data);
+      console.error('Status:', error.response?.status);
       mostrarMensaje('error', '❌ Error al guardar la salida de materiales');
     } finally {
       setCargando(false);

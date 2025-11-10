@@ -549,6 +549,20 @@
   border: 1px solid #ffb3ba;
 }
 
+.registro-productos-container .badge-productos.consumible-si-productos {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  font-weight: 700;
+}
+
+.registro-productos-container .badge-productos.consumible-no-productos {
+  background: #e2e3e5;
+  color: #383d41;
+  border: 1px solid #d6d8db;
+  font-weight: 700;
+}
+
 .registro-productos-container .action-buttons-productos {
   display: flex;
   gap: 8px;

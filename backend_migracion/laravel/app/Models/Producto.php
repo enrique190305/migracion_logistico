@@ -20,6 +20,7 @@ class Producto extends Model
         'tipo_producto',
         'descripcion',
         'unidad',
+        'consumible',
         'observacion'
     ];
 
