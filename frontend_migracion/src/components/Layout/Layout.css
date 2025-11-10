@@ -87,6 +87,35 @@
   color: #6c757d;
 }
 
+/* ✅ Botón de Editar Perfil */
+.profile-edit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.profile-edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.profile-edit-icon {
+  font-size: 16px;
+}
+
+.profile-edit-text {
+  font-weight: 500;
+}
+
 .logout-btn {
   display: flex;
   align-items: center;

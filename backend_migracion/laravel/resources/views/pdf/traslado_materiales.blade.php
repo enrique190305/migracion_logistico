@@ -13,95 +13,117 @@
         
         body {
             font-family: 'Arial', sans-serif;
-            font-size: 12px;
+            font-size: 10px;
             color: #333;
-            padding: 20px;
+            padding: 30px;
+            line-height: 1.4;
         }
         
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #667eea;
+            margin-bottom: 20px;
             padding-bottom: 15px;
+            border-bottom: 3px solid #1e3a8a;
         }
         
         .header h1 {
-            color: #667eea;
-            font-size: 24px;
+            color: #1e3a8a;
+            font-size: 16px;
+            font-weight: bold;
             margin-bottom: 5px;
+            text-transform: uppercase;
         }
         
         .header h2 {
-            color: #764ba2;
-            font-size: 18px;
-            font-weight: normal;
-        }
-        
-        .info-section {
-            margin-bottom: 25px;
-        }
-        
-        .info-grid {
-            display: table;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .info-row {
-            display: table-row;
-        }
-        
-        .info-label {
-            display: table-cell;
-            font-weight: bold;
-            padding: 8px;
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            width: 150px;
-        }
-        
-        .info-value {
-            display: table-cell;
-            padding: 8px;
-            border: 1px solid #dee2e6;
-        }
-        
-        .section-title {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-weight: bold;
+            color: #1e3a8a;
             font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
         
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .document-info {
+            background-color: #f3f4f6;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #d1d5db;
             margin-bottom: 20px;
         }
         
-        table thead {
-            background-color: #667eea;
+        .document-info .doc-number {
+            font-weight: bold;
+            font-size: 11px;
+            color: #1e3a8a;
+        }
+        
+        .document-info .doc-date {
+            font-size: 9px;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 3px;
+        }
+        
+        .info-section {
+            margin-bottom: 20px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .info-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .info-table td:first-child {
+            font-weight: bold;
+            background-color: #f9fafb;
+            width: 120px;
+            color: #374151;
+        }
+        
+        .info-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 8px 10px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 9px;
+        }
+        
+        .products-table thead {
+            background-color: #1e3a8a;
             color: white;
         }
         
-        table th {
-            padding: 10px 8px;
+        .products-table th {
+            padding: 8px 6px;
             text-align: left;
             font-weight: bold;
-            font-size: 11px;
+            border: 1px solid #1e3a8a;
         }
         
-        table td {
-            padding: 8px;
-            border: 1px solid #dee2e6;
-            font-size: 11px;
+        .products-table td {
+            padding: 6px;
+            border: 1px solid #d1d5db;
         }
         
-        table tbody tr:nth-child(even) {
-            background-color: #f8f9fa;
+        .products-table tbody tr:nth-child(even) {
+            background-color: #f9fafb;
         }
         
         .text-right {
@@ -112,117 +134,168 @@
             text-align: center;
         }
         
-        .footer {
-            margin-top: 50px;
-            padding-top: 20px;
-            border-top: 2px solid #dee2e6;
+        .summary-box {
+            background-color: #eff6ff;
+            padding: 10px;
+            border: 1px solid #bfdbfe;
+            margin-top: 15px;
+            text-align: right;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+        
+        .conditions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+        }
+        
+        .conditions h3 {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1e3a8a;
+        }
+        
+        .conditions p {
+            font-size: 9px;
+            line-height: 1.6;
+            text-align: justify;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            display: table;
+            width: 100%;
         }
         
         .signature-box {
-            display: inline-block;
-            width: 45%;
+            display: table-cell;
+            width: 50%;
             text-align: center;
-            margin-top: 40px;
+            padding: 10px;
+            vertical-align: top;
         }
         
         .signature-line {
-            border-top: 1px solid #333;
-            margin-top: 50px;
-            padding-top: 5px;
+            border-top: 2px solid #333;
+            width: 250px;
+            margin: 50px auto 5px auto;
         }
         
-        .total-productos {
-            background-color: #e3f2fd;
-            padding: 10px;
-            margin-top: 10px;
+        .signature-name {
             font-weight: bold;
-            text-align: right;
+            font-size: 11px;
+            margin-top: 5px;
         }
         
-        .page-number {
-            text-align: center;
-            margin-top: 20px;
+        .signature-title {
             font-size: 10px;
-            color: #6c757d;
+            color: #6b7280;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #d1d5db;
+            text-align: center;
+            font-size: 8px;
+            color: #6b7280;
+        }
+        
+        .atentamente {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-style: italic;
+            font-size: 10px;
         }
     </style>
 </head>
 <body>
     <!-- ENCABEZADO -->
     <div class="header">
-        <h1>TRASLADO DE MATERIALES</h1>
-        <h2>N° {{ $traslado->id_traslado }}</h2>
+        <h1>SISTEMA DE GESTIÓN DE MATERIALES</h1>
+        <h2>TRASLADO DE MATERIALES</h2>
+    </div>
+
+    <!-- INFORMACIÓN DEL DOCUMENTO -->
+    <div class="document-info">
+        <div class="doc-number">DOCUMENTO N°: {{ $traslado->id_traslado }}</div>
+        <div class="doc-date">Fecha de traslado: {{ \Carbon\Carbon::parse($traslado->fecha_traslado)->format('d/m/Y') }}</div>
     </div>
 
     <!-- INFORMACIÓN GENERAL -->
     <div class="info-section">
-        <div class="info-grid">
-            <div class="info-row">
-                <div class="info-label">Fecha Traslado:</div>
-                <div class="info-value">{{ \Carbon\Carbon::parse($traslado->fecha_traslado)->format('d/m/Y') }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Usuario:</div>
-                <div class="info-value">{{ $traslado->usuario }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Estado:</div>
-                <div class="info-value">{{ $traslado->estado }}</div>
-            </div>
-        </div>
+        <table class="info-table">
+            <tr>
+                <td>Fecha Traslado:</td>
+                <td>{{ \Carbon\Carbon::parse($traslado->fecha_traslado)->format('d/m/Y') }}</td>
+            </tr>
+            <tr>
+                <td>Usuario:</td>
+                <td>{{ $traslado->usuario }}</td>
+            </tr>
+            <tr>
+                <td>Estado:</td>
+                <td>{{ $traslado->estado }}</td>
+            </tr>
+            @if(isset($traslado->observaciones) && $traslado->observaciones)
+            <tr>
+                <td>Observaciones:</td>
+                <td>{{ $traslado->observaciones }}</td>
+            </tr>
+            @endif
+        </table>
     </div>
 
-    <!-- PROYECTOS / RESERVAS -->
-    <div class="section-title">INFORMACIÓN DE ORIGEN Y DESTINO</div>
+    <!-- INFORMACIÓN DE ORIGEN Y DESTINO -->
+    <div class="section-title">Información de Origen y Destino</div>
     <div class="info-section">
-        <div class="info-grid">
+        <table class="info-table">
             @if(isset($traslado->bodega_origen))
-            <div class="info-row">
-                <div class="info-label">Bodega Origen:</div>
-                <div class="info-value">{{ $traslado->bodega_origen }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Reserva Origen:</div>
-                <div class="info-value">{{ $traslado->reserva_origen_nombre ?? 'N/A' }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Bodega Destino:</div>
-                <div class="info-value">{{ $traslado->bodega_destino }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Reserva Destino:</div>
-                <div class="info-value">{{ $traslado->reserva_destino_nombre ?? 'N/A' }}</div>
-            </div>
+            <tr>
+                <td>Bodega Origen:</td>
+                <td>{{ $traslado->bodega_origen }}</td>
+            </tr>
+            <tr>
+                <td>Reserva Origen:</td>
+                <td>{{ $traslado->reserva_origen_nombre ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td>Bodega Destino:</td>
+                <td>{{ $traslado->bodega_destino }}</td>
+            </tr>
+            <tr>
+                <td>Reserva Destino:</td>
+                <td>{{ $traslado->reserva_destino_nombre ?? 'N/A' }}</td>
+            </tr>
             @else
-            <div class="info-row">
-                <div class="info-label">Proyecto Origen:</div>
-                <div class="info-value">{{ $traslado->proyecto_origen }}</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">Proyecto Destino:</div>
-                <div class="info-value">{{ $traslado->proyecto_destino }}</div>
-            </div>
+            <tr>
+                <td>Proyecto Origen:</td>
+                <td>{{ $traslado->proyecto_origen }}</td>
+            </tr>
+            <tr>
+                <td>Proyecto Destino:</td>
+                <td>{{ $traslado->proyecto_destino }}</td>
+            </tr>
             @endif
-            @if(isset($traslado->observaciones) && $traslado->observaciones)
-            <div class="info-row">
-                <div class="info-label">Observaciones:</div>
-                <div class="info-value">{{ $traslado->observaciones }}</div>
-            </div>
-            @endif
-        </div>
+        </table>
     </div>
 
     <!-- DETALLE DE PRODUCTOS -->
-    <div class="section-title">DETALLE DE PRODUCTOS TRASLADADOS</div>
-    <table>
+    <div class="section-title">Detalle de Productos Trasladados</div>
+    
+    <table class="products-table">
         <thead>
             <tr>
-                <th style="width: 5%;">#</th>
+                <th style="width: 5%;" class="text-center">N°</th>
                 <th style="width: 15%;">Código</th>
-                <th style="width: 40%;">Descripción</th>
-                <th style="width: 15%;" class="text-center">Cantidad</th>
+                <th style="width: 35%;">Descripción</th>
+                <th style="width: 12%;" class="text-center">Cantidad</th>
                 <th style="width: 10%;" class="text-center">Unidad</th>
-                <th style="width: 15%;">Observaciones</th>
+                <th style="width: 23%;">Observaciones</th>
             </tr>
         </thead>
         <tbody>
@@ -232,9 +305,9 @@
             @foreach($detallesArray as $index => $detalle)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $detalle->codigo_producto }}</td>
+                <td><strong>{{ $detalle->codigo_producto }}</strong></td>
                 <td>{{ $detalle->descripcion }}</td>
-                <td class="text-right">{{ number_format($detalle->cantidad, 2) }}</td>
+                <td class="text-center"><strong>{{ number_format($detalle->cantidad, 2) }}</strong></td>
                 <td class="text-center">{{ $detalle->unidad }}</td>
                 <td>{{ $detalle->observaciones ?: '-' }}</td>
             </tr>
@@ -242,36 +315,35 @@
         </tbody>
     </table>
 
-    <div class="total-productos">
-        Total de productos trasladados: {{ is_array($detallesArray) || is_object($detallesArray) ? count((array)$detallesArray) : 0 }} items
+    <!-- RESUMEN -->
+    <div class="summary-box">
+        Total de productos trasladados: {{ is_array($detallesArray) || is_object($detallesArray) ? count((array)$detallesArray) : 0 }} item(s)
     </div>
 
-    <!-- PIE DE PÁGINA CON FIRMAS -->
+    <!-- FIRMAS -->
+    <div class="atentamente">
+        Conforme con el traslado,
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-name">{{ $traslado->usuario }}</div>
+            <div class="signature-title">Entregado por</div>
+            <div style="font-size: 9px; color: #6b7280; margin-top: 3px;">{{ $traslado->bodega_origen ?? $traslado->proyecto_origen }}</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line"></div>
+            <div class="signature-name">_____________________</div>
+            <div class="signature-title">Recibido por</div>
+            <div style="font-size: 9px; color: #6b7280; margin-top: 3px;">{{ $traslado->bodega_destino ?? $traslado->proyecto_destino }}</div>
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
     <div class="footer">
-        <table style="border: none;">
-            <tr>
-                <td style="width: 50%; border: none; text-align: center;">
-                    <div class="signature-box">
-                        <div class="signature-line">
-                            <strong>Entregado por</strong><br>
-                            {{ $traslado->usuario }}<br>
-                            {{ $traslado->bodega_origen ?? $traslado->proyecto_origen }}
-                        </div>
-                    </div>
-                </td>
-                <td style="width: 50%; border: none; text-align: center;">
-                    <div class="signature-box">
-                        _________________________<br>
-                        <strong>Recibido por</strong>
-                    </div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- NÚMERO DE PÁGINA -->
-    <div class="page-number">
-        Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}
+        Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}<br>
+        Sistema de Gestión Logística - Traslado de Materiales
     </div>
 </body>
 </html>

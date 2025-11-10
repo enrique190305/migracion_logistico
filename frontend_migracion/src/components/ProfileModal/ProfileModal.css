@@ -1,0 +1,699 @@
+/* Overlay del Modal */
+.profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Container del Modal */
+.profile-modal-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 550px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Header del Modal */
+.profile-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 28px;
+  border-bottom: 2px solid #e9ecef;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.profile-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-icon {
+  font-size: 28px;
+  background: white;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.profile-modal-title h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.profile-modal-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.profile-modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.profile-modal-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Alertas */
+.profile-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 20px 28px 0;
+  font-size: 14px;
+  font-weight: 500;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.profile-alert-error {
+  background: #fee;
+  color: #c62828;
+  border: 1px solid #f5c6cb;
+}
+
+.profile-alert-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-icon {
+  font-size: 18px;
+}
+
+/* Formulario */
+.profile-modal-form {
+  padding: 28px;
+}
+
+.profile-form-group {
+  margin-bottom: 24px;
+}
+
+.profile-form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 14px;
+}
+
+.profile-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 15px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.profile-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.profile-input.disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.profile-input:disabled {
+  background: #f8f9fa;
+  cursor: not-allowed;
+}
+
+.profile-help-text {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Input de contraseña con toggle */
+.profile-password-input {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-password-input .profile-input {
+  padding-right: 50px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.password-toggle-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.password-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Firma Digital */
+.signature-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.signature-current-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #d4edda;
+  color: #155724;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #c3e6cb;
+}
+
+.signature-current-label span:first-child {
+  font-size: 16px;
+}
+
+.signature-preview {
+  max-width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
+  padding: 10px;
+}
+
+/* Acciones simplificadas (solo 2 botones) */
+.signature-actions-simple {
+  display: flex;
+  gap: 10px;
+}
+
+/* Botones de acción de firma */
+.btn-action-signature {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-action-signature.btn-redraw {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-action-signature.btn-redraw:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-action-signature.btn-remove {
+  background: #e74c3c;
+  color: white;
+}
+
+.btn-action-signature.btn-remove:hover {
+  background: #c0392b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-action-signature:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Contenedor cuando NO hay firma (botón grande único) */
+.signature-empty-container {
+  display: flex;
+  justify-content: center;
+  padding: 30px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 12px;
+  border: 2px dashed #667eea;
+  transition: all 0.3s ease;
+}
+
+.signature-empty-container:hover {
+  background: linear-gradient(135deg, #e8ecf3 0%, #b8c6db 100%);
+  border-color: #5568d3;
+}
+
+/* Botón principal para dibujar firma */
+.btn-draw-signature-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 3px solid #667eea;
+  border-radius: 16px;
+  padding: 32px 48px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.btn-draw-signature-main:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+}
+
+.btn-draw-signature-main:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.draw-icon {
+  font-size: 48px;
+}
+
+.draw-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.draw-desc {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* Estilos legacy - mantener por compatibilidad */
+.signature-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-action-signature.btn-draw {
+  background: #667eea;
+  color: white;
+}
+
+.btn-action-signature.btn-draw:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-action-signature.btn-upload {
+  background: #3498db;
+  color: white;
+}
+
+.btn-action-signature.btn-upload:hover {
+  background: #2980b9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+/* Contenedor de opciones - YA NO SE USA pero mantener por seguridad */
+.signature-options-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+}
+
+.signature-options-text {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.signature-options-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+/* Botones de opción inicial */
+.btn-option-signature {
+  flex: 1;
+  max-width: 200px;
+  padding: 20px 16px;
+  background: white;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-option-signature:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.btn-option-signature.btn-draw-option {
+  border-color: #667eea;
+}
+
+.btn-option-signature.btn-draw-option:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
+.btn-option-signature.btn-upload-option {
+  border-color: #3498db;
+}
+
+.btn-option-signature.btn-upload-option:hover {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  border-color: #3498db;
+  color: white;
+}
+
+.option-icon {
+  font-size: 40px;
+}
+
+.option-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.option-desc {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.btn-option-signature:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Upload de firma (legacy - ya no se usa directamente) */
+.signature-upload-container {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px dashed #dee2e6;
+  transition: all 0.2s ease;
+}
+
+.signature-upload-container:hover {
+  border-color: #667eea;
+  background: #f0f3ff;
+}
+
+.btn-upload-signature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  border: 2px solid #667eea;
+  color: #667eea;
+  padding: 20px 40px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-upload-signature:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-upload-signature:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.upload-icon {
+  font-size: 32px;
+}
+
+/* Footer del Modal */
+.profile-modal-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+  margin-top: 8px;
+}
+
+.btn-cancel,
+.btn-save {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 2px solid #dee2e6;
+}
+
+.btn-cancel:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-save:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-cancel:disabled,
+.btn-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Spinner de carga */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-modal-container {
+    max-width: 100%;
+    max-height: 95vh;
+    margin: 10px;
+  }
+
+  .profile-modal-header {
+    padding: 20px 20px;
+  }
+
+  .profile-modal-title h2 {
+    font-size: 20px;
+  }
+
+  .profile-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 22px;
+  }
+
+  .profile-modal-form {
+    padding: 20px;
+  }
+
+  .profile-form-group {
+    margin-bottom: 20px;
+  }
+
+  .signature-actions,
+  .signature-actions-simple {
+    flex-direction: column;
+  }
+
+  .btn-action-signature {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .btn-draw-signature-main {
+    padding: 24px 32px;
+  }
+
+  .draw-icon {
+    font-size: 40px;
+  }
+
+  .draw-title {
+    font-size: 16px;
+  }
+
+  .signature-options-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-option-signature {
+    max-width: 100%;
+  }
+
+  .profile-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Scrollbar personalizado */
+.profile-modal-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-modal-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 0 16px 16px 0;
+}
+
+.profile-modal-container::-webkit-scrollbar-thumb {
+  background: #667eea;
+  border-radius: 4px;
+}
+
+.profile-modal-container::-webkit-scrollbar-thumb:hover {
+  background: #5568d3;
+}

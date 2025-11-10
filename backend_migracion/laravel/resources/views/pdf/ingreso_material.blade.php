@@ -10,179 +10,305 @@
             padding: 0;
             box-sizing: border-box;
         }
+        
         body {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            font-size: 10px;
             color: #333;
+            padding: 30px;
+            line-height: 1.4;
         }
+        
         .header {
             text-align: center;
             margin-bottom: 20px;
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 10px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #1e3a8a;
         }
+        
         .header h1 {
-            font-size: 20px;
-            color: #2c3e50;
+            color: #1e3a8a;
+            font-size: 16px;
+            font-weight: bold;
             margin-bottom: 5px;
+            text-transform: uppercase;
         }
+        
         .header h2 {
+            color: #1e3a8a;
             font-size: 14px;
-            color: #7f8c8d;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
+        
+        .document-info {
+            background-color: #f3f4f6;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            margin-bottom: 20px;
+        }
+        
+        .document-info .doc-number {
+            font-weight: bold;
+            font-size: 11px;
+            color: #1e3a8a;
+        }
+        
+        .document-info .doc-date {
+            font-size: 9px;
+            color: #6b7280;
+            font-style: italic;
+            margin-top: 3px;
+        }
+        
         .info-section {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #d1d5db;
         }
-        .info-grid {
-            display: table;
+        
+        .info-table {
             width: 100%;
-            margin-bottom: 10px;
+            border-collapse: collapse;
         }
-        .info-row {
-            display: table-row;
+        
+        .info-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e5e7eb;
         }
-        .info-label {
-            display: table-cell;
+        
+        .info-table td:first-child {
             font-weight: bold;
-            width: 25%;
-            padding: 5px;
-            background-color: #ecf0f1;
+            background-color: #f9fafb;
+            width: 120px;
+            color: #374151;
         }
-        .info-value {
-            display: table-cell;
-            width: 25%;
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
+        
+        .info-table tr:last-child td {
+            border-bottom: none;
         }
+        
         .section-title {
-            background-color: #3498db;
+            background-color: #1e3a8a;
             color: white;
-            padding: 8px;
-            font-size: 12px;
+            padding: 8px 10px;
             font-weight: bold;
-            margin-top: 15px;
+            font-size: 11px;
+            margin-top: 20px;
             margin-bottom: 10px;
         }
-        table {
+        
+        .products-table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
-        }
-        th {
-            background-color: #34495e;
-            color: white;
-            padding: 8px;
-            text-align: left;
-            font-size: 10px;
-        }
-        td {
-            padding: 6px;
-            border-bottom: 1px solid #ddd;
-            font-size: 10px;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .totals {
-            margin-top: 20px;
-            float: right;
-            width: 300px;
-        }
-        .total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 10px;
-            border-bottom: 1px solid #ddd;
-        }
-        .total-row.final {
-            background-color: #2c3e50;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-        }
-        .total-label {
-            font-weight: bold;
-        }
-        .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 15px 20px;
             font-size: 9px;
-            color: #7f8c8d;
         }
+        
+        .products-table thead {
+            background-color: #1e3a8a;
+            color: white;
+        }
+        
+        .products-table th {
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: bold;
+            border: 1px solid #1e3a8a;
+        }
+        
+        .products-table td {
+            padding: 6px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .products-table tbody tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        
         .text-right {
             text-align: right;
         }
+        
         .text-center {
             text-align: center;
         }
-        .firma-box {
-            text-align: center;
-            margin-top: 20px;
+        
+        .totals-table {
+            width: 100%;
+            margin-top: 10px;
+            font-size: 10px;
         }
-        .firma-linea {
-            border-top: 1px solid #333;
-            width: 250px;
-            margin: 0 auto;
-            padding-top: 5px;
+        
+        .totals-table td {
+            padding: 6px 10px;
+            text-align: right;
+        }
+        
+        .totals-table td:first-child {
+            background-color: #eff6ff;
+            font-weight: bold;
+            color: #1e3a8a;
+            border: 1px solid #bfdbfe;
+            width: 70%;
+        }
+        
+        .totals-table td:last-child {
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+            font-weight: bold;
+        }
+        
+        .totals-table tr:last-child td {
+            background-color: #dbeafe;
+            font-size: 11px;
+            color: #1e3a8a;
+            font-weight: bold;
+            border: 2px solid #1e3a8a;
+        }
+        
+        .conditions {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9fafb;
+            border: 1px solid #d1d5db;
+        }
+        
+        .conditions h3 {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #1e3a8a;
+        }
+        
+        .conditions p {
+            font-size: 9px;
+            line-height: 1.6;
+            text-align: justify;
+        }
+        
+        .signature-section {
+            margin-top: 40px;
+            text-align: center;
+        }
+        
+        .signature-container {
+            display: inline-block;
+            text-align: center;
+            min-width: 300px;
+        }
+        
+        .signature-image {
+            max-width: 250px;
+            max-height: 80px;
+            margin: 0 auto 5px auto;
+            display: block;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #333;
+            width: 300px;
+            margin: 0 auto 5px auto;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            font-size: 11px;
+            margin-top: 5px;
+        }
+        
+        .signature-title {
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #d1d5db;
+            text-align: center;
             font-size: 8px;
+            color: #6b7280;
+        }
+        
+        .atentamente {
+            text-align: center;
+            margin-top: 30px;
+            margin-bottom: 10px;
+            font-style: italic;
+            font-size: 10px;
         }
     </style>
 </head>
 <body>
+    <!-- ENCABEZADO -->
     <div class="header">
-        <h1>INGRESO DE MATERIAL</h1>
-        <h2>{{ $ingreso->id_ingreso }}</h2>
+        <h1>SISTEMA DE GESTIÓN DE MATERIALES</h1>
+        <h2>INGRESO DE MATERIAL</h2>
     </div>
 
-    <div class="section-title">INFORMACIÓN GENERAL</div>
-    <div class="info-grid">
-        <div class="info-row">
-            <div class="info-label">Orden de Compra:</div>
-            <div class="info-value">{{ $ingreso->correlativo_oc ?? 'N/A' }}</div>
-            <div class="info-label">Fecha Ingreso:</div>
-            <div class="info-value">{{ \Carbon\Carbon::parse($ingreso->fecha_ingreso)->format('d/m/Y') }}</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Proveedor:</div>
-            <div class="info-value">{{ $ingreso->razon_social ?? 'N/A' }}</div>
-            <div class="info-label">RUC:</div>
-            <div class="info-value">{{ $ingreso->ruc ?? 'N/A' }}</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">Bodega:</div>
-            <div class="info-value">{{ $ingreso->nombre_bodega ?? $ingreso->proyecto_almacen }}</div>
-            <div class="info-label">Usuario:</div>
-            <div class="info-value">{{ $ingreso->usuario }}</div>
-        </div>
-        <div class="info-row">
-            <div class="info-label">N° Guía:</div>
-            <div class="info-value">{{ $ingreso->num_guia ?? '-' }}</div>
-            <div class="info-label">Factura:</div>
-            <div class="info-value">{{ $ingreso->factura ?? '-' }}</div>
-        </div>
-        @if($ingreso->observaciones)
-        <div class="info-row">
-            <div class="info-label">Observaciones:</div>
-            <div class="info-value" colspan="3">{{ $ingreso->observaciones }}</div>
-        </div>
-        @endif
+    <!-- INFORMACIÓN DEL DOCUMENTO -->
+    <div class="document-info">
+        <div class="doc-number">DOCUMENTO N°: {{ $ingreso->id_ingreso }}</div>
+        <div class="doc-date">Fecha de ingreso: {{ \Carbon\Carbon::parse($ingreso->fecha_ingreso)->format('d/m/Y') }}</div>
     </div>
 
-    <div class="section-title">DETALLE DE PRODUCTOS</div>
-    <table>
+    <!-- INFORMACIÓN GENERAL -->
+    <div class="info-section">
+        <table class="info-table">
+            <tr>
+                <td>Orden de Compra:</td>
+                <td>{{ $ingreso->correlativo_oc ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td>Fecha Ingreso:</td>
+                <td>{{ \Carbon\Carbon::parse($ingreso->fecha_ingreso)->format('d/m/Y') }}</td>
+            </tr>
+            <tr>
+                <td>Proveedor:</td>
+                <td>{{ $ingreso->razon_social ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td>RUC:</td>
+                <td>{{ $ingreso->ruc ?? 'N/A' }}</td>
+            </tr>
+            <tr>
+                <td>Bodega:</td>
+                <td>{{ $ingreso->nombre_bodega ?? $ingreso->proyecto_almacen }}</td>
+            </tr>
+            <tr>
+                <td>Usuario:</td>
+                <td>{{ $ingreso->usuario }}</td>
+            </tr>
+            <tr>
+                <td>N° Guía:</td>
+                <td>{{ $ingreso->num_guia ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td>Factura:</td>
+                <td>{{ $ingreso->factura ?? '-' }}</td>
+            </tr>
+            @if($ingreso->observaciones)
+            <tr>
+                <td>Observaciones:</td>
+                <td>{{ $ingreso->observaciones }}</td>
+            </tr>
+            @endif
+        </table>
+    </div>
+
+    <!-- DETALLE DE PRODUCTOS -->
+    <div class="section-title">Detalle de Productos</div>
+    
+    <table class="products-table">
         <thead>
             <tr>
-                <th width="8%">CÓDIGO</th>
-                <th width="37%">DESCRIPCIÓN</th>
-                <th width="10%" class="text-center">UNIDAD</th>
-                <th width="12%" class="text-right">CANTIDAD</th>
-                <th width="13%" class="text-right">P. UNITARIO</th>
-                <th width="15%" class="text-right">TOTAL</th>
-                <th width="5%"></th>
+                <th style="width: 12%;">Código</th>
+                <th style="width: 35%;">Descripción</th>
+                <th style="width: 10%;" class="text-center">Unidad</th>
+                <th style="width: 13%;" class="text-right">Cantidad</th>
+                <th style="width: 15%;" class="text-right">Precio Unitario</th>
+                <th style="width: 15%;" class="text-right">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -194,45 +320,58 @@
                 <td class="text-right">{{ number_format($detalle->cantidad_recibida, 2) }}</td>
                 <td class="text-right">S/ {{ number_format($detalle->precio_unitario ?? 0, 2) }}</td>
                 <td class="text-right">S/ {{ number_format($detalle->total, 2) }}</td>
-                <td></td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div class="totals">
-        <div class="total-row">
-            <span class="total-label">SUBTOTAL:</span>
-            <span>S/ {{ number_format($subtotal, 2) }}</span>
-        </div>
-        <div class="total-row">
-            <span class="total-label">IGV (18%):</span>
-            <span>S/ {{ number_format($igv, 2) }}</span>
-        </div>
-        <div class="total-row final">
-            <span class="total-label">TOTAL:</span>
-            <span>S/ {{ number_format($total, 2) }}</span>
+    <!-- TOTALES -->
+    <table class="totals-table">
+        <tr>
+            <td>Subtotal:</td>
+            <td>S/ {{ number_format($subtotal, 2) }}</td>
+        </tr>
+        <tr>
+            <td>IGV (18%):</td>
+            <td>S/ {{ number_format($igv, 2) }}</td>
+        </tr>
+        <tr>
+            <td>TOTAL GENERAL:</td>
+            <td>S/ {{ number_format($total, 2) }}</td>
+        </tr>
+    </table>
+
+    <!-- DECLARACIÓN -->
+    <div class="conditions">
+        <h3>Declaración de Responsabilidad</h3>
+        <p>Declaro que he recibido los elementos relacionados en la parte superior. Me comprometo a responder por estos elementos y en caso de pérdida o diferencias de inventario a mi cargo, autorizo a la empresa para que de mi salario y prestaciones sociales me sea descontado este valor.</p>
+    </div>
+
+    <!-- FIRMA -->
+    <div class="atentamente">
+        Conforme,
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-container">
+            @if($firma_usuario)
+                <!-- Mostrar imagen de firma si existe -->
+                <img src="{{ $firma_usuario }}" alt="Firma" class="signature-image">
+            @else
+                <!-- Espacio vacío si no hay firma -->
+                <div style="height: 80px;"></div>
+            @endif
+            <!-- Línea debajo de la firma -->
+            <div class="signature-line"></div>
+            <div class="signature-name">{{ $ingreso->usuario }}</div>
+            <div class="signature-title">Responsable de Ingreso de Material</div>
         </div>
     </div>
 
-    <div style="clear: both;"></div>
-
+    <!-- PIE DE PÁGINA -->
     <div class="footer">
-        <p style="font-size: 9px; color: #7f8c8d; margin-bottom: 50px; text-align: justify;">
-            Declaro que he recibido los elementos relacionados en la parte superior. Me comprometo a responder por estos elementos y en caso de pérdida o diferencias de inventario a mi cargo, autorizo a la empresa para que de mi salario y prestaciones sociales me sea descontado este valor
-        </p>
-        
-        <div class="firma-box">
-            <div class="firma-linea">
-                <strong>Responsable de Ingreso Material:</strong> {{ $ingreso->usuario }}
-            </div>
-        </div>
-        
-        <div style="text-align: center; margin-top: 15px; font-size: 9px; color: #7f8c8d;">
-            <p>Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}</p>
-            <p>Sistema de Gestión Logística</p>
-            <p style="font-weight: bold;">Pagina 1/1</p>
-        </div>
+        Documento generado el {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}<br>
+        Sistema de Gestión Logística | Página 1/1
     </div>
 </body>
 </html>

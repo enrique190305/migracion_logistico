@@ -243,6 +243,43 @@ export const authService = {
     return user?.permissions?.is_admin || user?.id_rol === 1 || false;
   },
 
+  // ✅ NUEVO: Actualizar perfil del usuario (nombre, contraseña, firma)
+  async updateProfile(profileData) {
+    try {
+      console.log('👤 Actualizando perfil...');
+      
+      const response = await apiClient.put('/auth/profile', profileData);
+
+      if (response.data.success) {
+        // Actualizar información del usuario en localStorage
+        const updatedUser = response.data.data.user;
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        console.log('✅ Perfil actualizado exitosamente');
+        
+        return {
+          success: true,
+          user: updatedUser,
+          message: response.data.message
+        };
+      } else {
+        throw new Error(response.data.message || 'Error al actualizar perfil');
+      }
+    } catch (error) {
+      console.error('❌ Error al actualizar perfil:', error);
+      
+      const errorMessage = error.response?.data?.message 
+        || error.response?.data?.errors 
+        || error.message 
+        || 'Error al actualizar perfil';
+      
+      return {
+        success: false,
+        message: errorMessage
+      };
+    }
+  },
+
   // Limpiar todos los datos de autenticación
   clearAuthData() {
     localStorage.removeItem('jwt_token');

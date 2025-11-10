@@ -403,7 +403,16 @@ const IngresoMateriales = ({ initialTab }) => {
         try {
           const idIngreso = response.data?.id_ingreso;
           if (idIngreso) {
-            const pdfResponse = await fetch(`http://localhost:8000/api/ingreso-materiales/${idIngreso}/pdf`);
+            // Obtener token JWT del localStorage
+            const token = localStorage.getItem('jwt_token');
+            
+            const pdfResponse = await fetch(`http://localhost:8000/api/ingreso-materiales/${idIngreso}/pdf`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/pdf'
+              }
+            });
+            
             if (pdfResponse.ok) {
               const blob = await pdfResponse.blob();
               const url = window.URL.createObjectURL(blob);
