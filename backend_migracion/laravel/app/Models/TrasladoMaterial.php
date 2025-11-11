@@ -15,6 +15,7 @@ class TrasladoMaterial extends Model
 
     protected $fillable = [
         'id_traslado',
+        'correlativo',
         'fecha_traslado',
         'proyecto_origen',
         'proyecto_destino',

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './HistorialComun.css';
+import { obtenerBodegas } from '../../services/bodegasAPI';
+import * as XLSX from 'xlsx';
 
 // ============================================
 // COMPONENTE: Toast Notification
@@ -30,14 +32,16 @@ const Toast = ({ message, type, onClose }) => {
 
 const HistorialIngresoMateriales = () => {
   const [ingresos, setIngresos] = useState([]);
-  const [proyectos, setProyectos] = useState([]);
+  const [bodegas, setBodegas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState('');
-  const [filtroProyecto, setFiltroProyecto] = useState('');
+  const [filtroBodega, setFiltroBodega] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('TODOS');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [toast, setToast] = useState(null);
+  const [modalDetalles, setModalDetalles] = useState(null);
+  const [detallesIngreso, setDetallesIngreso] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -80,20 +84,25 @@ const HistorialIngresoMateriales = () => {
         setIngresos([]);
       }
       
-      // Intentar cargar proyectos (opcional)
+      // Intentar cargar bodegas (opcional)
       try {
-        const proyectosRes = await fetch('http://localhost:8000/api/proyectos/lista');
-        const proyectosData = await proyectosRes.json();
-        const proyectosArray = Array.isArray(proyectosData) ? proyectosData : (proyectosData.data || []);
-        setProyectos(Array.isArray(proyectosArray) ? proyectosArray : []);
+        const bodegasResponse = await obtenerBodegas();
+        console.log('📦 Respuesta de bodegas:', bodegasResponse);
+        if (bodegasResponse.success) {
+          console.log('✅ Bodegas cargadas:', bodegasResponse.data);
+          setBodegas(bodegasResponse.data || []);
+        } else {
+          console.error('❌ Error al cargar bodegas:', bodegasResponse.message);
+          setBodegas([]);
+        }
       } catch (err) {
-        console.warn('No se pudieron cargar proyectos:', err);
-        setProyectos([]);
+        console.warn('No se pudieron cargar bodegas:', err);
+        setBodegas([]);
       }
     } catch (error) {
       console.error('Error al cargar historial:', error);
       setIngresos([]);
-      setProyectos([]);
+      setBodegas([]);
     } finally {
       setLoading(false);
     }
@@ -101,27 +110,40 @@ const HistorialIngresoMateriales = () => {
 
   const ingresosFiltrados = Array.isArray(ingresos) ? ingresos.filter(ingreso => {
     const cumpleFiltroTipo = filtroTipo === 'TODOS' || ingreso.tipo_ingreso === filtroTipo;
-    const cumpleFiltroProyecto = !filtroProyecto || ingreso.id_proyecto === parseInt(filtroProyecto);
+    const cumpleFiltroBodega = !filtroBodega || ingreso.id_bodega === parseInt(filtroBodega);
     const cumpleFechaInicio = !fechaInicio || ingreso.fecha_ingreso >= fechaInicio;
     const cumpleFechaFin = !fechaFin || ingreso.fecha_ingreso <= fechaFin;
     const cumpleBusqueda = busqueda === '' || 
       ingreso.correlativo?.toLowerCase().includes(busqueda.toLowerCase()) ||
-      ingreso.proyecto?.toLowerCase().includes(busqueda.toLowerCase()) ||
       ingreso.bodega?.toLowerCase().includes(busqueda.toLowerCase());
     
-    return cumpleFiltroTipo && cumpleFiltroProyecto && cumpleFechaInicio && cumpleFechaFin && cumpleBusqueda;
+    return cumpleFiltroTipo && cumpleFiltroBodega && cumpleFechaInicio && cumpleFechaFin && cumpleBusqueda;
   }) : [];
 
   const limpiarFiltros = () => {
     setBusqueda('');
-    setFiltroProyecto('');
+    setFiltroBodega('');
     setFiltroTipo('TODOS');
     setFechaInicio('');
     setFechaFin('');
   };
 
-  const verDetalles = (ingreso) => {
-    showToast(`📥 DETALLES DE INGRESO\n\nCorrelativo: ${ingreso.correlativo}\nProyecto: ${ingreso.proyecto}\nBodega: ${ingreso.bodega}\nFecha: ${new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE')}\nProductos: ${ingreso.total_productos}\n\n(Modal de detalles en desarrollo)`, 'info');
+  const verDetalles = async (ingreso) => {
+    try {
+      setModalDetalles(true);
+      setDetallesIngreso(ingreso);
+      
+      // Aquí podrías hacer una llamada adicional al backend si necesitas más información
+      // Por ahora mostramos la información básica que ya tenemos
+    } catch (error) {
+      console.error('Error al cargar detalles:', error);
+      showToast('Error al cargar los detalles del ingreso', 'error');
+    }
+  };
+
+  const cerrarModal = () => {
+    setModalDetalles(false);
+    setDetallesIngreso(null);
   };
 
   const descargarPDF = async (idIngreso) => {
@@ -154,7 +176,95 @@ const HistorialIngresoMateriales = () => {
   };
 
   const exportarExcel = () => {
-    showToast('📊 Exportación a Excel en desarrollo', 'warning');
+    try {
+      if (ingresosFiltrados.length === 0) {
+        showToast('⚠️ No hay datos para exportar', 'warning');
+        return;
+      }
+
+      // Crear un nuevo libro de Excel
+      const wb = XLSX.utils.book_new();
+
+      // Información del encabezado
+      const fechaActual = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Crear array para la hoja con encabezado
+      const data = [
+        ['HISTORIAL DE INGRESO DE MATERIALES'],
+        ['Fecha de generación:', fechaActual],
+        ['Total de registros:', ingresosFiltrados.length],
+        [], // Fila vacía
+        ['CORRELATIVO', 'FECHA', 'BODEGA', 'TIPO', 'PRODUCTOS', 'USUARIO'] // Encabezados
+      ];
+
+      // Agregar los datos
+      ingresosFiltrados.forEach(ingreso => {
+        data.push([
+          ingreso.correlativo || 'N/A',
+          ingreso.fecha_ingreso 
+            ? new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            : 'N/A',
+          ingreso.bodega || 'N/A',
+          ingreso.tipo_ingreso || 'COMPRA',
+          ingreso.total_productos || 0,
+          ingreso.usuario || 'Sistema'
+        ]);
+      });
+
+      // Agregar fila de totales
+      data.push([]);
+      data.push([
+        'TOTAL GENERAL',
+        '',
+        '',
+        '',
+        ingresosFiltrados.reduce((sum, i) => sum + (parseInt(i.total_productos) || 0), 0),
+        ''
+      ]);
+
+      // Crear la hoja de cálculo
+      const ws = XLSX.utils.aoa_to_sheet(data);
+
+      // Establecer el ancho de las columnas
+      ws['!cols'] = [
+        { wch: 15 }, // CORRELATIVO
+        { wch: 12 }, // FECHA
+        { wch: 30 }, // BODEGA
+        { wch: 15 }, // TIPO
+        { wch: 12 }, // PRODUCTOS
+        { wch: 20 }  // USUARIO
+      ];
+
+      // Aplicar estilos al encabezado (opcional, requiere xlsx-style)
+      // Combinar celdas del título
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Título
+      ];
+
+      // Agregar la hoja al libro
+      XLSX.utils.book_append_sheet(wb, ws, 'Historial Ingresos');
+
+      // Generar el nombre del archivo
+      const nombreArchivo = `Historial_Ingresos_Materiales_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+      // Descargar el archivo
+      XLSX.writeFile(wb, nombreArchivo);
+
+      showToast('✅ Excel exportado exitosamente', 'success');
+    } catch (error) {
+      console.error('Error al exportar Excel:', error);
+      showToast('❌ Error al exportar a Excel', 'error');
+    }
   };
 
   return (
@@ -187,16 +297,16 @@ const HistorialIngresoMateriales = () => {
         </div>
 
         <div className="filtro-grupo">
-          <label>🏗️ Proyecto:</label>
+          <label>🏪 Bodega:</label>
           <select 
-            value={filtroProyecto} 
-            onChange={(e) => setFiltroProyecto(e.target.value)}
+            value={filtroBodega} 
+            onChange={(e) => setFiltroBodega(e.target.value)}
             className="select-filtro"
           >
-            <option value="">Todos los proyectos</option>
-            {Array.isArray(proyectos) && proyectos.map(proy => (
-              <option key={proy.id_proyecto || proy.id} value={proy.id_proyecto || proy.id}>
-                {proy.nombre_proyecto || proy.nombre}
+            <option value="">Todas las bodegas</option>
+            {Array.isArray(bodegas) && bodegas.map(bodega => (
+              <option key={bodega.id_bodega || bodega.id} value={bodega.id_bodega || bodega.id}>
+                {bodega.nombre || bodega.nombre_bodega}
               </option>
             ))}
           </select>
@@ -255,7 +365,6 @@ const HistorialIngresoMateriales = () => {
               <tr>
                 <th>Correlativo</th>
                 <th>Fecha</th>
-                <th>Proyecto</th>
                 <th>Bodega</th>
                 <th>Tipo</th>
                 <th className="text-center">Productos</th>
@@ -268,7 +377,6 @@ const HistorialIngresoMateriales = () => {
                 <tr key={ingreso.id || index}>
                   <td><strong>{ingreso.correlativo || 'N/A'}</strong></td>
                   <td>{ingreso.fecha_ingreso ? new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE') : 'N/A'}</td>
-                  <td>{ingreso.proyecto || 'N/A'}</td>
                   <td>{ingreso.bodega || 'N/A'}</td>
                   <td>
                     <span 
@@ -364,6 +472,101 @@ const HistorialIngresoMateriales = () => {
           type={toast.type} 
           onClose={closeToast} 
         />
+      )}
+
+      {/* Modal de Detalles */}
+      {modalDetalles && detallesIngreso && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-detalles" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>📥 Detalles del Ingreso de Material</h2>
+              <button className="modal-close-btn" onClick={cerrarModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detalle-seccion">
+                <h3>📋 Información General</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Correlativo:</span>
+                    <span className="detalle-valor">{detallesIngreso.correlativo || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Fecha de Ingreso:</span>
+                    <span className="detalle-valor">
+                      {detallesIngreso.fecha_ingreso 
+                        ? new Date(detallesIngreso.fecha_ingreso).toLocaleDateString('es-PE', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Tipo de Ingreso:</span>
+                    <span className="detalle-valor badge-tipo">{detallesIngreso.tipo_ingreso || 'COMPRA'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Estado:</span>
+                    <span className="detalle-valor badge-estado">{detallesIngreso.estado || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>🏪 Información de Bodega</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Bodega:</span>
+                    <span className="detalle-valor">{detallesIngreso.bodega || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Total de Productos:</span>
+                    <span className="detalle-valor badge-productos">{detallesIngreso.total_productos || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>👤 Información Adicional</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Proveedor:</span>
+                    <span className="detalle-valor">{detallesIngreso.proveedor || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Usuario:</span>
+                    <span className="detalle-valor">{detallesIngreso.usuario || 'Sistema'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">N° Guía:</span>
+                    <span className="detalle-valor">{detallesIngreso.num_guia || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">N° Factura:</span>
+                    <span className="detalle-valor">{detallesIngreso.factura || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-modal-cerrar" onClick={cerrarModal}>
+                Cerrar
+              </button>
+              <button 
+                className="btn-modal-pdf" 
+                onClick={() => {
+                  descargarPDF(detallesIngreso.id_ingreso);
+                  cerrarModal();
+                }}
+              >
+                📄 Descargar PDF
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

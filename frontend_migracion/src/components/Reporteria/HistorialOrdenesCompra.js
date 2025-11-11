@@ -41,6 +41,8 @@ const HistorialOrdenesCompra = () => {
   const [fechaFin, setFechaFin] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [toast, setToast] = useState(null);
+  const [modalDetalles, setModalDetalles] = useState(false);
+  const [detallesOrden, setDetallesOrden] = useState(null);
 
   // Función para mostrar toast
   const showToast = (message, type = 'info') => {
@@ -126,8 +128,19 @@ const HistorialOrdenesCompra = () => {
     }
   };
 
-  const verDetalles = (orden) => {
-    showToast(`📋 DETALLES DE ORDEN DE COMPRA\n\nN° OC: ${orden.correlativo}\nEmpresa: ${orden.empresa?.razon_social}\nProveedor: ${orden.proveedor?.nombre}\nTotal: S/ ${parseFloat(orden.total_general).toFixed(2)}\nEstado: ${orden.estado}\n\n(Modal de detalles en desarrollo)`, 'info');
+  const verDetalles = async (orden) => {
+    try {
+      setModalDetalles(true);
+      setDetallesOrden(orden);
+    } catch (error) {
+      console.error('Error al cargar detalles:', error);
+      showToast('Error al cargar los detalles de la orden', 'error');
+    }
+  };
+
+  const cerrarModal = () => {
+    setModalDetalles(false);
+    setDetallesOrden(null);
   };
 
   const exportarExcel = async () => {
@@ -666,6 +679,126 @@ const HistorialOrdenesCompra = () => {
           type={toast.type} 
           onClose={closeToast} 
         />
+      )}
+
+      {/* Modal de Detalles */}
+      {modalDetalles && detallesOrden && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-detalles" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+              <h2>🛒 Detalles de Orden de Compra</h2>
+              <button className="modal-close-btn" onClick={cerrarModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detalle-seccion">
+                <h3>📋 Información General</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">N° Orden:</span>
+                    <span className="detalle-valor">{detallesOrden.correlativo || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Fecha de Emisión:</span>
+                    <span className="detalle-valor">
+                      {detallesOrden.fecha_emision 
+                        ? new Date(detallesOrden.fecha_emision).toLocaleDateString('es-PE', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Estado:</span>
+                    <span className={`detalle-valor badge-estado-${detallesOrden.estado?.toLowerCase()}`}>
+                      {detallesOrden.estado || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Moneda:</span>
+                    <span className="detalle-valor">{detallesOrden.moneda || 'SOLES'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>🏢 Información de Empresa y Proveedor</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Empresa:</span>
+                    <span className="detalle-valor">{detallesOrden.empresa?.razon_social || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">RUC Empresa:</span>
+                    <span className="detalle-valor">{detallesOrden.empresa?.ruc || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Proveedor:</span>
+                    <span className="detalle-valor">{detallesOrden.proveedor?.nombre || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">RUC Proveedor:</span>
+                    <span className="detalle-valor">{detallesOrden.proveedor?.ruc || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>💰 Información Financiera</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Subtotal:</span>
+                    <span className="detalle-valor">
+                      S/ {parseFloat(detallesOrden.sub_total || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">IGV (18%):</span>
+                    <span className="detalle-valor">
+                      S/ {parseFloat(detallesOrden.igv || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Total General:</span>
+                    <span className="detalle-valor badge-productos" style={{ fontSize: '20px' }}>
+                      S/ {parseFloat(detallesOrden.total_general || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Forma de Pago:</span>
+                    <span className="detalle-valor">{detallesOrden.forma_pago || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {detallesOrden.observaciones && (
+                <div className="detalle-seccion">
+                  <h3>📝 Observaciones</h3>
+                  <div className="detalle-observaciones">
+                    {detallesOrden.observaciones}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-modal-cerrar" onClick={cerrarModal}>
+                Cerrar
+              </button>
+              <button 
+                className="btn-modal-pdf" 
+                onClick={() => {
+                  descargarPDF(detallesOrden.id_oc);
+                  cerrarModal();
+                }}
+              >
+                📄 Descargar PDF
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

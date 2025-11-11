@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './HistorialComun.css';
+import * as XLSX from 'xlsx';
 
 // ============================================
 // COMPONENTE: Toast Notification
@@ -38,6 +39,8 @@ const HistorialSalidaMateriales = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [toast, setToast] = useState(null);
+  const [modalDetalles, setModalDetalles] = useState(false);
+  const [detallesSalida, setDetallesSalida] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -103,8 +106,19 @@ const HistorialSalidaMateriales = () => {
     setFechaFin('');
   };
 
-  const verDetalles = (salida) => {
-    showToast(`📤 DETALLES DE SALIDA\n\nCorrelativo: ${salida.correlativo}\nProyecto: ${salida.proyecto}\nMotivo: ${salida.motivo}\nFecha: ${new Date(salida.fecha_salida).toLocaleDateString('es-PE')}\nProductos: ${salida.total_productos}\n\n(Modal de detalles en desarrollo)`, 'info');
+  const verDetalles = async (salida) => {
+    try {
+      setModalDetalles(true);
+      setDetallesSalida(salida);
+    } catch (error) {
+      console.error('Error al cargar detalles:', error);
+      showToast('Error al cargar los detalles de la salida', 'error');
+    }
+  };
+
+  const cerrarModal = () => {
+    setModalDetalles(false);
+    setDetallesSalida(null);
   };
 
   const descargarPDF = async (numeroSalida) => {
@@ -128,7 +142,68 @@ const HistorialSalidaMateriales = () => {
   };
 
   const exportarExcel = () => {
-    showToast('📊 Exportación a Excel en desarrollo', 'warning');
+    try {
+      // Validar que haya datos para exportar
+      if (!salidasFiltradas || salidasFiltradas.length === 0) {
+        showToast('⚠️ No hay datos para exportar', 'warning');
+        return;
+      }
+
+      // Preparar los datos para Excel
+      const datosExcel = salidasFiltradas.map((salida, index) => ({
+        'N°': index + 1,
+        'Correlativo': salida.correlativo || 'N/A',
+        'Fecha': salida.fecha_salida 
+          ? new Date(salida.fecha_salida).toLocaleDateString('es-PE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })
+          : 'N/A',
+        'Proyecto': salida.proyecto || 'N/A',
+        'Tipo Salida': salida.tipo_salida || 'CONSUMO',
+        'Motivo': salida.motivo || 'N/A',
+        'Total Productos': salida.total_productos || 0,
+        'Usuario': salida.usuario || 'Sistema',
+        'Solicitante': salida.solicitante || 'N/A',
+        'Observaciones': salida.observaciones || 'Sin observaciones'
+      }));
+
+      // Crear el libro de Excel
+      const wb = XLSX.utils.book_new();
+      
+      // Crear la hoja con los datos
+      const ws = XLSX.utils.json_to_sheet(datosExcel);
+
+      // Configurar anchos de columna
+      ws['!cols'] = [
+        { wch: 5 },   // N°
+        { wch: 15 },  // Correlativo
+        { wch: 12 },  // Fecha
+        { wch: 25 },  // Proyecto
+        { wch: 15 },  // Tipo Salida
+        { wch: 30 },  // Motivo
+        { wch: 15 },  // Total Productos
+        { wch: 20 },  // Usuario
+        { wch: 20 },  // Solicitante
+        { wch: 40 }   // Observaciones
+      ];
+
+      // Agregar la hoja al libro
+      XLSX.utils.book_append_sheet(wb, ws, 'Salidas');
+
+      // Generar el archivo con nombre descriptivo
+      const fechaActual = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
+      const nombreArchivo = `Historial_Salida_Materiales_${fechaActual}.xlsx`;
+      
+      // Descargar el archivo
+      XLSX.writeFile(wb, nombreArchivo);
+
+      showToast(`✅ Excel generado exitosamente: ${salidasFiltradas.length} registros`, 'success');
+    } catch (error) {
+      console.error('Error al exportar Excel:', error);
+      showToast('❌ Error al generar el archivo Excel', 'error');
+    }
   };
 
   return (
@@ -339,6 +414,102 @@ const HistorialSalidaMateriales = () => {
           type={toast.type} 
           onClose={closeToast} 
         />
+      )}
+
+      {/* Modal de Detalles */}
+      {modalDetalles && detallesSalida && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-detalles" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+              <h2>📤 Detalles de Salida de Material</h2>
+              <button className="modal-close-btn" onClick={cerrarModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detalle-seccion">
+                <h3>📋 Información General</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Correlativo:</span>
+                    <span className="detalle-valor">{detallesSalida.correlativo || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Fecha de Salida:</span>
+                    <span className="detalle-valor">
+                      {detallesSalida.fecha_salida 
+                        ? new Date(detallesSalida.fecha_salida).toLocaleDateString('es-PE', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric'
+                          })
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Tipo de Salida:</span>
+                    <span className="detalle-valor badge-tipo">{detallesSalida.tipo_salida || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Total de Productos:</span>
+                    <span className="detalle-valor badge-productos">{detallesSalida.total_productos || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>🏪 Información del Proyecto</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Proyecto:</span>
+                    <span className="detalle-valor">{detallesSalida.proyecto || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Motivo:</span>
+                    <span className="detalle-valor">{detallesSalida.motivo || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>👤 Información Adicional</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Usuario:</span>
+                    <span className="detalle-valor">{detallesSalida.usuario || 'Sistema'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Solicitante:</span>
+                    <span className="detalle-valor">{detallesSalida.solicitante || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {detallesSalida.observaciones && (
+                <div className="detalle-seccion">
+                  <h3>📝 Observaciones</h3>
+                  <div className="detalle-observaciones">
+                    {detallesSalida.observaciones}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-modal-cerrar" onClick={cerrarModal}>
+                Cerrar
+              </button>
+              <button 
+                className="btn-modal-pdf" 
+                onClick={() => {
+                  descargarPDF(detallesSalida.correlativo);
+                  cerrarModal();
+                }}
+              >
+                📄 Descargar PDF
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

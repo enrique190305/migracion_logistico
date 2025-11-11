@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './HistorialComun.css';
+import * as XLSX from 'xlsx';
 
 // ============================================
 // COMPONENTE: Toast Notification
@@ -38,6 +39,8 @@ const HistorialTrasladoMateriales = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
   const [toast, setToast] = useState(null);
+  const [modalDetalles, setModalDetalles] = useState(false);
+  const [detallesTraslado, setDetallesTraslado] = useState(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -123,12 +126,80 @@ const HistorialTrasladoMateriales = () => {
     }
   };
 
-  const verDetalles = (traslado) => {
-    showToast(`🔄 DETALLES DE TRASLADO\n\nCorrelativo: ${traslado.correlativo}\nOrigen: ${traslado.proyecto_origen}\nDestino: ${traslado.proyecto_destino}\nFecha: ${new Date(traslado.fecha_traslado).toLocaleDateString('es-PE')}\nProductos: ${traslado.total_productos}\n\n(Modal de detalles en desarrollo)`, 'info');
+  const verDetalles = async (traslado) => {
+    try {
+      setModalDetalles(true);
+      setDetallesTraslado(traslado);
+    } catch (error) {
+      console.error('Error al cargar detalles:', error);
+      showToast('Error al cargar los detalles del traslado', 'error');
+    }
+  };
+
+  const cerrarModal = () => {
+    setModalDetalles(false);
+    setDetallesTraslado(null);
   };
 
   const exportarExcel = () => {
-    showToast('📊 Exportación a Excel en desarrollo', 'warning');
+    try {
+      // Validar que haya datos para exportar
+      if (!trasladosFiltrados || trasladosFiltrados.length === 0) {
+        showToast('⚠️ No hay datos para exportar', 'warning');
+        return;
+      }
+
+      // Preparar los datos para Excel
+      const datosExcel = trasladosFiltrados.map((traslado, index) => ({
+        'N°': index + 1,
+        'Correlativo': traslado.correlativo || 'N/A',
+        'Fecha': traslado.fecha_traslado 
+          ? new Date(traslado.fecha_traslado).toLocaleDateString('es-PE', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })
+          : 'N/A',
+        'Proyecto Origen': traslado.proyecto_origen || 'N/A',
+        'Proyecto Destino': traslado.proyecto_destino || 'N/A',
+        'Total Productos': traslado.total_productos || 0,
+        'Usuario': traslado.usuario || 'Sistema',
+        'Observaciones': traslado.observaciones || 'Sin observaciones'
+      }));
+
+      // Crear el libro de Excel
+      const wb = XLSX.utils.book_new();
+      
+      // Crear la hoja con los datos
+      const ws = XLSX.utils.json_to_sheet(datosExcel);
+
+      // Configurar anchos de columna
+      ws['!cols'] = [
+        { wch: 5 },   // N°
+        { wch: 15 },  // Correlativo
+        { wch: 12 },  // Fecha
+        { wch: 25 },  // Proyecto Origen
+        { wch: 25 },  // Proyecto Destino
+        { wch: 15 },  // Total Productos
+        { wch: 20 },  // Usuario
+        { wch: 40 }   // Observaciones
+      ];
+
+      // Agregar la hoja al libro
+      XLSX.utils.book_append_sheet(wb, ws, 'Traslados');
+
+      // Generar el archivo con nombre descriptivo
+      const fechaActual = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
+      const nombreArchivo = `Historial_Traslado_Materiales_${fechaActual}.xlsx`;
+      
+      // Descargar el archivo
+      XLSX.writeFile(wb, nombreArchivo);
+
+      showToast(`✅ Excel generado exitosamente: ${trasladosFiltrados.length} registros`, 'success');
+    } catch (error) {
+      console.error('Error al exportar Excel:', error);
+      showToast('❌ Error al generar el archivo Excel', 'error');
+    }
   };
 
   return (
@@ -338,6 +409,84 @@ const HistorialTrasladoMateriales = () => {
           type={toast.type} 
           onClose={closeToast} 
         />
+      )}
+
+      {/* Modal de Detalles */}
+      {modalDetalles && detallesTraslado && (
+        <div className="modal-overlay" onClick={cerrarModal}>
+          <div className="modal-detalles" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+              <h2>🔄 Detalles del Traslado de Material</h2>
+              <button className="modal-close-btn" onClick={cerrarModal}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="detalle-seccion">
+                <h3>📋 Información General</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">Correlativo:</span>
+                    <span className="detalle-valor">{detallesTraslado.correlativo || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Fecha de Traslado:</span>
+                    <span className="detalle-valor">{detallesTraslado.fecha_traslado || 'N/A'}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Total de Productos:</span>
+                    <span className="detalle-valor badge-productos">{detallesTraslado.total_productos || 0}</span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">Usuario:</span>
+                    <span className="detalle-valor">{detallesTraslado.usuario || 'Sistema'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="detalle-seccion">
+                <h3>📍 Información de Origen y Destino</h3>
+                <div className="detalle-grid">
+                  <div className="detalle-item">
+                    <span className="detalle-label">🏪 Bodega Origen:</span>
+                    <span className="detalle-valor" style={{ borderLeftColor: '#e74c3c' }}>
+                      {detallesTraslado.proyecto_origen || 'N/A'}
+                    </span>
+                  </div>
+                  <div className="detalle-item">
+                    <span className="detalle-label">🏪 Bodega Destino:</span>
+                    <span className="detalle-valor" style={{ borderLeftColor: '#27ae60' }}>
+                      {detallesTraslado.proyecto_destino || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {detallesTraslado.observaciones && (
+                <div className="detalle-seccion">
+                  <h3>📝 Observaciones</h3>
+                  <div className="detalle-observaciones">
+                    {detallesTraslado.observaciones}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-modal-cerrar" onClick={cerrarModal}>
+                Cerrar
+              </button>
+              <button 
+                className="btn-modal-pdf" 
+                onClick={() => {
+                  descargarPDF(detallesTraslado.id_traslado);
+                  cerrarModal();
+                }}
+              >
+                📄 Descargar PDF
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

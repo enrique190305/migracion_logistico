@@ -151,7 +151,7 @@ const Kardex = () => {
 
     const term = termino.toLowerCase();
     const filtrados = inventarioCache.filter(item =>
-      item.proyecto?.toLowerCase().includes(term) ||
+      item.bodega?.toLowerCase().includes(term) ||
       item.codigo_producto?.toLowerCase().includes(term) ||
       item.descripcion?.toLowerCase().includes(term)
     );
@@ -170,7 +170,7 @@ const Kardex = () => {
       item.codigo_producto?.toLowerCase().includes(term) ||
       item.descripcion?.toLowerCase().includes(term) ||
       item.documento?.toLowerCase().includes(term) ||
-      item.proyecto?.toLowerCase().includes(term)
+      item.bodega?.toLowerCase().includes(term)
     );
     setHistorialData(filtrados);
   };
@@ -381,7 +381,7 @@ const Kardex = () => {
         ];
 
         rows = data.map(item => ({
-          proyecto: item.proyecto || 'N/A',
+          proyecto: item.bodega || 'N/A',
           codigo: item.codigo_producto,
           descripcion: item.descripcion.substring(0, 40) + (item.descripcion.length > 40 ? '...' : ''),
           unidad: item.unidad,
@@ -452,7 +452,7 @@ const Kardex = () => {
           descripcion: item.descripcion.substring(0, 30) + (item.descripcion.length > 30 ? '...' : ''),
           unidad: item.unidad,
           cantidad: item.cantidad,
-          proyecto: (item.proyecto || 'N/A').substring(0, 15),
+          proyecto: (item.bodega || 'N/A').substring(0, 15),
           documento: (item.documento || 'N/A').substring(0, 12)
         }));
 
@@ -520,12 +520,12 @@ const Kardex = () => {
     if (tipo === 'inventario') {
       csv = 'Bodega,Código,Descripción,Unidad,Cantidad,Precio Unit.,Precio Total\n';
       data.forEach(item => {
-        csv += `"${item.proyecto}","${item.codigo_producto}","${item.descripcion}","${item.unidad}",${item.stock},${item.precio_unitario},${item.precio_total}\n`;
+        csv += `"${item.bodega}","${item.codigo_producto}","${item.descripcion}","${item.unidad}",${item.stock},${item.precio_unitario},${item.precio_total}\n`;
       });
     } else {
       csv = 'Fecha,Tipo,Código,Descripción,Unidad,Cantidad,Bodega,Documento,Observaciones\n';
       data.forEach(item => {
-        csv += `"${formatearFecha(item.fecha)}","${item.tipo_movimiento}","${item.codigo_producto}","${item.descripcion}","${item.unidad}",${item.cantidad},"${item.proyecto}","${item.documento}","${item.observaciones}"\n`;
+        csv += `"${formatearFecha(item.fecha)}","${item.tipo_movimiento}","${item.codigo_producto}","${item.descripcion}","${item.unidad}",${item.cantidad},"${item.bodega}","${item.documento}","${item.observaciones}"\n`;
       });
     }
 
@@ -676,7 +676,7 @@ const Kardex = () => {
                 ) : (
                   inventarioData.map((item, index) => (
                     <tr key={index}>
-                      <td>{item.proyecto || 'N/A'}</td>
+                      <td>{item.bodega || 'N/A'}</td>
                       <td>{item.codigo_producto}</td>
                       <td>{item.descripcion}</td>
                       <td>{item.unidad}</td>
@@ -804,7 +804,7 @@ const Kardex = () => {
                       <td>{item.descripcion}</td>
                       <td>{item.unidad}</td>
                       <td>{item.cantidad}</td>
-                      <td>{item.proyecto || 'N/A'}</td>
+                      <td>{item.bodega || 'N/A'}</td>
                       <td>{item.documento || 'N/A'}</td>
                       <td>{item.observaciones || 'N/A'}</td>
                     </tr>

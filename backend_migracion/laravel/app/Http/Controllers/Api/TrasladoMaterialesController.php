@@ -643,6 +643,7 @@ class TrasladoMaterialesController extends Controller
             $data = $traslados->map(function ($traslado) {
                 return [
                     'id_traslado' => $traslado->id_traslado,
+                    'correlativo' => $traslado->correlativo ?? $traslado->id_traslado,
                     'fecha_traslado' => $traslado->fecha_traslado->format('d/m/Y'),
                     'proyecto_origen' => $traslado->proyecto_origen,
                     'proyecto_destino' => $traslado->proyecto_destino,
@@ -684,6 +685,7 @@ class TrasladoMaterialesController extends Controller
                 'success' => true,
                 'data' => [
                     'id_traslado' => $traslado->id_traslado,
+                    'correlativo' => $traslado->correlativo ?? $traslado->id_traslado,
                     'fecha_traslado' => $traslado->fecha_traslado->format('d/m/Y'),
                     'proyecto_origen' => $traslado->proyecto_origen,
                     'proyecto_destino' => $traslado->proyecto_destino,

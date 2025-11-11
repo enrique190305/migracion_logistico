@@ -446,11 +446,15 @@ class SalidaMaterialController extends Controller
             $query = DB::table('salidas_materiales as sm')
                 ->select(
                     'sm.numero_salida',
+                    'sm.numero_salida as correlativo',
                     'sm.proyecto',
                     'sm.fecha_registro as fecha_salida',
-                    'sm.nom_ape as trabajador',
-                    'sm.area',
+                    'sm.nom_ape as solicitante',
+                    'sm.nom_ape as usuario',
+                    'sm.area as motivo',
                     'sm.dni',
+                    DB::raw("'CONSUMO' as tipo_salida"),
+                    DB::raw('NULL as observaciones'),
                     DB::raw('(SELECT COUNT(*) FROM detalle_salida WHERE numero_salida = sm.numero_salida) as total_productos')
                 )
                 ->orderBy('sm.fecha_registro', 'desc');

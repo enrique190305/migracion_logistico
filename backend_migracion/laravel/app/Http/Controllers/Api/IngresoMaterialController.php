@@ -578,14 +578,15 @@ class IngresoMaterialController extends Controller
             $query = DB::table('ingreso_material as im')
                 ->join('orden_compra as oc', 'im.id_oc', '=', 'oc.id_oc')
                 ->join('proveedor as p', 'oc.id_proveedor', '=', 'p.id_proveedor')
+                ->leftJoin('bodega as b', 'im.id_bodega', '=', 'b.id_bodega')
                 ->leftJoin('detalle_ingreso_material as dim', 'im.id_ingreso', '=', 'dim.id_ingreso')
                 ->select(
                     'im.id_ingreso',
                     'oc.correlativo',
                     'im.fecha_ingreso',
                     'p.nombre as proveedor',
-                    'im.proyecto_almacen as proyecto',
-                    DB::raw("'Almacén Principal' as bodega"),
+                    'b.nombre as bodega',
+                    'im.id_bodega',
                     DB::raw("'COMPRA' as tipo_ingreso"),
                     'oc.estado',
                     'im.num_guia',
@@ -598,7 +599,8 @@ class IngresoMaterialController extends Controller
                     'oc.correlativo',
                     'im.fecha_ingreso',
                     'p.nombre',
-                    'im.proyecto_almacen',
+                    'b.nombre',
+                    'im.id_bodega',
                     'oc.estado',
                     'im.num_guia',
                     'im.factura',
