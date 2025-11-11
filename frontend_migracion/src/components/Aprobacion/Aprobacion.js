@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '../../services/authService';
 import './Aprobacion.css';
 import ModalDetalle from './ModalDetalle';
-
-// ✅ CAMBIAR de 5000 a 8000
-const API_BASE_URL = 'http://localhost:8000/api';
 
 // ============================================
 // COMPONENTE: Toast Notification
@@ -130,8 +127,6 @@ const Aprobacion = () => {
   const [confirmModal, setConfirmModal] = useState(null);
   const [inputModal, setInputModal] = useState(null);
 
-  const token = localStorage.getItem('token');
-
   // Función para mostrar toast
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -145,9 +140,7 @@ const Aprobacion = () => {
   const fetchOrdenesCompra = async () => {
     try {
       console.log('🔍 Cargando órdenes de compra...');
-      const response = await axios.get(`${API_BASE_URL}/aprobacion/ordenes-compra`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/aprobacion/ordenes-compra');
       
       console.log('✅ Órdenes de compra cargadas:', response.data);
       setOrdenesCompra(response.data);
@@ -162,9 +155,7 @@ const Aprobacion = () => {
   const fetchOrdenesServicio = async () => {
     try {
       console.log('🔍 Cargando órdenes de servicio...');
-      const response = await axios.get(`${API_BASE_URL}/aprobacion/ordenes-servicio`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get('/aprobacion/ordenes-servicio');
       
       console.log('✅ Órdenes de servicio cargadas:', response.data);
       setOrdenesServicio(response.data);
@@ -181,12 +172,10 @@ const Aprobacion = () => {
     try {
       console.log(`🔍 Cargando detalles de ${tipo} ID:`, id);
       const endpoint = tipo === 'compra' 
-        ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/detalles`
-        : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/detalles`;
+        ? `/aprobacion/ordenes-compra/${id}/detalles`
+        : `/aprobacion/ordenes-servicio/${id}/detalles`;
       
-      const response = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await apiClient.get(endpoint);
       
       console.log('✅ Detalles cargados:', response.data);
       setDetallesOrden(response.data || []);
@@ -221,16 +210,12 @@ const Aprobacion = () => {
         try {
           const id = activeTab === 'compra' ? selectedOrden.id_oc : selectedOrden.id_os;
           const endpoint = activeTab === 'compra'
-            ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/estado`
-            : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/estado`;
+            ? `/aprobacion/ordenes-compra/${id}/estado`
+            : `/aprobacion/ordenes-servicio/${id}/estado`;
           
           console.log('🔄 Aprobando orden:', endpoint);
           
-          await axios.put(
-            endpoint,
-            { estado: 'APROBADO' },
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
+          await apiClient.put(endpoint, { estado: 'APROBADO' });
           
           showToast('Orden aprobada correctamente', 'success');
           setShowModal(false);
@@ -263,18 +248,17 @@ const Aprobacion = () => {
         try {
           const id = activeTab === 'compra' ? selectedOrden.id_oc : selectedOrden.id_os;
           const endpoint = activeTab === 'compra'
-            ? `${API_BASE_URL}/aprobacion/ordenes-compra/${id}/estado`
-            : `${API_BASE_URL}/aprobacion/ordenes-servicio/${id}/estado`;
+            ? `/aprobacion/ordenes-compra/${id}/estado`
+            : `/aprobacion/ordenes-servicio/${id}/estado`;
           
           console.log('🔄 Rechazando orden:', endpoint);
           
-          await axios.put(
+          await apiClient.put(
             endpoint,
             { 
               estado: 'RECHAZADO',
               observaciones: motivo 
-            },
-            { headers: { Authorization: `Bearer ${token}` } }
+            }
           );
           
           showToast('Orden rechazada correctamente', 'success');

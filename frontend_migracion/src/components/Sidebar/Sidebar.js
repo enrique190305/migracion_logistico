@@ -84,7 +84,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         { id: 'ingreso-materiales', title: 'Ingreso de Materiales', icon: '📥' },
         { id: 'traslado-materiales', title: 'Traslado de Materiales', icon: '🔄' },
         { id: 'salida-materiales', title: 'Salida de Materiales', icon: '📤' },
-        { id: 'ajuste-inventario', title: 'Ajuste de Inventario', icon: '⚖️' }
+        { id: 'ajuste-inventario', title: 'Ajuste de Inventario (Solo Admin)', icon: '⚖️', adminOnly: true }
       ]
     },
     {
@@ -150,7 +150,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
 
   const handleItemClick = (itemId) => {
     // Verificar si es un módulo que requiere permisos de admin
-    const restrictedModules = ['aprobacion-ordenes'];
+    const restrictedModules = ['aprobacion-ordenes', 'ajuste-inventario'];
     
     if (restrictedModules.includes(itemId) && !isAdmin) {
       showToast('🚫 Acceso Denegado\n\nEste módulo está disponible únicamente para usuarios con rol de Administrador.\n\nContacte al administrador del sistema si necesita acceso.', 'error');
@@ -240,7 +240,9 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
               
               {!isCollapsed && expandedCategories[category.id] && (
                 <div className="category-items">
-                  {category.items.map(item => (
+                  {category.items
+                    .filter(item => !item.adminOnly || isAdmin) // Filtrar ítems que requieren admin
+                    .map(item => (
                     <div 
                       key={item.id}
                       className={`menu-item ${activeModule === item.id ? 'active' : ''}`}

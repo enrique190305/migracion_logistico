@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { apiClient } from '../../services/authService';
 import './AjusteInventario.css';
 import {
   Box,
@@ -44,8 +44,6 @@ import {
   TrendingDown as TrendingDownIcon
 } from '@mui/icons-material';
 
-const API_BASE_URL = 'http://localhost:8000/api';
-
 function AjusteInventario() {
   // Estados principales
   const [inventario, setInventario] = useState([]);
@@ -88,7 +86,7 @@ function AjusteInventario() {
   // Cargar catálogos
   const cargarBodegas = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/ajuste-inventario/bodegas`);
+      const response = await apiClient.get('/ajuste-inventario/bodegas');
       if (response.data.success) {
         setBodegas(response.data.bodegas);
       }
@@ -106,7 +104,7 @@ function AjusteInventario() {
       if (filtros.id_bodega) params.append('id_bodega', filtros.id_bodega);
       if (filtros.buscar) params.append('buscar', filtros.buscar);
 
-      const response = await axios.get(`${API_BASE_URL}/ajuste-inventario/inventario?${params}`);
+      const response = await apiClient.get(`/ajuste-inventario/inventario?${params}`);
       if (response.data.success) {
         setInventario(response.data.inventario);
       }
@@ -122,8 +120,8 @@ function AjusteInventario() {
   const abrirModalAjuste = async (producto) => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/ajuste-inventario/detalle/${producto.codigo_producto}/${producto.id_bodega}`
+      const response = await apiClient.get(
+        `/ajuste-inventario/detalle/${producto.codigo_producto}/${producto.id_bodega}`
       );
       if (response.data.success) {
         setProductoSeleccionado(producto);
@@ -198,7 +196,7 @@ function AjusteInventario() {
         documento_referencia: ajusteForm.documento_referencia
       };
 
-      const response = await axios.post(`${API_BASE_URL}/ajuste-inventario/ajustar`, payload);
+      const response = await apiClient.post('/ajuste-inventario/ajustar', payload);
       
       if (response.data.success) {
         setSuccess(`Ajuste realizado exitosamente: ${response.data.message}`);
@@ -222,7 +220,7 @@ function AjusteInventario() {
       if (filtros.id_bodega) params.append('id_bodega', filtros.id_bodega);
       if (filtros.id_reserva) params.append('id_reserva', filtros.id_reserva);
 
-      const response = await axios.get(`${API_BASE_URL}/ajuste-inventario/exportar?${params}`);
+      const response = await apiClient.get(`/ajuste-inventario/exportar?${params}`);
       
       if (response.data.success) {
         // Convertir a CSV

@@ -380,11 +380,11 @@ Route::prefix('reservas')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - APROBACIÓN (✅ CORREGIDO)
+| API Routes - APROBACIÓN (✅ CORREGIDO) - SOLO ADMINISTRADORES
 |--------------------------------------------------------------------------
 */
 
-Route::prefix('aprobacion')->group(function () {
+Route::middleware(['jwt.auth', 'admin'])->prefix('aprobacion')->group(function () {
     // ✅ CAMBIADO A AprobacionController
     Route::get('/ordenes-compra', [AprobacionController::class, 'listarOrdenesCompraPendientes']);
     Route::get('/ordenes-servicio', [AprobacionController::class, 'listarOrdenesServicioPendientes']);
@@ -555,12 +555,12 @@ Route::prefix('salida-materiales')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| API Routes - Ajuste de Inventario
+| API Routes - Ajuste de Inventario - SOLO ADMINISTRADORES
 |--------------------------------------------------------------------------
 */
 use App\Http\Controllers\Api\AjusteInventarioController;
 
-Route::prefix('ajuste-inventario')->group(function () {
+Route::middleware(['jwt.auth', 'admin'])->prefix('ajuste-inventario')->group(function () {
     // Catálogos
     Route::get('/bodegas', [AjusteInventarioController::class, 'obtenerBodegas']);
     Route::get('/reservas', [AjusteInventarioController::class, 'obtenerReservas']);

@@ -19,7 +19,7 @@ class KardexController extends Controller
             // ✅ Mostrar bodega desde la tabla bodega usando id_bodega del kardex
             $inventario = DB::select("
                 SELECT 
-                    COALESCE(b.nombre, 'Sin bodega') as proyecto,
+                    COALESCE(b.nombre, 'Sin bodega') as bodega,
                     mk.codigo_producto,
                     COALESCE(mk.descripcion, 'Sin descripción') as descripcion,
                     mk.unidad,
@@ -40,7 +40,7 @@ class KardexController extends Controller
                     WHEN mk.tipo_movimiento = 'INGRESO' THEN mk.cantidad 
                     ELSE -mk.cantidad 
                 END) > 0
-                ORDER BY proyecto, descripcion
+                ORDER BY bodega, descripcion
             ");
 
             Log::info('Inventario obtenido: ' . count($inventario) . ' productos');
@@ -77,7 +77,7 @@ class KardexController extends Controller
                     COALESCE(mk.descripcion, 'Sin descripción') as descripcion,
                     mk.unidad,
                     mk.cantidad,
-                    COALESCE(b.nombre, mk.proyecto, 'Sin bodega') as proyecto,
+                    COALESCE(b.nombre, mk.proyecto, 'Sin bodega') as bodega,
                     COALESCE(mk.documento, 'N/A') as documento,
                     COALESCE(mk.observaciones, 'N/A') as observaciones
                 FROM movimiento_kardex mk
