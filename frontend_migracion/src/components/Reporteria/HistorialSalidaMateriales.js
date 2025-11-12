@@ -141,7 +141,8 @@ const HistorialSalidaMateriales = () => {
     }
   };
 
-  const exportarExcel = () => {
+  // Exportación GENERAL de todos los registros filtrados
+  const exportarExcelGeneral = () => {
     try {
       // Validar que haya datos para exportar
       if (!salidasFiltradas || salidasFiltradas.length === 0) {
@@ -149,33 +150,61 @@ const HistorialSalidaMateriales = () => {
         return;
       }
 
-      // Preparar los datos para Excel
-      const datosExcel = salidasFiltradas.map((salida, index) => ({
-        'N°': index + 1,
-        'Correlativo': salida.correlativo || 'N/A',
-        'Fecha': salida.fecha_salida 
-          ? new Date(salida.fecha_salida).toLocaleDateString('es-PE', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            })
-          : 'N/A',
-        'Proyecto': salida.proyecto || 'N/A',
-        'Tipo Salida': salida.tipo_salida || 'CONSUMO',
-        'Motivo': salida.motivo || 'N/A',
-        'Total Productos': salida.total_productos || 0,
-        'Usuario': salida.usuario || 'Sistema',
-        'Solicitante': salida.solicitante || 'N/A',
-        'Observaciones': salida.observaciones || 'Sin observaciones'
-      }));
+      const fechaActual = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
 
-      // Crear el libro de Excel
+      const data = [
+        ['HISTORIAL DE SALIDA DE MATERIALES'],
+        ['Fecha de generación:', fechaActual],
+        ['Total de registros:', salidasFiltradas.length],
+        [],
+        ['N°', 'CORRELATIVO', 'FECHA', 'PROYECTO', 'TIPO SALIDA', 'MOTIVO', 'TOTAL PRODUCTOS', 'USUARIO', 'SOLICITANTE', 'OBSERVACIONES']
+      ];
+
+      salidasFiltradas.forEach((salida, index) => {
+        data.push([
+          index + 1,
+          salida.correlativo || 'N/A',
+          salida.fecha_salida 
+            ? new Date(salida.fecha_salida).toLocaleDateString('es-PE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            : 'N/A',
+          salida.proyecto || 'N/A',
+          salida.tipo_salida || 'CONSUMO',
+          salida.motivo || 'N/A',
+          salida.total_productos || 0,
+          salida.usuario || 'Sistema',
+          salida.solicitante || 'N/A',
+          salida.observaciones || 'Sin observaciones'
+        ]);
+      });
+
+      // Agregar totales
+      data.push([]);
+      data.push([
+        '',
+        'TOTAL GENERAL',
+        '',
+        '',
+        '',
+        '',
+        salidasFiltradas.reduce((sum, s) => sum + (parseInt(s.total_productos) || 0), 0),
+        '',
+        '',
+        ''
+      ]);
+
       const wb = XLSX.utils.book_new();
-      
-      // Crear la hoja con los datos
-      const ws = XLSX.utils.json_to_sheet(datosExcel);
+      const ws = XLSX.utils.aoa_to_sheet(data);
 
-      // Configurar anchos de columna
       ws['!cols'] = [
         { wch: 5 },   // N°
         { wch: 15 },  // Correlativo
@@ -189,20 +218,75 @@ const HistorialSalidaMateriales = () => {
         { wch: 40 }   // Observaciones
       ];
 
-      // Agregar la hoja al libro
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+      ];
+
       XLSX.utils.book_append_sheet(wb, ws, 'Salidas');
 
-      // Generar el archivo con nombre descriptivo
-      const fechaActual = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
-      const nombreArchivo = `Historial_Salida_Materiales_${fechaActual}.xlsx`;
+      const fechaArchivo = new Date().toISOString().split('T')[0];
+      const nombreArchivo = `Historial_Salida_Materiales_${fechaArchivo}.xlsx`;
       
-      // Descargar el archivo
       XLSX.writeFile(wb, nombreArchivo);
 
       showToast(`✅ Excel generado exitosamente: ${salidasFiltradas.length} registros`, 'success');
     } catch (error) {
       console.error('Error al exportar Excel:', error);
       showToast('❌ Error al generar el archivo Excel', 'error');
+    }
+  };
+
+  // Exportación INDIVIDUAL de una salida específica
+  const exportarSalidaIndividual = async (salida) => {
+    try {
+      const wb = XLSX.utils.book_new();
+      
+      const fechaSalida = new Date(salida.fecha_salida).toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      });
+      
+      const fechaGeneracion = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const wsData = [
+        [`SALIDA DE MATERIAL - ${salida.correlativo}`],
+        [`Fecha de salida: ${fechaSalida}`],
+        [`Generado: ${fechaGeneracion}`],
+        [],
+        ['INFORMACIÓN DE LA SALIDA'],
+        ['Correlativo:', salida.correlativo || 'N/A'],
+        ['Fecha:', fechaSalida],
+        ['Proyecto:', salida.proyecto || 'N/A'],
+        ['Tipo de Salida:', salida.tipo_salida || 'CONSUMO'],
+        ['Motivo:', salida.motivo || 'N/A'],
+        ['Total Productos:', salida.total_productos || 0],
+        ['Usuario:', salida.usuario || 'Sistema'],
+        ['Solicitante:', salida.solicitante || 'N/A'],
+        ['Observaciones:', salida.observaciones || 'Sin observaciones']
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws['!cols'] = [
+        { wch: 20 },
+        { wch: 50 }
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, `Salida-${salida.correlativo}`);
+
+      XLSX.writeFile(wb, `Salida_${salida.correlativo}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      showToast(`✅ Excel generado: ${salida.correlativo}`, 'success');
+    } catch (error) {
+      console.error('Error al exportar salida:', error);
+      showToast('❌ Error al exportar la salida', 'error');
     }
   };
 
@@ -284,6 +368,18 @@ const HistorialSalidaMateriales = () => {
 
         <button className="btn-recargar" onClick={cargarHistorial}>
           🔄 Recargar
+        </button>
+
+        <button 
+          className="btn-recargar" 
+          onClick={exportarExcelGeneral}
+          disabled={salidasFiltradas.length === 0}
+          style={{ 
+            background: salidasFiltradas.length === 0 ? '#95a5a6' : '#10b981',
+            cursor: salidasFiltradas.length === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
+          📊 Exportar Excel
         </button>
       </div>
 
@@ -371,7 +467,7 @@ const HistorialSalidaMateriales = () => {
                         📄 PDF
                       </button>
                       <button
-                        onClick={() => exportarExcel()}
+                        onClick={() => exportarSalidaIndividual(salida)}
                         style={{
                           padding: '5px 10px',
                           background: '#10b981',

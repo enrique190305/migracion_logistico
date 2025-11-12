@@ -141,7 +141,8 @@ const HistorialTrasladoMateriales = () => {
     setDetallesTraslado(null);
   };
 
-  const exportarExcel = () => {
+  // Exportación GENERAL de todos los registros filtrados
+  const exportarExcelGeneral = () => {
     try {
       // Validar que haya datos para exportar
       if (!trasladosFiltrados || trasladosFiltrados.length === 0) {
@@ -150,28 +151,57 @@ const HistorialTrasladoMateriales = () => {
       }
 
       // Preparar los datos para Excel
-      const datosExcel = trasladosFiltrados.map((traslado, index) => ({
-        'N°': index + 1,
-        'Correlativo': traslado.correlativo || 'N/A',
-        'Fecha': traslado.fecha_traslado 
-          ? new Date(traslado.fecha_traslado).toLocaleDateString('es-PE', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            })
-          : 'N/A',
-        'Proyecto Origen': traslado.proyecto_origen || 'N/A',
-        'Proyecto Destino': traslado.proyecto_destino || 'N/A',
-        'Total Productos': traslado.total_productos || 0,
-        'Usuario': traslado.usuario || 'Sistema',
-        'Observaciones': traslado.observaciones || 'Sin observaciones'
-      }));
+      const fechaActual = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const data = [
+        ['HISTORIAL DE TRASLADO DE MATERIALES'],
+        ['Fecha de generación:', fechaActual],
+        ['Total de registros:', trasladosFiltrados.length],
+        [],
+        ['N°', 'CORRELATIVO', 'FECHA', 'PROYECTO ORIGEN', 'PROYECTO DESTINO', 'TOTAL PRODUCTOS', 'USUARIO', 'OBSERVACIONES']
+      ];
+
+      trasladosFiltrados.forEach((traslado, index) => {
+        data.push([
+          index + 1,
+          traslado.correlativo || 'N/A',
+          traslado.fecha_traslado 
+            ? new Date(traslado.fecha_traslado).toLocaleDateString('es-PE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+              })
+            : 'N/A',
+          traslado.proyecto_origen || 'N/A',
+          traslado.proyecto_destino || 'N/A',
+          traslado.total_productos || 0,
+          traslado.usuario || 'Sistema',
+          traslado.observaciones || 'Sin observaciones'
+        ]);
+      });
+
+      // Agregar totales
+      data.push([]);
+      data.push([
+        '',
+        'TOTAL GENERAL',
+        '',
+        '',
+        '',
+        trasladosFiltrados.reduce((sum, t) => sum + (parseInt(t.total_productos) || 0), 0),
+        '',
+        ''
+      ]);
 
       // Crear el libro de Excel
       const wb = XLSX.utils.book_new();
-      
-      // Crear la hoja con los datos
-      const ws = XLSX.utils.json_to_sheet(datosExcel);
+      const ws = XLSX.utils.aoa_to_sheet(data);
 
       // Configurar anchos de columna
       ws['!cols'] = [
@@ -185,12 +215,17 @@ const HistorialTrasladoMateriales = () => {
         { wch: 40 }   // Observaciones
       ];
 
+      // Combinar celdas del título
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } },
+      ];
+
       // Agregar la hoja al libro
       XLSX.utils.book_append_sheet(wb, ws, 'Traslados');
 
       // Generar el archivo con nombre descriptivo
-      const fechaActual = new Date().toLocaleDateString('es-PE').replace(/\//g, '-');
-      const nombreArchivo = `Historial_Traslado_Materiales_${fechaActual}.xlsx`;
+      const fechaArchivo = new Date().toISOString().split('T')[0];
+      const nombreArchivo = `Historial_Traslado_Materiales_${fechaArchivo}.xlsx`;
       
       // Descargar el archivo
       XLSX.writeFile(wb, nombreArchivo);
@@ -199,6 +234,58 @@ const HistorialTrasladoMateriales = () => {
     } catch (error) {
       console.error('Error al exportar Excel:', error);
       showToast('❌ Error al generar el archivo Excel', 'error');
+    }
+  };
+
+  // Exportación INDIVIDUAL de un traslado específico
+  const exportarTrasladoIndividual = async (traslado) => {
+    try {
+      const wb = XLSX.utils.book_new();
+      
+      const fechaTraslado = new Date(traslado.fecha_traslado).toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      });
+      
+      const fechaGeneracion = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      const wsData = [
+        [`TRASLADO DE MATERIAL - ${traslado.correlativo}`],
+        [`Fecha de traslado: ${fechaTraslado}`],
+        [`Generado: ${fechaGeneracion}`],
+        [],
+        ['INFORMACIÓN DEL TRASLADO'],
+        ['Correlativo:', traslado.correlativo || 'N/A'],
+        ['Fecha:', fechaTraslado],
+        ['Proyecto Origen:', traslado.proyecto_origen || 'N/A'],
+        ['Proyecto Destino:', traslado.proyecto_destino || 'N/A'],
+        ['Total Productos:', traslado.total_productos || 0],
+        ['Usuario:', traslado.usuario || 'Sistema'],
+        ['Observaciones:', traslado.observaciones || 'Sin observaciones']
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      ws['!cols'] = [
+        { wch: 20 },
+        { wch: 50 }
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, `Traslado-${traslado.correlativo}`);
+
+      XLSX.writeFile(wb, `Traslado_${traslado.correlativo}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      showToast(`✅ Excel generado: ${traslado.correlativo}`, 'success');
+    } catch (error) {
+      console.error('Error al exportar traslado:', error);
+      showToast('❌ Error al exportar el traslado', 'error');
     }
   };
 
@@ -280,6 +367,18 @@ const HistorialTrasladoMateriales = () => {
 
         <button className="btn-recargar" onClick={cargarHistorial}>
           🔄 Recargar
+        </button>
+
+        <button 
+          className="btn-recargar" 
+          onClick={exportarExcelGeneral}
+          disabled={trasladosFiltrados.length === 0}
+          style={{ 
+            background: trasladosFiltrados.length === 0 ? '#95a5a6' : '#10b981',
+            cursor: trasladosFiltrados.length === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
+          📊 Exportar Excel
         </button>
       </div>
 
@@ -366,7 +465,7 @@ const HistorialTrasladoMateriales = () => {
                         📄 PDF
                       </button>
                       <button
-                        onClick={() => exportarExcel()}
+                        onClick={() => exportarTrasladoIndividual(traslado)}
                         style={{
                           padding: '5px 10px',
                           background: '#10b981',
@@ -382,7 +481,7 @@ const HistorialTrasladoMateriales = () => {
                         onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
                         title="Exportar a Excel"
                       >
-                        � Excel
+                        📊 Excel
                       </button>
                     </div>
                   </td>

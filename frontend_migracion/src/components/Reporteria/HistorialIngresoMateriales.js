@@ -175,7 +175,8 @@ const HistorialIngresoMateriales = () => {
     }
   };
 
-  const exportarExcel = () => {
+  // Exportación GENERAL de todos los registros filtrados
+  const exportarExcelGeneral = () => {
     try {
       if (ingresosFiltrados.length === 0) {
         showToast('⚠️ No hay datos para exportar', 'warning');
@@ -200,12 +201,13 @@ const HistorialIngresoMateriales = () => {
         ['Fecha de generación:', fechaActual],
         ['Total de registros:', ingresosFiltrados.length],
         [], // Fila vacía
-        ['CORRELATIVO', 'FECHA', 'BODEGA', 'TIPO', 'PRODUCTOS', 'USUARIO'] // Encabezados
+        ['N°', 'CORRELATIVO', 'FECHA', 'BODEGA', 'PROVEEDOR', 'TIPO', 'PRODUCTOS', 'USUARIO'] // Encabezados
       ];
 
       // Agregar los datos
-      ingresosFiltrados.forEach(ingreso => {
+      ingresosFiltrados.forEach((ingreso, index) => {
         data.push([
+          index + 1,
           ingreso.correlativo || 'N/A',
           ingreso.fecha_ingreso 
             ? new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE', {
@@ -215,6 +217,7 @@ const HistorialIngresoMateriales = () => {
               })
             : 'N/A',
           ingreso.bodega || 'N/A',
+          ingreso.proveedor || 'N/A',
           ingreso.tipo_ingreso || 'COMPRA',
           ingreso.total_productos || 0,
           ingreso.usuario || 'Sistema'
@@ -224,7 +227,9 @@ const HistorialIngresoMateriales = () => {
       // Agregar fila de totales
       data.push([]);
       data.push([
+        '',
         'TOTAL GENERAL',
+        '',
         '',
         '',
         '',
@@ -237,18 +242,19 @@ const HistorialIngresoMateriales = () => {
 
       // Establecer el ancho de las columnas
       ws['!cols'] = [
+        { wch: 5 },  // N°
         { wch: 15 }, // CORRELATIVO
         { wch: 12 }, // FECHA
         { wch: 30 }, // BODEGA
+        { wch: 30 }, // PROVEEDOR
         { wch: 15 }, // TIPO
         { wch: 12 }, // PRODUCTOS
         { wch: 20 }  // USUARIO
       ];
 
-      // Aplicar estilos al encabezado (opcional, requiere xlsx-style)
       // Combinar celdas del título
       ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }, // Título
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }, // Título
       ];
 
       // Agregar la hoja al libro
@@ -260,10 +266,71 @@ const HistorialIngresoMateriales = () => {
       // Descargar el archivo
       XLSX.writeFile(wb, nombreArchivo);
 
-      showToast('✅ Excel exportado exitosamente', 'success');
+      showToast(`✅ Excel generado exitosamente: ${ingresosFiltrados.length} registros`, 'success');
     } catch (error) {
       console.error('Error al exportar Excel:', error);
       showToast('❌ Error al exportar a Excel', 'error');
+    }
+  };
+
+  // Exportación INDIVIDUAL de un ingreso específico
+  const exportarIngresoIndividual = async (ingreso) => {
+    try {
+      // Crear un nuevo libro de Excel
+      const wb = XLSX.utils.book_new();
+      
+      const fechaIngreso = new Date(ingreso.fecha_ingreso).toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      });
+      
+      const fechaGeneracion = new Date().toLocaleDateString('es-PE', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // Crear datos para la hoja
+      const wsData = [
+        [`INGRESO DE MATERIAL - ${ingreso.correlativo}`],
+        [`Fecha de ingreso: ${fechaIngreso}`],
+        [`Generado: ${fechaGeneracion}`],
+        [],
+        ['INFORMACIÓN DEL INGRESO'],
+        ['Correlativo:', ingreso.correlativo || 'N/A'],
+        ['Fecha:', fechaIngreso],
+        ['Bodega:', ingreso.bodega || 'N/A'],
+        ['Proveedor:', ingreso.proveedor || 'N/A'],
+        ['Tipo:', ingreso.tipo_ingreso || 'COMPRA'],
+        ['Total Productos:', ingreso.total_productos || 0],
+        ['Usuario:', ingreso.usuario || 'Sistema'],
+        ['N° Guía:', ingreso.num_guia || 'N/A'],
+        ['N° Factura:', ingreso.factura || 'N/A'],
+        ['Estado:', ingreso.estado || 'N/A']
+      ];
+
+      // Crear hoja de trabajo
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+      // Configurar anchos de columna
+      ws['!cols'] = [
+        { wch: 20 },
+        { wch: 40 }
+      ];
+
+      // Agregar la hoja al libro
+      XLSX.utils.book_append_sheet(wb, ws, `Ingreso-${ingreso.correlativo}`);
+
+      // Generar archivo y descargar
+      XLSX.writeFile(wb, `Ingreso_${ingreso.correlativo}_${new Date().toISOString().split('T')[0]}.xlsx`);
+      
+      showToast(`✅ Excel generado: ${ingreso.correlativo}`, 'success');
+    } catch (error) {
+      console.error('Error al exportar ingreso:', error);
+      showToast('❌ Error al exportar el ingreso', 'error');
     }
   };
 
@@ -344,6 +411,18 @@ const HistorialIngresoMateriales = () => {
 
         <button className="btn-recargar" onClick={cargarHistorial}>
           🔄 Recargar
+        </button>
+
+        <button 
+          className="btn-recargar" 
+          onClick={exportarExcelGeneral}
+          disabled={ingresosFiltrados.length === 0}
+          style={{ 
+            background: ingresosFiltrados.length === 0 ? '#95a5a6' : '#10b981',
+            cursor: ingresosFiltrados.length === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
+          📊 Exportar Excel
         </button>
       </div>
 
@@ -429,7 +508,7 @@ const HistorialIngresoMateriales = () => {
                         📄 PDF
                       </button>
                       <button
-                        onClick={() => exportarExcel()}
+                        onClick={() => exportarIngresoIndividual(ingreso)}
                         style={{
                           padding: '5px 10px',
                           background: '#10b981',
