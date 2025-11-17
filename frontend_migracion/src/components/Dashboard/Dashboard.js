@@ -18,7 +18,7 @@ import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import Reporteria from '../Reporteria/Reporteria';
-import Prestamos from '../Prestamos/Prestamos_NEW';
+import Prestamos from '../Prestamos/Prestamos_COMPLETO';
 
 
 

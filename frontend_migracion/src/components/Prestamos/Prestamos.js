@@ -1,119 +1,92 @@
 import React, { useState } from 'react';
-import './Prestamos.css'; 
+import Barcode from 'react-barcode';
+import JsBarcode from 'jsbarcode';
+import jsPDF from 'jspdf';
+import './Prestamos.css';
+
 const Prestamos = () => {
-  const [activeTab, setActiveTab] = useState('nuevo'); // 'nuevo', 'historial', 'codigo'
+  const [activeTab, setActiveTab] = useState('nuevo');
+  
+  // Estados para Nuevo Préstamo
   const [registroManual, setRegistroManual] = useState({
     codigoPersonal: '',
     nombrePersonal: '',
+    areaPersonal: '',
     codigoProducto: '',
     nombreProducto: '',
+    cantidad: '',
+    unidadMedida: '',
+    condicionInicial: 'OPERATIVO',
+    observacion: '',
     fechaPrestamo: new Date().toISOString().slice(0, 16)
   });
 
   const [listaPrestamosPendientes, setListaPrestamosPendientes] = useState([]);
+
+  // Estados para Código de Barras
+  const [personalSeleccionado, setPersonalSeleccionado] = useState(null);
+  const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+  const [codigoBarrasPersonal, setCodigoBarrasPersonal] = useState(null);
+  const [codigoBarrasProducto, setCodigoBarrasProducto] = useState(null);
   
-  // Estados para generación de códigos de barras
-  const [configBarras, setConfigBarras] = useState({
-    tipo: 'personal', // 'personal', 'productos', 'ambos'
-    ancho: 80,
-    alto: 40,
-    fontSize: 12,
-    margen: 2
-  });
-  const [personalSeleccionado, setPersonalSeleccionado] = useState([]);
-  const [productosSeleccionados, setProductosSeleccionados] = useState([]);
-  const [codigosGenerados, setCodigosGenerados] = useState([]);
-  
-  // Datos estáticos de productos NO CONSUMIBLES
+  // Datos estáticos
   const productosNoConsumibles = [
-    { codigo: 'HER-0003', nombre: 'MARTILLO DE GOMA', tipo: 'NO CONSUMIBLE' },
-    { codigo: 'HER-0001', nombre: 'DESTORNILLADOR PLANO', tipo: 'NO CONSUMIBLE' },
-    { codigo: 'HER-0005', nombre: 'ALICATE DE PRESIÓN', tipo: 'NO CONSUMIBLE' },
-    { codigo: 'ACTI-0001', nombre: 'LAPTOP DELL INSPIRON', tipo: 'NO CONSUMIBLE' },
-    { codigo: 'ACTI-0002', nombre: 'TALADRO BOSCH', tipo: 'NO CONSUMIBLE' },
-    { codigo: 'EPROT-0001', nombre: 'CASCO DE SEGURIDAD', tipo: 'NO CONSUMIBLE' },
-    { codigo: 'EPROT-0003', nombre: 'ARNÉS DE SEGURIDAD', tipo: 'NO CONSUMIBLE' }
+    { codigo: 'HER-0003', nombre: 'MARTILLO DE GOMA', tipo: 'NO CONSUMIBLE', unidad: 'UND' },
+    { codigo: 'HER-0001', nombre: 'DESTORNILLADOR PLANO', tipo: 'NO CONSUMIBLE', unidad: 'UND' },
+    { codigo: 'HER-0005', nombre: 'ALICATE DE PRESIÓN', tipo: 'NO CONSUMIBLE', unidad: 'UND' },
+    { codigo: 'ACTI-0001', nombre: 'LAPTOP DELL INSPIRON', tipo: 'NO CONSUMIBLE', unidad: 'UND' },
+    { codigo: 'ACTI-0002', nombre: 'TALADRO BOSCH', tipo: 'NO CONSUMIBLE', unidad: 'UND' },
+    { codigo: 'EPROT-0001', nombre: 'CASCO DE SEGURIDAD', tipo: 'NO CONSUMIBLE', unidad: 'UND' },
+    { codigo: 'EPROT-0003', nombre: 'ARNÉS DE SEGURIDAD', tipo: 'NO CONSUMIBLE', unidad: 'UND' }
   ];
 
-  // Datos estáticos de personal
   const personalData = [
-    { codigo: '12345678', nombre: 'Juan Pérez' },
-    { codigo: '23456789', nombre: 'María López' },
-    { codigo: '34567890', nombre: 'Carlos Ramírez' },
-    { codigo: '45678901', nombre: 'Ana García' },
-    { codigo: '56789012', nombre: 'Luis Torres' }
+    { codigo: '12345678', nombre: 'Juan Pérez', area: 'Producción' },
+    { codigo: '23456789', nombre: 'María López', area: 'Logística' },
+    { codigo: '34567890', nombre: 'Carlos Ramírez', area: 'Mantenimiento' },
+    { codigo: '45678901', nombre: 'Ana García', area: 'Almacén' },
+    { codigo: '56789012', nombre: 'Luis Torres', area: 'Operaciones' }
   ];
 
-  // Historial de préstamos (datos estáticos)
-  const [historialPrestamos] = useState([
+  const [historialPrestamos, setHistorialPrestamos] = useState([
     {
-      codigoProducto: 'ALV-0002',
-      nombreProducto: 'ALVEOL',
+      id: 1,
+      codigoProducto: 'HER-0003',
+      nombreProducto: 'MARTILLO DE GOMA',
       codigoUsuario: '12345678',
       nombreUsuario: 'Juan Pérez',
-      fechaPrestamo: '13/09/2025 01:49:12',
-      fechaDevolucion: '13/09/2025 01:49',
-      estado: 'DEVUELTO'
+      fechaPrestamo: '13/11/2025 10:30:00',
+      fechaDevolucion: null,
+      estado: 'PRESTADO'
     },
     {
-      codigoProducto: 'ALV-0002',
-      nombreProducto: 'ALVEOL',
-      codigoUsuario: '12345678',
-      nombreUsuario: 'Juan Pérez',
-      fechaPrestamo: '13/09/2025 01:13:15',
-      fechaDevolucion: '13/09/2025 01:13',
-      estado: 'DEVUELTO'
-    },
-    {
-      codigoProducto: 'ALV-0002',
-      nombreProducto: 'ALVEOL',
-      codigoUsuario: '12345678',
-      nombreUsuario: 'Juan Pérez',
-      fechaPrestamo: '13/09/2025 00:42:37',
-      fechaDevolucion: '13/09/2025 00:43',
-      estado: 'DEVUELTO'
-    },
-    {
-      codigoProducto: 'CAJ-0001',
-      nombreProducto: 'CAJAS',
-      codigoUsuario: '12345678',
-      nombreUsuario: 'Juan Pérez',
-      fechaPrestamo: '13/09/2025 00:12:38',
-      fechaDevolucion: '13/09/2025 00:12',
-      estado: 'DEVUELTO'
-    },
-    {
-      codigoProducto: 'FER-0006',
-      nombreProducto: 'FERT',
+      id: 2,
+      codigoProducto: 'ACTI-0001',
+      nombreProducto: 'LAPTOP DELL INSPIRON',
       codigoUsuario: '23456789',
       nombreUsuario: 'María López',
-      fechaPrestamo: '26/08/2025 23:55:20',
-      fechaDevolucion: '26/08/2025 23:55',
+      fechaPrestamo: '12/11/2025 14:20:00',
+      fechaDevolucion: '13/11/2025 09:15:00',
       estado: 'DEVUELTO'
     },
     {
-      codigoProducto: 'BAN-0001',
-      nombreProducto: 'BANDJA',
+      id: 3,
+      codigoProducto: 'HER-0001',
+      nombreProducto: 'DESTORNILLADOR PLANO',
       codigoUsuario: '34567890',
       nombreUsuario: 'Carlos Ramírez',
-      fechaPrestamo: '26/08/2025 23:50:58',
-      fechaDevolucion: '13/09/2025 00:13',
-      estado: 'DEVUELTO'
-    },
-    {
-      codigoProducto: 'ACT-0001',
-      nombreProducto: 'ACTI',
-      codigoUsuario: '12345678',
-      nombreUsuario: 'Juan Pérez',
-      fechaPrestamo: '26/08/2025 23:50:13',
-      fechaDevolucion: '13/09/2025 00:43',
-      estado: 'DEVUELTO'
+      fechaPrestamo: '11/11/2025 08:45:00',
+      fechaDevolucion: null,
+      estado: 'PRESTADO'
     }
   ]);
 
+  const [prestamoSeleccionado, setPrestamoSeleccionado] = useState(null);
+
+  // ============ FUNCIONES PARA NUEVO PRÉSTAMO ============
   const handleAgregarPrestamo = () => {
-    if (!registroManual.codigoPersonal || !registroManual.codigoProducto) {
-      alert('⚠️ Por favor complete el código del personal y del producto');
+    if (!registroManual.codigoPersonal || !registroManual.codigoProducto || !registroManual.cantidad) {
+      alert('⚠️ Por favor complete todos los campos requeridos (Personal, Producto y Cantidad)');
       return;
     }
 
@@ -121,19 +94,34 @@ const Prestamos = () => {
       codigoProducto: registroManual.codigoProducto,
       nombreProducto: registroManual.nombreProducto,
       codigoPersonal: registroManual.codigoPersonal,
-      nombrePersonal: registroManual.nombrePersonal
+      nombrePersonal: registroManual.nombrePersonal,
+      cantidad: registroManual.cantidad,
+      unidadMedida: registroManual.unidadMedida,
+      condicionInicial: registroManual.condicionInicial,
+      observacion: registroManual.observacion
     };
 
     setListaPrestamosPendientes([...listaPrestamosPendientes, nuevoPrestamo]);
     
-    // Limpiar formulario
+    // Limpiar formulario pero mantener fecha
     setRegistroManual({
       codigoPersonal: '',
       nombrePersonal: '',
+      areaPersonal: '',
       codigoProducto: '',
       nombreProducto: '',
-      fechaPrestamo: new Date().toISOString().slice(0, 16)
+      cantidad: '',
+      unidadMedida: '',
+      condicionInicial: 'OPERATIVO',
+      observacion: '',
+      fechaPrestamo: registroManual.fechaPrestamo
     });
+
+    // Enfocar el primer input
+    setTimeout(() => {
+      const firstInput = document.querySelector('input[placeholder="Escanee o escriba DNI"]');
+      if (firstInput) firstInput.focus();
+    }, 100);
   };
 
   const handleBuscarPersonal = (codigo) => {
@@ -142,13 +130,15 @@ const Prestamos = () => {
       setRegistroManual({
         ...registroManual,
         codigoPersonal: codigo,
-        nombrePersonal: personal.nombre
+        nombrePersonal: personal.nombre,
+        areaPersonal: personal.area
       });
     } else {
       setRegistroManual({
         ...registroManual,
         codigoPersonal: codigo,
-        nombrePersonal: ''
+        nombrePersonal: '',
+        areaPersonal: ''
       });
     }
   };
@@ -159,13 +149,15 @@ const Prestamos = () => {
       setRegistroManual({
         ...registroManual,
         codigoProducto: codigo,
-        nombreProducto: producto.nombre
+        nombreProducto: producto.nombre,
+        unidadMedida: producto.unidad
       });
     } else {
       setRegistroManual({
         ...registroManual,
         codigoProducto: codigo,
-        nombreProducto: ''
+        nombreProducto: '',
+        unidadMedida: ''
       });
     }
   };
@@ -176,111 +168,163 @@ const Prestamos = () => {
       return;
     }
     
-    alert('✅ Préstamos guardados exitosamente (Simulación)');
+    // Agregar al historial
+    const nuevosRegistros = listaPrestamosPendientes.map((item, index) => ({
+      id: historialPrestamos.length + index + 1,
+      codigoProducto: item.codigoProducto,
+      nombreProducto: item.nombreProducto,
+      codigoUsuario: item.codigoPersonal,
+      nombreUsuario: item.nombrePersonal,
+      fechaPrestamo: new Date().toLocaleString('es-PE'),
+      fechaDevolucion: null,
+      estado: 'PRESTADO'
+    }));
+
+    setHistorialPrestamos([...nuevosRegistros, ...historialPrestamos]);
     setListaPrestamosPendientes([]);
+    alert('✅ ' + nuevosRegistros.length + ' préstamo(s) guardado(s) exitosamente');
   };
 
   const handleLimpiarLista = () => {
-    setListaPrestamosPendientes([]);
+    if (listaPrestamosPendientes.length === 0) {
+      alert('⚠️ No hay préstamos en la lista');
+      return;
+    }
+    const confirmacion = window.confirm('¿Está seguro de limpiar toda la lista de préstamos pendientes?');
+    if (confirmacion) {
+      setListaPrestamosPendientes([]);
+    }
+  };
+
+  const handleEliminarPrestamoLista = (index) => {
+    const nuevaLista = listaPrestamosPendientes.filter((_, i) => i !== index);
+    setListaPrestamosPendientes(nuevaLista);
+  };
+
+  // ============ FUNCIONES PARA HISTORIAL ============
+  const handleSeleccionarPrestamo = (prestamo) => {
+    if (prestamo.estado === 'PRESTADO') {
+      setPrestamoSeleccionado(prestamo);
+    }
   };
 
   const handleDevolverPrestamo = () => {
-    alert('✅ Devolución de préstamo registrada (Simulación)');
-  };
-
-  // Funciones para códigos de barras
-  const togglePersonalSeleccion = (codigo) => {
-    if (personalSeleccionado.includes(codigo)) {
-      setPersonalSeleccionado(personalSeleccionado.filter(c => c !== codigo));
-    } else {
-      setPersonalSeleccionado([...personalSeleccionado, codigo]);
+    if (!prestamoSeleccionado) {
+      alert('⚠️ Por favor seleccione un préstamo activo del historial');
+      return;
     }
-  };
 
-  const toggleProductoSeleccion = (codigo) => {
-    if (productosSeleccionados.includes(codigo)) {
-      setProductosSeleccionados(productosSeleccionados.filter(c => c !== codigo));
-    } else {
-      setProductosSeleccionados([...productosSeleccionados, codigo]);
-    }
-  };
+    const confirmacion = window.confirm(
+      `¿Confirmar devolución del préstamo?\n\n` +
+      `Producto: ${prestamoSeleccionado.nombreProducto}\n` +
+      `Usuario: ${prestamoSeleccionado.nombreUsuario}\n` +
+      `Fecha Préstamo: ${prestamoSeleccionado.fechaPrestamo}`
+    );
 
-  const seleccionarTodoPersonal = () => {
-    if (personalSeleccionado.length === personalData.length) {
-      setPersonalSeleccionado([]);
-    } else {
-      setPersonalSeleccionado(personalData.map(p => p.codigo));
-    }
-  };
-
-  const seleccionarTodoProductos = () => {
-    if (productosSeleccionados.length === productosNoConsumibles.length) {
-      setProductosSeleccionados([]);
-    } else {
-      setProductosSeleccionados(productosNoConsumibles.map(p => p.codigo));
-    }
-  };
-
-  const generarCodigos = () => {
-    const codigos = [];
-    
-    if (configBarras.tipo === 'personal' || configBarras.tipo === 'ambos') {
-      personalSeleccionado.forEach(codigo => {
-        const persona = personalData.find(p => p.codigo === codigo);
-        if (persona) {
-          codigos.push({
-            tipo: 'personal',
-            codigo: persona.codigo,
-            nombre: persona.nombre,
-            ancho: configBarras.ancho,
-            alto: configBarras.alto,
-            fontSize: configBarras.fontSize,
-            margen: configBarras.margen
-          });
+    if (confirmacion) {
+      const historialActualizado = historialPrestamos.map(item => {
+        if (item.id === prestamoSeleccionado.id) {
+          return {
+            ...item,
+            fechaDevolucion: new Date().toLocaleString('es-PE'),
+            estado: 'DEVUELTO'
+          };
         }
+        return item;
       });
+
+      setHistorialPrestamos(historialActualizado);
+      setPrestamoSeleccionado(null);
+      alert('✅ Devolución registrada exitosamente');
     }
-    
-    if (configBarras.tipo === 'productos' || configBarras.tipo === 'ambos') {
-      productosSeleccionados.forEach(codigo => {
-        const producto = productosNoConsumibles.find(p => p.codigo === codigo);
-        if (producto) {
-          codigos.push({
-            tipo: 'producto',
-            codigo: producto.codigo,
-            nombre: producto.nombre,
-            ancho: configBarras.ancho,
-            alto: configBarras.alto,
-            fontSize: configBarras.fontSize,
-            margen: configBarras.margen
-          });
-        }
-      });
-    }
-    
-    if (codigos.length === 0) {
-      alert('⚠️ Por favor seleccione al menos un item para generar códigos de barras');
-      return;
-    }
-    
-    setCodigosGenerados(codigos);
-    alert(`✅ ${codigos.length} código(s) de barras generado(s) exitosamente`);
   };
 
-  const descargarPDF = () => {
-    if (codigosGenerados.length === 0) {
-      alert('⚠️ Primero debe generar los códigos de barras');
-      return;
+  // ============ FUNCIONES PARA CÓDIGO DE BARRAS ============
+  const handleSeleccionPersonal = (e) => {
+    const codigo = e.target.value;
+    if (codigo) {
+      const personal = personalData.find(p => p.codigo === codigo);
+      setPersonalSeleccionado(personal);
+      setCodigoBarrasPersonal(codigo);
+    } else {
+      setPersonalSeleccionado(null);
+      setCodigoBarrasPersonal(null);
     }
-    alert('📥 Función de descarga PDF en desarrollo\n\nEn producción, aquí se generará un PDF con todos los códigos de barras.');
   };
 
-  const imprimirCodigos = () => {
-    if (codigosGenerados.length === 0) {
-      alert('⚠️ Primero debe generar los códigos de barras');
+  const handleSeleccionProducto = (e) => {
+    const codigo = e.target.value;
+    if (codigo) {
+      const producto = productosNoConsumibles.find(p => p.codigo === codigo);
+      setProductoSeleccionado(producto);
+      setCodigoBarrasProducto(codigo);
+    } else {
+      setProductoSeleccionado(null);
+      setCodigoBarrasProducto(null);
+    }
+  };
+
+  const generarPDFCodigoBarras = (tipo) => {
+    if (tipo === 'personal' && !personalSeleccionado) {
+      alert('⚠️ Seleccione un personal primero');
       return;
     }
-    window.print();
+    if (tipo === 'producto' && !productoSeleccionado) {
+      alert('⚠️ Seleccione un producto primero');
+      return;
+    }
+
+    try {
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [100, 50]
+      });
+
+      // Crear canvas temporal para el código de barras
+      const canvas = document.createElement('canvas');
+      
+      if (tipo === 'personal') {
+        JsBarcode(canvas, personalSeleccionado.codigo, {
+          format: 'CODE128',
+          width: 2,
+          height: 50,
+          displayValue: true,
+          fontSize: 14,
+          margin: 10
+        });
+        
+        pdf.setFontSize(12);
+        pdf.text(personalSeleccionado.nombre, 50, 10, { align: 'center' });
+        pdf.setFontSize(10);
+        pdf.text('DNI: ' + personalSeleccionado.codigo, 50, 17, { align: 'center' });
+        pdf.text('Área: ' + personalSeleccionado.area, 50, 23, { align: 'center' });
+        pdf.addImage(canvas.toDataURL(), 'PNG', 10, 28, 80, 18);
+        pdf.save('codigo_barras_' + personalSeleccionado.nombre.replace(/ /g, '_') + '.pdf');
+      } else {
+        JsBarcode(canvas, productoSeleccionado.codigo, {
+          format: 'CODE128',
+          width: 2,
+          height: 50,
+          displayValue: true,
+          fontSize: 14,
+          margin: 10
+        });
+        
+        pdf.setFontSize(12);
+        pdf.text(productoSeleccionado.nombre, 50, 10, { align: 'center' });
+        pdf.setFontSize(10);
+        pdf.text('Código: ' + productoSeleccionado.codigo, 50, 17, { align: 'center' });
+        pdf.text('Tipo: ' + productoSeleccionado.tipo, 50, 23, { align: 'center' });
+        pdf.addImage(canvas.toDataURL(), 'PNG', 10, 28, 80, 18);
+        pdf.save('codigo_barras_' + productoSeleccionado.codigo + '.pdf');
+      }
+
+      alert('✅ Código de barras generado y descargado correctamente');
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      alert('❌ Error al generar el PDF: ' + error.message);
+    }
   };
 
 

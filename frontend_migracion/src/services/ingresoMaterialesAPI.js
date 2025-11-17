@@ -214,6 +214,19 @@ const ingresoMaterialesAPI = {
     },
 
     /**
+     * Generar número automático de ingreso directo (ID-001, ID-002, etc.)
+     */
+    async generarNumeroIngresoDirecto() {
+        try {
+            const response = await axios.get(`${API_URL}/generar-numero-directo`);
+            return response.data;
+        } catch (error) {
+            console.error('Error al generar número de ingreso directo:', error);
+            throw error;
+        }
+    },
+
+    /**
      * Guardar ingreso directo (sin OC/OS)
      * @param {Object} datos - Datos del ingreso directo
      * @param {string} datos.numero_ingreso - Número de ingreso generado

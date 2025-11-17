@@ -83,7 +83,7 @@ class KardexController extends Controller
                 FROM movimiento_kardex mk
                 LEFT JOIN bodega b ON mk.id_bodega = b.id_bodega
                 WHERE DATE(mk.fecha) BETWEEN ? AND ?
-                ORDER BY mk.fecha DESC, mk.id_movimiento DESC
+                ORDER BY mk.id_movimiento DESC
                 LIMIT 1000
             ", [$fechaInicio, $fechaFin]);
 
@@ -101,6 +101,7 @@ class KardexController extends Controller
 
     /**
      * Obtener kardex de un producto específico
+     */
     public function getKardexProducto($codigoProducto)
     {
         try {
@@ -123,7 +124,6 @@ class KardexController extends Controller
                 LEFT JOIN bodega b ON mk.id_bodega = b.id_bodega
                 WHERE mk.codigo_producto = ?
                 ORDER BY mk.fecha DESC, mk.id_movimiento DESC
-            ", [$codigoProducto]);DESC, mk.id_movimiento DESC
             ", [$codigoProducto]);
 
             // Calcular saldo acumulado

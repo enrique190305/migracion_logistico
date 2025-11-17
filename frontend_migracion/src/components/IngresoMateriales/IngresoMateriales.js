@@ -32,6 +32,7 @@ const IngresoMateriales = ({ initialTab }) => {
   const [numeroIngresoDirecto, setNumeroIngresoDirecto] = useState('');
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState('');
   const [proveedorDirecto, setProveedorDirecto] = useState('');
+  const [bodegaDirecta, setBodegaDirecta] = useState('');
   const [moneda, setMoneda] = useState('');
   const [fechaIngresoDirecto, setFechaIngresoDirecto] = useState(new Date().toISOString().split('T')[0]);
   const [numGuiaDirecto, setNumGuiaDirecto] = useState('');
@@ -102,6 +103,18 @@ const IngresoMateriales = ({ initialTab }) => {
     }
   }, [bodegaSeleccionada]);
 
+  // Filtrar bodegas cuando cambia la empresa en Ingreso Directo
+  useEffect(() => {
+    if (empresaSeleccionada && bodegas.length > 0) {
+      const bodegasFiltradas = bodegas.filter(b => b.empresa?.id_empresa === parseInt(empresaSeleccionada));
+      setBodegasFiltradas(bodegasFiltradas);
+      setBodegaDirecta(''); // Reset bodega cuando cambia empresa
+    } else {
+      setBodegasFiltradas([]);
+      setBodegaDirecta('');
+    }
+  }, [empresaSeleccionada, bodegas]);
+
   // ============================================
   // FUNCIONES DE CARGA DE DATOS
   // ============================================
@@ -148,10 +161,16 @@ const IngresoMateriales = ({ initialTab }) => {
         setMonedas(respMonedas.data);
       }
 
+      // Generar número para OC/OS (NI-001)
       const respNumero = await ingresoMaterialesAPI.generarNumeroIngreso();
       if (respNumero.success) {
         setNumeroIngreso(respNumero.data.numero_ingreso);
-        setNumeroIngresoDirecto(respNumero.data.numero_ingreso);
+      }
+
+      // Generar número para Ingreso Directo (ID-001)
+      const respNumeroDirecto = await ingresoMaterialesAPI.generarNumeroIngresoDirecto();
+      if (respNumeroDirecto.success) {
+        setNumeroIngresoDirecto(respNumeroDirecto.data.numero_ingreso);
       }
 
     } catch (error) {
@@ -1018,6 +1037,10 @@ const IngresoMateriales = ({ initialTab }) => {
         mostrarMensaje('error', '❌ Debe seleccionar un proveedor');
         return;
       }
+      if (!bodegaDirecta) {
+        mostrarMensaje('error', '❌ Debe seleccionar una bodega');
+        return;
+      }
       if (!moneda) {
         mostrarMensaje('error', '❌ Debe seleccionar una moneda');
         return;
@@ -1031,13 +1054,21 @@ const IngresoMateriales = ({ initialTab }) => {
         return;
       }
 
+      // Calcular total y validar límite de S/ 500
+      const totalCalculado = calcularTotalGeneral();
+      if (totalCalculado > 500) {
+        mostrarMensaje('error', `❌ El total no puede exceder los S/ 500.00 (Total actual: S/ ${totalCalculado.toFixed(2)})`);
+        return;
+      }
+
       const datosIngreso = {
         numero_ingreso: numeroIngresoDirecto,
         id_empresa: empresaSeleccionada,
         id_proveedor: proveedorDirecto,
+        id_bodega: bodegaDirecta,
         moneda: moneda,
         fecha_ingreso: fechaIngresoDirecto,
-        total: calcularTotalGeneral(),
+        total: totalCalculado,
         num_guia: numGuiaDirecto,
         factura: facturaDirecto,
         observaciones: observacionesDirecto,
@@ -1057,9 +1088,9 @@ const IngresoMateriales = ({ initialTab }) => {
           mostrarMensaje('success', `✅ ${response.message}`);
           limpiarFormularioDirecto();
           
-          const respNumero = await ingresoMaterialesAPI.generarNumeroIngreso();
+          const respNumero = await ingresoMaterialesAPI.generarNumeroIngresoDirecto();
           if (respNumero.success) {
-            setNumeroIngresoDirecto(respNumero.numero_ingreso);
+            setNumeroIngresoDirecto(respNumero.data.numero_ingreso);
           }
         } else {
           mostrarMensaje('error', `❌ ${response.message}`);
@@ -1075,6 +1106,7 @@ const IngresoMateriales = ({ initialTab }) => {
     const limpiarFormularioDirecto = () => {
       setEmpresaSeleccionada('');
       setProveedorDirecto('');
+      setBodegaDirecta('');
       setMoneda('');
       setFechaIngresoDirecto(new Date().toISOString().split('T')[0]);
       setNumGuiaDirecto('');
@@ -1085,6 +1117,7 @@ const IngresoMateriales = ({ initialTab }) => {
       setPrecioUnitario('');
       setObservacionProducto('');
       setProductosDirectos([]);
+      setBodegasFiltradas([]);
     };
 
     return (
@@ -1147,6 +1180,30 @@ const IngresoMateriales = ({ initialTab }) => {
                 </select>
               </div>
 
+              <div className="ingreso-form-group">
+                <label className="ingreso-form-label">
+                  🏪 Bodega *
+                </label>
+                <select
+                  className="ingreso-form-select"
+                  value={bodegaDirecta}
+                  onChange={(e) => setBodegaDirecta(e.target.value)}
+                  disabled={!empresaSeleccionada}
+                >
+                  <option value="">-- Seleccione bodega --</option>
+                  {bodegasFiltradas.map((bodega) => (
+                    <option key={bodega.id_bodega} value={bodega.id_bodega}>
+                      {bodega.nombre}
+                    </option>
+                  ))}
+                </select>
+                {empresaSeleccionada && bodegasFiltradas.length === 0 && (
+                  <small style={{ color: '#f5576c', fontSize: '12px' }}>
+                    No hay bodegas disponibles para esta empresa
+                  </small>
+                )}
+              </div>
+
             </div>
 
             <div className="ingreso-form-row" style={{ marginTop: '15px' }}>
@@ -1162,8 +1219,8 @@ const IngresoMateriales = ({ initialTab }) => {
                 >
                   <option value="">-- Seleccione moneda --</option>
                   {monedas.map((mon, index) => (
-                    <option key={index} value={mon.codigo}>
-                      {mon.codigo} - {mon.descripcion}
+                    <option key={index} value={mon.id_moneda}>
+                      {mon.tipo_moneda} - {mon.descripcion}
                     </option>
                   ))}
                 </select>
@@ -1370,10 +1427,20 @@ const IngresoMateriales = ({ initialTab }) => {
                     ))}
                     <tr style={{ backgroundColor: '#f0f0f0', fontWeight: '700', fontSize: '16px' }}>
                       <td colSpan="5" style={{ textAlign: 'right', padding: '15px' }}>
-                        TOTAL GENERAL ({moneda || 'N/A'}):
+                        TOTAL GENERAL:
                       </td>
-                      <td style={{ textAlign: 'right', color: '#27ae60', fontSize: '18px', padding: '15px' }}>
-                        {calcularTotalGeneral().toFixed(2)}
+                      <td style={{ 
+                        textAlign: 'right', 
+                        color: calcularTotalGeneral() > 500 ? '#e74c3c' : '#27ae60', 
+                        fontSize: '18px', 
+                        padding: '15px' 
+                      }}>
+                        S/ {calcularTotalGeneral().toFixed(2)}
+                        {calcularTotalGeneral() > 500 && (
+                          <div style={{ fontSize: '12px', color: '#e74c3c', marginTop: '5px' }}>
+                            ⚠️ Excede el límite de S/ 500.00
+                          </div>
+                        )}
                       </td>
                       <td colSpan="2"></td>
                     </tr>

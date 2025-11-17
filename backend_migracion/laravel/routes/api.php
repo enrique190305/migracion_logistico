@@ -90,6 +90,7 @@ Route::prefix('ingreso-materiales')->group(function () {
     Route::get('/proyectos-almacen', [IngresoMaterialController::class, 'listarProyectosAlmacen']);
     Route::get('/productos', [IngresoMaterialController::class, 'listarProductos']);
     Route::get('/generar-numero', [IngresoMaterialController::class, 'generarNumeroIngreso']);
+    Route::get('/generar-numero-directo', [IngresoMaterialController::class, 'generarNumeroIngresoDirecto']);
     
     // Reservas por bodega
     Route::get('/reservas/bodega/{id}', [IngresoMaterialController::class, 'obtenerReservasPorBodega']);

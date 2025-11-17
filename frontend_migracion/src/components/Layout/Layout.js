@@ -22,7 +22,7 @@ import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
 import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
 import AjusteInventario from '../AjusteInventario/AjusteInventario';
 import Reporteria from '../Reporteria/Reporteria';
-import Prestamos from '../Prestamos/Prestamos_NEW';
+import Prestamos from '../Prestamos/Prestamos_COMPLETO';
 
 
 

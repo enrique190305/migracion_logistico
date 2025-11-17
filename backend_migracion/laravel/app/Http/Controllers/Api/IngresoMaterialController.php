@@ -307,6 +307,48 @@ class IngresoMaterialController extends Controller
     }
 
     /**
+     * Generar número correlativo para Ingreso Directo (ID-001, ID-002, etc.)
+     */
+    public function generarNumeroIngresoDirecto()
+    {
+        try {
+            // Obtener el máximo correlativo de ingreso_directo con formato ID-XXX
+            $maxNumero = DB::table('ingreso_directo')
+                ->where('correlativo', 'LIKE', 'ID-%')
+                ->selectRaw("COALESCE(MAX(CAST(SUBSTRING(correlativo, 4) AS UNSIGNED)), 0) as max_numero")
+                ->value('max_numero');
+
+            $maxNumero = $maxNumero ?? 0;
+            $siguiente = intval($maxNumero) + 1;
+            $numeroIngresoDirecto = 'ID-' . str_pad($siguiente, 3, '0', STR_PAD_LEFT);
+
+            Log::info("Generando número de ingreso directo - MAX actual: {$maxNumero}, Siguiente: {$siguiente}, Número generado: {$numeroIngresoDirecto}");
+
+            return response()->json([
+                'success' => true,
+                'data' => ['numero_ingreso' => $numeroIngresoDirecto]
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error generando número de ingreso directo: ' . $e->getMessage());
+            
+            $resultado = DB::select("
+                SELECT COALESCE(MAX(CAST(SUBSTRING(correlativo, 4) AS UNSIGNED)), 0) as max_num 
+                FROM ingreso_directo 
+                WHERE correlativo LIKE 'ID-%'
+            ");
+            $siguiente = intval($resultado[0]->max_num ?? 0) + 1;
+            $numeroIngresoDirecto = 'ID-' . str_pad($siguiente, 3, '0', STR_PAD_LEFT);
+            
+            Log::info("Número de ingreso directo generado en catch: {$numeroIngresoDirecto}");
+            
+            return response()->json([
+                'success' => true,
+                'data' => ['numero_ingreso' => $numeroIngresoDirecto]
+            ]);
+        }
+    }
+
+    /**
      * Guardar ingreso de material (OC) o conformidad de servicio (OS)
      */
     public function guardarIngreso(Request $request)
@@ -741,8 +783,12 @@ class IngresoMaterialController extends Controller
             $monedas = DB::table('moneda')
                 ->select(
                     'id_moneda',
-                    'tipo_moneda as codigo',
-                    'tipo_moneda as descripcion'
+                    'tipo_moneda',
+                    DB::raw("CASE 
+                        WHEN tipo_moneda = 'SOLES' THEN 'Soles Peruanos (S/)'
+                        WHEN tipo_moneda = 'DOLARES' THEN 'Dólares Americanos ($)'
+                        ELSE tipo_moneda
+                    END as descripcion")
                 )
                 ->orderBy('tipo_moneda')
                 ->get();
@@ -766,13 +812,15 @@ class IngresoMaterialController extends Controller
     public function guardarIngresoDirecto(Request $request)
     {
         try {
+            \Log::info('📥 Datos recibidos en guardarIngresoDirecto:', $request->all());
+            
             // Validación
             $validator = Validator::make($request->all(), [
                 'numero_ingreso' => 'required',
                 'id_empresa' => 'required|exists:empresa,id_empresa',
                 'id_proveedor' => 'required|exists:proveedor,id_proveedor',
+                'id_bodega' => 'required|exists:bodega,id_bodega',
                 'moneda' => 'required',
-                'proyecto_almacen' => 'required',
                 'fecha_ingreso' => 'required|date',
                 'productos' => 'required|array|min:1',
                 'productos.*.codigo_producto' => 'required',
@@ -781,6 +829,7 @@ class IngresoMaterialController extends Controller
             ]);
 
             if ($validator->fails()) {
+                \Log::error('❌ Errores de validación:', $validator->errors()->toArray());
                 return response()->json([
                     'success' => false,
                     'message' => 'Errores de validación',
@@ -788,6 +837,7 @@ class IngresoMaterialController extends Controller
                 ], 422);
             }
 
+            \Log::info('✅ Validación pasada, iniciando transacción');
             DB::beginTransaction();
 
             // Calcular total
@@ -797,21 +847,41 @@ class IngresoMaterialController extends Controller
                 $total += $subtotal;
             }
 
+            // Validación: El total no debe exceder los S/ 500.00
+            if ($total > 500) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El total del ingreso directo no puede exceder los S/ 500.00',
+                    'total_calculado' => 'S/ ' . number_format($total, 2)
+                ], 400);
+            }
+
             // Insertar ingreso directo
+            \Log::info('💾 Insertando en ingreso_directo...');
             $idIngresoDirecto = DB::table('ingreso_directo')->insertGetId([
                 'correlativo' => $request->numero_ingreso,
                 'id_empresa' => $request->id_empresa,
                 'id_proveedor' => $request->id_proveedor,
-                'id_moneda' => DB::table('moneda')->where('tipo_moneda', $request->moneda)->value('id_moneda') ?? 1,
+                'id_bodega' => $request->id_bodega,
+                'id_moneda' => is_numeric($request->moneda) ? $request->moneda : (DB::table('moneda')->where('tipo_moneda', $request->moneda)->value('id_moneda') ?? 1),
+                'fecha_servicio' => $request->fecha_ingreso,
                 'fecha_oc' => $request->fecha_ingreso,
+                'fecha_requerida' => $request->fecha_ingreso,
+                'igv' => $total * 0.18,
                 'total_general' => $total,
-                'estado' => 'COMPLETADO',
-                'usuario_creacion' => 'admin', // Temporal
+                'estado' => 'ACTIVO',
+                'usuario_creacion' => auth()->user()->name ?? auth()->user()->email ?? 'sistema',
                 'fecha_creacion' => now()
             ]);
 
+            \Log::info('✅ Ingreso directo insertado con ID: ' . $idIngresoDirecto);
+
             // Insertar detalles
+            \Log::info('📦 Procesando productos...');
             foreach ($request->productos as $producto) {
+                \Log::info('🔍 Procesando producto: ' . $producto['codigo_producto']);
+                
                 // Obtener info del producto
                 $productoInfo = DB::table('producto')
                     ->where('codigo_producto', $producto['codigo_producto'])
@@ -836,33 +906,54 @@ class IngresoMaterialController extends Controller
                     'subtotal' => $subtotal,
                     'total' => $subtotal
                 ]);
+                \Log::info('✅ Detalle insertado');
 
-                // Actualizar stock del producto
-                $stockActual = $productoInfo->stock_actual ?? 0;
-                DB::table('producto')
+                // Actualizar o insertar en bodega_stock (tabla correcta)
+                // Nota: id_reserva = 1 es la reserva por defecto para ingreso directo
+                $stockBodega = DB::table('bodega_stock')
                     ->where('codigo_producto', $producto['codigo_producto'])
-                    ->update([
-                        'stock_actual' => $stockActual + $cantidad
+                    ->where('id_bodega', $request->id_bodega)
+                    ->where('id_reserva', 1)
+                    ->first();
+
+                if ($stockBodega) {
+                    DB::table('bodega_stock')
+                        ->where('codigo_producto', $producto['codigo_producto'])
+                        ->where('id_bodega', $request->id_bodega)
+                        ->where('id_reserva', 1)
+                        ->update([
+                            'cantidad_disponible' => $stockBodega->cantidad_disponible + $cantidad
+                        ]);
+                } else {
+                    DB::table('bodega_stock')->insert([
+                        'id_bodega' => $request->id_bodega,
+                        'id_reserva' => 1,
+                        'codigo_producto' => $producto['codigo_producto'],
+                        'cantidad_disponible' => $cantidad,
+                        'cantidad_reservada' => 0
                     ]);
+                }
+                \Log::info('✅ Stock bodega actualizado');
 
                 // Insertar movimiento en kardex
+                \Log::info('📝 Insertando en kardex...');
                 DB::table('movimiento_kardex')->insert([
-                    'codigo_producto' => $producto['codigo_producto'],
+                    'fecha' => now(),
                     'tipo_movimiento' => 'INGRESO',
-                    'documento_referencia' => $request->numero_ingreso,
+                    'codigo_producto' => $producto['codigo_producto'],
+                    'descripcion' => $productoInfo->descripcion,
+                    'unidad' => $productoInfo->unidad,
                     'cantidad' => $cantidad,
+                    'proyecto' => 'Ingreso Directo',
+                    'id_bodega' => $request->id_bodega,
+                    'documento' => $request->numero_ingreso,
                     'precio_unitario' => $precioUnitario,
-                    'stock_anterior' => $stockActual,
-                    'stock_nuevo' => $stockActual + $cantidad,
-                    'fecha_movimiento' => $request->fecha_ingreso,
-                    'proyecto_almacen' => $request->proyecto_almacen,
-                    'id_bodega' => $request->id_bodega, // ✅ Agregar id_bodega
-                    'observaciones' => "Ingreso Directo - {$request->num_guia}",
-                    'usuario_registro' => 'admin',
-                    'fecha_registro' => now()
+                    'observaciones' => "Ingreso Directo {$request->numero_ingreso} | Guía Remisión: {$request->num_guia} | Factura: {$request->factura}"
                 ]);
+                \Log::info('✅ Kardex insertado');
             }
 
+            \Log::info('🎉 Todos los productos procesados, haciendo commit');
             DB::commit();
 
             return response()->json([
@@ -876,6 +967,12 @@ class IngresoMaterialController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
+            \Log::error('❌ Error al guardar ingreso directo:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar ingreso directo',
