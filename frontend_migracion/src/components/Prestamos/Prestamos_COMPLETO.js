@@ -353,7 +353,7 @@ const Prestamos = () => {
           return;
         }
 
-        // Agregar a lista
+        // Agregar a lista con valores por defecto (se pueden editar después en la tabla)
         const nuevo = {
           codigoProducto: producto.codigo,
           nombreProducto: producto.nombre,
@@ -1170,12 +1170,67 @@ const Prestamos = () => {
                       <tr key={index}>
                         <td>{prestamo.codigoProducto}</td>
                         <td>{prestamo.nombreProducto}</td>
-                        <td>{prestamo.cantidad}</td>
+                        <td>
+                          <input
+                            type="number"
+                            min="1"
+                            value={prestamo.cantidad}
+                            onChange={(e) => {
+                              const nuevaLista = [...listaPrestamosPendientes];
+                              nuevaLista[index].cantidad = parseInt(e.target.value) || 1;
+                              setListaPrestamosPendientes(nuevaLista);
+                            }}
+                            style={{width: '60px', padding: '5px', textAlign: 'center', border: '1px solid #ddd', borderRadius: '4px'}}
+                          />
+                        </td>
                         <td>{prestamo.unidadMedida}</td>
-                        <td><span className="badge-condicion">{prestamo.condicionInicial}</span></td>
+                        <td>
+                          <select
+                            value={prestamo.condicionInicial}
+                            onChange={(e) => {
+                              const nuevaLista = [...listaPrestamosPendientes];
+                              nuevaLista[index].condicionInicial = e.target.value;
+                              if (e.target.value !== 'OTROS') {
+                                nuevaLista[index].condicionDescripcion = '';
+                              }
+                              setListaPrestamosPendientes(nuevaLista);
+                            }}
+                            style={{padding: '5px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px'}}
+                          >
+                            <option value="NUEVO">NUEVO</option>
+                            <option value="OPERATIVO">OPERATIVO</option>
+                            <option value="CON FALLAS">CON FALLAS</option>
+                            <option value="OTROS">OTROS</option>
+                          </select>
+                          {prestamo.condicionInicial === 'OTROS' && (
+                            <input
+                              type="text"
+                              placeholder="Especificar..."
+                              value={prestamo.condicionDescripcion}
+                              onChange={(e) => {
+                                const nuevaLista = [...listaPrestamosPendientes];
+                                nuevaLista[index].condicionDescripcion = e.target.value;
+                                setListaPrestamosPendientes(nuevaLista);
+                              }}
+                              style={{marginTop: '5px', width: '100%', padding: '5px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px'}}
+                            />
+                          )}
+                        </td>
                         <td>{prestamo.codigoPersonal}</td>
                         <td>{prestamo.nombrePersonal}</td>
-                        <td>{prestamo.observacion || '-'}</td>
+                        <td>
+                          <input
+                            type="text"
+                            placeholder="Observación..."
+                            value={prestamo.observacion}
+                            onChange={(e) => {
+                              const nuevaLista = [...listaPrestamosPendientes];
+                              nuevaLista[index].observacion = e.target.value;
+                              setListaPrestamosPendientes(nuevaLista);
+                            }}
+                            style={{width: '100%', padding: '5px', border: '1px solid #ddd', borderRadius: '4px', fontSize: '12px'}}
+                          />
+                        </td>
                         <td>
                           <button 
                             className="btn-eliminar-fila"
