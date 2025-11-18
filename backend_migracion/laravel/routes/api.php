@@ -555,6 +555,23 @@ Route::get('/areas', function() {
 
 /*
 |--------------------------------------------------------------------------
+| API Routes - CÓDIGO DE BARRAS (PRÉSTAMOS)
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\PersonalCodigoBarrasController;
+use App\Http\Controllers\ProductoCodigoBarrasController;
+use App\Http\Controllers\PrestamosController;
+
+Route::get('/personal-codigo-barras', [PersonalCodigoBarrasController::class, 'obtenerPersonal']);
+Route::get('/productos-codigo-barras', [ProductoCodigoBarrasController::class, 'obtenerProductos']);
+
+// Rutas de préstamos
+Route::post('/prestamos/guardar', [PrestamosController::class, 'guardarPrestamos']);
+Route::get('/prestamos-historial', [PrestamosController::class, 'obtenerHistorial']);
+Route::post('/prestamos/devolver', [PrestamosController::class, 'devolverPrestamos']);
+
+/*
+|--------------------------------------------------------------------------
 | API Routes - Salida de Materiales
 |--------------------------------------------------------------------------
 */

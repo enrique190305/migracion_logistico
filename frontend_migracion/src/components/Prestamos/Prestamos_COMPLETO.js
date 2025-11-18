@@ -19,6 +19,7 @@ const Prestamos = () => {
     cantidad: '',
     unidadMedida: '',
     condicionInicial: 'OPERATIVO',
+    condicionDescripcion: '',
     observacion: '',
     fechaPrestamo: new Date().toISOString().slice(0, 16)
   });
@@ -30,6 +31,12 @@ const Prestamos = () => {
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
   const [medidasCodigos, setMedidasCodigos] = useState({});
   const [mostrarPrevisualizacion, setMostrarPrevisualizacion] = useState(false);
+  
+  // Estados para datos desde BD
+  const [personalBD, setPersonalBD] = useState([]);
+  const [productosBD, setProductosBD] = useState([]);
+  const [cargandoPersonal, setCargandoPersonal] = useState(false);
+  const [cargandoProductos, setCargandoProductos] = useState(false);
   
   // Estados para filtros y modal
   const [filtroPersonal, setFiltroPersonal] = useState('');
@@ -54,6 +61,17 @@ const Prestamos = () => {
     cargarAreas();
     cargarPersonal();
   }, []);
+
+  // Cargar datos de BD cuando se activa pestaña código de barras
+  useEffect(() => {
+    if (activeTab === 'codigo') {
+      cargarPersonalBD();
+      cargarProductosBD();
+    }
+    if (activeTab === 'historial') {
+      cargarHistorialPrestamos();
+    }
+  }, [activeTab]);
 
   const cargarAreas = async () => {
     try {
@@ -91,50 +109,53 @@ const Prestamos = () => {
     }
   };
 
-  const [historialPrestamos, setHistorialPrestamos] = useState([
-    {
-      id: 1,
-      codigoProducto: 'HER-0003',
-      nombreProducto: 'MARTILLO DE GOMA',
-      codigoUsuario: '12345678',
-      nombreUsuario: 'Juan Pérez',
-      cantidad: 1,
-      unidadMedida: 'UND',
-      condicionInicial: 'OPERATIVO',
-      observacion: 'Para reparación de estructura',
-      fechaPrestamo: '13/11/2025 10:30:00',
-      fechaDevolucion: null,
-      estado: 'PRESTADO'
-    },
-    {
-      id: 2,
-      codigoProducto: 'ACTI-0001',
-      nombreProducto: 'LAPTOP DELL INSPIRON',
-      codigoUsuario: '23456789',
-      nombreUsuario: 'María López',
-      cantidad: 1,
-      unidadMedida: 'UND',
-      condicionInicial: 'OPERATIVO',
-      observacion: 'Trabajo remoto',
-      fechaPrestamo: '12/11/2025 14:20:00',
-      fechaDevolucion: '13/11/2025 09:15:00',
-      estado: 'DEVUELTO'
-    },
-    {
-      id: 3,
-      codigoProducto: 'HER-0001',
-      nombreProducto: 'DESTORNILLADOR PLANO',
-      codigoUsuario: '34567890',
-      nombreUsuario: 'Carlos Ramírez',
-      cantidad: 1,
-      unidadMedida: 'UND',
-      condicionInicial: 'OPERATIVO',
-      observacion: '',
-      fechaPrestamo: '11/11/2025 08:45:00',
-      fechaDevolucion: null,
-      estado: 'PRESTADO'
+  const cargarPersonalBD = async () => {
+    setCargandoPersonal(true);
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/personal-codigo-barras');
+      if (response.data.success) {
+        setPersonalBD(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar personal desde BD:', error);
+      alert('❌ Error al cargar personal desde la base de datos');
+    } finally {
+      setCargandoPersonal(false);
     }
-  ]);
+  };
+
+  const cargarProductosBD = async () => {
+    setCargandoProductos(true);
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/productos-codigo-barras');
+      if (response.data.success) {
+        setProductosBD(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar productos desde BD:', error);
+      alert('❌ Error al cargar productos desde la base de datos');
+    } finally {
+      setCargandoProductos(false);
+    }
+  };
+
+  const cargarHistorialPrestamos = async () => {
+    setCargandoHistorial(true);
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/prestamos-historial');
+      if (response.data.success) {
+        setHistorialPrestamos(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error al cargar historial:', error);
+      alert('❌ Error al cargar historial de préstamos');
+    } finally {
+      setCargandoHistorial(false);
+    }
+  };
+
+  const [historialPrestamos, setHistorialPrestamos] = useState([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(false);
 
   const [prestamoSeleccionado, setPrestamoSeleccionado] = useState(null);
   
@@ -150,6 +171,12 @@ const Prestamos = () => {
       return;
     }
 
+    // Validar que si seleccionó OTROS, debe ingresar descripción
+    if (registroManual.condicionInicial === 'OTROS' && !registroManual.condicionDescripcion.trim()) {
+      alert('⚠️ Por favor especifique la condición del producto');
+      return;
+    }
+
     const nuevoPrestamo = {
       codigoProducto: registroManual.codigoProducto,
       nombreProducto: registroManual.nombreProducto,
@@ -158,6 +185,7 @@ const Prestamos = () => {
       cantidad: registroManual.cantidad,
       unidadMedida: registroManual.unidadMedida,
       condicionInicial: registroManual.condicionInicial,
+      condicionDescripcion: registroManual.condicionDescripcion,
       observacion: registroManual.observacion
     };
 
@@ -173,6 +201,7 @@ const Prestamos = () => {
       cantidad: '',
       unidadMedida: '',
       condicionInicial: 'OPERATIVO',
+      condicionDescripcion: '',
       observacion: '',
       fechaPrestamo: registroManual.fechaPrestamo
     });
@@ -184,69 +213,107 @@ const Prestamos = () => {
     }, 100);
   };
 
-  const handleBuscarPersonal = (codigo) => {
-    const personal = personalData.find(p => p.codigo === codigo);
-    if (personal) {
-      setRegistroManual({
-        ...registroManual,
-        codigoPersonal: codigo,
-        nombrePersonal: personal.nombre,
-        areaPersonal: personal.area
-      });
-    } else {
-      setRegistroManual({
-        ...registroManual,
-        codigoPersonal: codigo,
-        nombrePersonal: '',
-        areaPersonal: ''
-      });
+  const handleBuscarPersonal = async (codigo) => {
+    setRegistroManual({
+      ...registroManual,
+      codigoPersonal: codigo,
+      nombrePersonal: '',
+      areaPersonal: ''
+    });
+
+    if (!codigo || codigo.trim() === '') return;
+
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/personal-codigo-barras');
+      if (response.data.success) {
+        const personal = response.data.data.find(p => p.codigo === codigo.trim());
+        if (personal) {
+          setRegistroManual({
+            ...registroManual,
+            codigoPersonal: codigo,
+            nombrePersonal: personal.nombre,
+            areaPersonal: personal.area || 'Sin área'
+          });
+        } else {
+          console.log('Personal no encontrado con código:', codigo);
+        }
+      }
+    } catch (error) {
+      console.error('Error al buscar personal:', error);
     }
   };
 
-  const handleBuscarProducto = (codigo) => {
-    const producto = productosNoConsumibles.find(p => p.codigo === codigo);
-    if (producto) {
-      setRegistroManual({
-        ...registroManual,
-        codigoProducto: codigo,
-        nombreProducto: producto.nombre,
-        unidadMedida: producto.unidad
-      });
-    } else {
-      setRegistroManual({
-        ...registroManual,
-        codigoProducto: codigo,
-        nombreProducto: '',
-        unidadMedida: ''
-      });
+  const handleBuscarProducto = async (codigo) => {
+    setRegistroManual({
+      ...registroManual,
+      codigoProducto: codigo,
+      nombreProducto: '',
+      unidadMedida: ''
+    });
+
+    if (!codigo || codigo.trim() === '') return;
+
+    try {
+      const response = await axios.get('http://127.0.0.1:8000/api/productos-codigo-barras');
+      if (response.data.success) {
+        const producto = response.data.data.find(p => p.codigo === codigo.trim());
+        if (producto) {
+          setRegistroManual({
+            ...registroManual,
+            codigoProducto: codigo,
+            nombreProducto: producto.nombre,
+            unidadMedida: producto.unidad || 'UND'
+          });
+        } else {
+          console.log('Producto no encontrado con código:', codigo);
+        }
+      }
+    } catch (error) {
+      console.error('Error al buscar producto:', error);
     }
   };
 
-  const handleGuardarPrestamos = () => {
+  const handleGuardarPrestamos = async () => {
     if (listaPrestamosPendientes.length === 0) {
       alert('⚠️ No hay préstamos pendientes para guardar');
       return;
     }
     
-    // Agregar al historial con TODOS los campos
-    const nuevosRegistros = listaPrestamosPendientes.map((item, index) => ({
-      id: historialPrestamos.length + index + 1,
-      codigoProducto: item.codigoProducto,
-      nombreProducto: item.nombreProducto,
-      codigoUsuario: item.codigoPersonal,
-      nombreUsuario: item.nombrePersonal,
-      cantidad: item.cantidad,
-      unidadMedida: item.unidadMedida,
-      condicionInicial: item.condicionInicial,
-      observacion: item.observacion,
-      fechaPrestamo: new Date().toLocaleString('es-PE'),
-      fechaDevolucion: null,
-      estado: 'PRESTADO'
-    }));
+    try {
+      // Preparar datos para enviar al backend
+      const prestamosParaGuardar = listaPrestamosPendientes.map(item => ({
+        codigo_producto: item.codigoProducto,
+        tipo_producto: item.nombreProducto,
+        cantidad: parseInt(item.cantidad),
+        condicion_inicial: item.condicionInicial,
+        condicion_descripcion: item.condicionDescripcion || null,
+        unidad: item.unidadMedida || 'UND',
+        observaciones: item.observacion || null,
+        dni: item.codigoPersonal,
+        nom_ape: item.nombrePersonal
+      }));
 
-    setHistorialPrestamos([...nuevosRegistros, ...historialPrestamos]);
-    setListaPrestamosPendientes([]);
-    alert('✅ ' + nuevosRegistros.length + ' préstamo(s) guardado(s) exitosamente');
+      // Guardar en la base de datos
+      const response = await axios.post('http://127.0.0.1:8000/api/prestamos/guardar', {
+        prestamos: prestamosParaGuardar
+      });
+
+      if (response.data.success) {
+        setListaPrestamosPendientes([]);
+        
+        // Recargar historial desde BD
+        await cargarHistorialPrestamos();
+        
+        alert('✅ ' + response.data.data.total + ' préstamo(s) guardado(s) exitosamente');
+      } else {
+        throw new Error(response.data.message);
+      }
+      
+    } catch (error) {
+      console.error('Error al guardar préstamos:', error);
+      const errorMsg = error.response?.data?.message || error.message;
+      alert('❌ Error al guardar préstamos: ' + errorMsg);
+    }
   };
 
   const handleLimpiarLista = () => {
@@ -305,7 +372,7 @@ const Prestamos = () => {
     }
   };
 
-  const handleDevolverPrestamos = () => {
+  const handleDevolverPrestamos = async () => {
     if (prestamosSeleccionados.length === 0) {
       alert('⚠️ Por favor seleccione al menos un préstamo para devolver');
       return;
@@ -314,46 +381,47 @@ const Prestamos = () => {
     const confirmacion = window.confirm(`¿Confirmar devolución de ${prestamosSeleccionados.length} préstamo(s)?`);
     if (!confirmacion) return;
     
-    const fechaDevolucion = new Date().toLocaleString('es-PE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
+    try {
+      // Obtener IDs de los préstamos seleccionados
+      const ids = prestamosSeleccionados.map(p => p.id);
+      
+      // Enviar petición al backend
+      const response = await axios.post('http://127.0.0.1:8000/api/prestamos/devolver', {
+        ids: ids
+      });
 
-    const historialActualizado = historialPrestamos.map(prestamo => {
-      const estaSeleccionado = prestamosSeleccionados.find(p => p.id === prestamo.id);
-      if (estaSeleccionado) {
-        return {
-          ...prestamo,
-          fechaDevolucion: fechaDevolucion,
-          estado: 'DEVUELTO'
-        };
+      if (response.data.success) {
+        // Recargar historial desde BD
+        await cargarHistorialPrestamos();
+        
+        // Limpiar selección
+        setPrestamosSeleccionados([]);
+        
+        alert(`✅ ${response.data.data.total_devueltos} préstamo(s) devuelto(s) exitosamente`);
+      } else {
+        throw new Error(response.data.message);
       }
-      return prestamo;
-    });
-
-    setHistorialPrestamos(historialActualizado);
-    setPrestamosSeleccionados([]);
-    alert(`✅ ${prestamosSeleccionados.length} préstamo(s) devuelto(s) exitosamente`);
+      
+    } catch (error) {
+      console.error('Error al devolver préstamos:', error);
+      const errorMsg = error.response?.data?.message || error.message;
+      alert('❌ Error al devolver préstamos: ' + errorMsg);
+    }
   };
 
   // ============ FUNCIONES PARA CÓDIGO DE BARRAS (Multi-selección) ============
   
-  // Filtrar personal según búsqueda
-  const personalFiltrado = personalData.filter(p => 
+  // Filtrar personal según búsqueda (desde BD)
+  const personalFiltrado = personalBD.filter(p => 
     p.nombre.toLowerCase().includes(filtroPersonal.toLowerCase()) ||
     p.codigo.includes(filtroPersonal) ||
-    p.area.toLowerCase().includes(filtroPersonal.toLowerCase())
+    (p.area && p.area.toLowerCase().includes(filtroPersonal.toLowerCase()))
   );
 
-  // Filtrar productos según búsqueda
-  const productosFiltrados = productosNoConsumibles.filter(p => 
+  // Filtrar productos según búsqueda (desde BD)
+  const productosFiltrados = productosBD.filter(p => 
     p.nombre.toLowerCase().includes(filtroProducto.toLowerCase()) ||
-    p.codigo.toLowerCase().includes(filtroProducto.toLowerCase()) ||
-    p.tipo.toLowerCase().includes(filtroProducto.toLowerCase())
+    p.codigo.toLowerCase().includes(filtroProducto.toLowerCase())
   );
 
   // Selección de personal (checkbox)
@@ -895,15 +963,39 @@ const Prestamos = () => {
                 <label>⚙️ Condición Inicial *</label>
                 <select
                   value={registroManual.condicionInicial}
-                  onChange={(e) => setRegistroManual({...registroManual, condicionInicial: e.target.value})}
+                  onChange={(e) => {
+                    setRegistroManual({
+                      ...registroManual, 
+                      condicionInicial: e.target.value,
+                      condicionDescripcion: e.target.value !== 'OTROS' ? '' : registroManual.condicionDescripcion
+                    });
+                  }}
                 >
                   <option value="NUEVO">NUEVO</option>
                   <option value="OPERATIVO">OPERATIVO</option>
                   <option value="CON FALLAS">CON FALLAS</option>
-                  <option value="DAÑADO">DAÑADO</option>
+                  <option value="OTROS">OTROS (especificar)</option>
                 </select>
               </div>
             </div>
+
+            {/* Campo de descripción personalizada cuando se selecciona OTROS */}
+            {registroManual.condicionInicial === 'OTROS' && (
+              <div className="form-row-1col" style={{marginTop: '10px'}}>
+                <div className="form-group">
+                  <label>📝 Especificar Condición *</label>
+                  <input
+                    type="text"
+                    placeholder="Ej: Pantalla rayada, botón de encendido flojo..."
+                    value={registroManual.condicionDescripcion}
+                    onChange={(e) => setRegistroManual({...registroManual, condicionDescripcion: e.target.value})}
+                    maxLength="200"
+                    required
+                  />
+                  <small style={{color: '#666', fontSize: '12px'}}>Máximo 200 caracteres</small>
+                </div>
+              </div>
+            )}
 
             <div className="form-row-2cols">
               <div className="form-group">
@@ -1073,7 +1165,13 @@ const Prestamos = () => {
                 </tr>
               </thead>
               <tbody>
-                {historialFiltrado.length === 0 ? (
+                {cargandoHistorial ? (
+                  <tr>
+                    <td colSpan="12" style={{textAlign: 'center', padding: '30px'}}>
+                      ⏳ Cargando historial de préstamos...
+                    </td>
+                  </tr>
+                ) : historialFiltrado.length === 0 ? (
                   <tr>
                     <td colSpan="12" style={{textAlign: 'center', padding: '30px', color: '#999'}}>
                       {filtroHistorial || filtroEstado !== 'TODOS' ? '🔍 Sin resultados' : 'No hay préstamos registrados'}
@@ -1107,7 +1205,9 @@ const Prestamos = () => {
                         <td>{item.nombreUsuario}</td>
                         <td>
                           <span className="badge-condicion">
-                            {item.condicionInicial}
+                            {item.condicionInicial === 'OTROS' && item.condicionDescripcion 
+                              ? item.condicionDescripcion 
+                              : item.condicionInicial}
                           </span>
                         </td>
                         <td>{item.observacion || '-'}</td>
@@ -1172,10 +1272,16 @@ const Prestamos = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {personalFiltrado.length === 0 ? (
+                        {cargandoPersonal ? (
+                          <tr>
+                            <td colSpan="5" style={{textAlign: 'center', padding: '30px'}}>
+                              ⏳ Cargando personal...
+                            </td>
+                          </tr>
+                        ) : personalFiltrado.length === 0 ? (
                           <tr>
                             <td colSpan="5" style={{textAlign: 'center', padding: '30px', color: '#999'}}>
-                              {filtroPersonal ? '🔍 Sin resultados' : 'No hay personal'}
+                              {filtroPersonal ? '🔍 Sin resultados' : 'No hay personal registrado'}
                             </td>
                           </tr>
                         ) : (
@@ -1195,7 +1301,7 @@ const Prestamos = () => {
                                 </td>
                                 <td><strong>{personal.nombre}</strong></td>
                                 <td>{personal.codigo}</td>
-                                <td>{personal.area}</td>
+                                <td>{personal.area || 'Sin área'}</td>
                                 <td>
                                   {isSelected && (
                                     <button
@@ -1251,10 +1357,16 @@ const Prestamos = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {productosFiltrados.length === 0 ? (
+                        {cargandoProductos ? (
+                          <tr>
+                            <td colSpan="5" style={{textAlign: 'center', padding: '30px'}}>
+                              ⏳ Cargando productos...
+                            </td>
+                          </tr>
+                        ) : productosFiltrados.length === 0 ? (
                           <tr>
                             <td colSpan="5" style={{textAlign: 'center', padding: '30px', color: '#999'}}>
-                              {filtroProducto ? '🔍 Sin resultados' : 'No hay productos'}
+                              {filtroProducto ? '🔍 Sin resultados' : 'No hay productos no consumibles'}
                             </td>
                           </tr>
                         ) : (
@@ -1274,7 +1386,7 @@ const Prestamos = () => {
                                 </td>
                                 <td><strong>{producto.nombre}</strong></td>
                                 <td>{producto.codigo}</td>
-                                <td><span className="badge-tipo">{producto.tipo}</span></td>
+                                <td><span className="badge-tipo">NO CONSUMIBLE</span></td>
                                 <td>
                                   {isSelected && (
                                     <button
