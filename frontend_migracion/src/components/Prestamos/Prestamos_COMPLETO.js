@@ -117,8 +117,8 @@ const Prestamos = () => {
         setPersonalBD(response.data.data);
       }
     } catch (error) {
-      console.error('Error al cargar personal desde BD:', error);
-      alert('❌ Error al cargar personal desde la base de datos');
+      // Silenciar error de conexión
+      setPersonalBD([]);
     } finally {
       setCargandoPersonal(false);
     }
@@ -132,8 +132,8 @@ const Prestamos = () => {
         setProductosBD(response.data.data);
       }
     } catch (error) {
-      console.error('Error al cargar productos desde BD:', error);
-      alert('❌ Error al cargar productos desde la base de datos');
+      // Silenciar error de conexión
+      setProductosBD([]);
     } finally {
       setCargandoProductos(false);
     }
@@ -147,8 +147,8 @@ const Prestamos = () => {
         setHistorialPrestamos(response.data.data);
       }
     } catch (error) {
-      console.error('Error al cargar historial:', error);
-      alert('❌ Error al cargar historial de préstamos');
+      // Silenciar error de conexión
+      setHistorialPrestamos([]);
     } finally {
       setCargandoHistorial(false);
     }
@@ -163,6 +163,11 @@ const Prestamos = () => {
   const [prestamosSeleccionados, setPrestamosSeleccionados] = useState([]);
   const [filtroHistorial, setFiltroHistorial] = useState('');
   const [filtroEstado, setFiltroEstado] = useState('TODOS'); // TODOS, PRESTADO, DEVUELTO
+
+  // Estados para Escaneo Rápido
+  const [modoEscaneoRapido, setModoEscaneoRapido] = useState(false);
+  const [codigoEscaneoRapido, setCodigoEscaneoRapido] = useState('');
+  const [ultimoPersonalEscaneado, setUltimoPersonalEscaneado] = useState(null);
 
   // ============ FUNCIONES PARA NUEVO PRÉSTAMO ============
   const handleAgregarPrestamo = () => {
@@ -234,12 +239,10 @@ const Prestamos = () => {
             nombrePersonal: personal.nombre,
             areaPersonal: personal.area || 'Sin área'
           });
-        } else {
-          console.log('Personal no encontrado con código:', codigo);
         }
       }
     } catch (error) {
-      console.error('Error al buscar personal:', error);
+      // Silenciar error de conexión
     }
   };
 
@@ -264,12 +267,10 @@ const Prestamos = () => {
             nombreProducto: producto.nombre,
             unidadMedida: producto.unidad || 'UND'
           });
-        } else {
-          console.log('Producto no encontrado con código:', codigo);
         }
       }
     } catch (error) {
-      console.error('Error al buscar producto:', error);
+      // Silenciar error de conexión
     }
   };
 
@@ -330,6 +331,63 @@ const Prestamos = () => {
   const handleEliminarPrestamoLista = (index) => {
     const nuevaLista = listaPrestamosPendientes.filter((_, i) => i !== index);
     setListaPrestamosPendientes(nuevaLista);
+  };
+
+  // ============ FUNCIONES PARA ESCANEO RÁPIDO ============
+  
+  const handleEscaneoRapido = async (e) => {
+    if (e.key !== 'Enter') return;
+    
+    const codigo = codigoEscaneoRapido.trim();
+    if (!codigo) return;
+
+    try {
+      // Buscar en productos primero
+      const respProducto = await axios.get('http://127.0.0.1:8000/api/productos-codigo-barras');
+      const producto = respProducto.data.data?.find(p => p.codigo === codigo);
+      
+      if (producto) {
+        if (!ultimoPersonalEscaneado) {
+          alert('⚠️ Escanee primero un código de personal');
+          setCodigoEscaneoRapido('');
+          return;
+        }
+
+        // Agregar a lista
+        const nuevo = {
+          codigoProducto: producto.codigo,
+          nombreProducto: producto.nombre,
+          codigoPersonal: ultimoPersonalEscaneado.codigo,
+          nombrePersonal: ultimoPersonalEscaneado.nombre,
+          cantidad: 1,
+          unidadMedida: producto.unidad || 'UND',
+          condicionInicial: 'OPERATIVO',
+          condicionDescripcion: '',
+          observacion: ''
+        };
+
+        setListaPrestamosPendientes(prev => [...prev, nuevo]);
+        setCodigoEscaneoRapido('');
+        setUltimoPersonalEscaneado(null); // Limpiar para nuevo par
+        return;
+      }
+
+      // Si no es producto, buscar en personal
+      const respPersonal = await axios.get('http://127.0.0.1:8000/api/personal-codigo-barras');
+      const personal = respPersonal.data.data?.find(p => p.codigo === codigo);
+      
+      if (personal) {
+        setUltimoPersonalEscaneado(personal);
+        setCodigoEscaneoRapido('');
+        return;
+      }
+
+      alert(`❌ Código ${codigo} no encontrado`);
+      setCodigoEscaneoRapido('');
+    } catch (error) {
+      // Silenciar errores
+      setCodigoEscaneoRapido('');
+    }
   };
 
   // ============ FUNCIONES PARA HISTORIAL ============
@@ -859,7 +917,53 @@ const Prestamos = () => {
       {/* Contenido según la pestaña activa */}
       {activeTab === 'nuevo' && (
         <div className="prestamo-content">
+          
+          {/* Toggle de Modo */}
+          <div className="toggle-modo-container">
+            <button 
+              className={`btn-modo ${!modoEscaneoRapido ? 'activo' : ''}`}
+              onClick={() => setModoEscaneoRapido(false)}
+            >
+              📝 Registro Manual
+            </button>
+            <button 
+              className={`btn-modo ${modoEscaneoRapido ? 'activo' : ''}`}
+              onClick={() => setModoEscaneoRapido(true)}
+            >
+              ⚡ Escaneo Rápido
+            </button>
+          </div>
+
+          {/* Sección de Escaneo Rápido */}
+          {modoEscaneoRapido && (
+            <div className="escaneo-rapido-section">
+              <h3>⚡ Escaneo Rápido (Personal → Producto)</h3>
+              <div className="escaneo-rapido-container">
+                <div className="escaneo-info">
+                  {ultimoPersonalEscaneado ? (
+                    <div className="personal-escaneado">
+                      <span className="badge-personal">👤 {ultimoPersonalEscaneado.nombre}</span>
+                      <span className="texto-instruccion">→ Ahora escanee el producto</span>
+                    </div>
+                  ) : (
+                    <span className="texto-instruccion">👉 Escanee o pegue el código de personal</span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  className="input-escaneo-rapido"
+                  placeholder="Escanee código aquí y presione Enter"
+                  value={codigoEscaneoRapido}
+                  onChange={(e) => setCodigoEscaneoRapido(e.target.value)}
+                  onKeyPress={handleEscaneoRapido}
+                  autoFocus
+                />
+              </div>
+            </div>
+          )}
+
           {/* Sección de Registro Manual */}
+          {!modoEscaneoRapido && (
           <div className="registro-manual-section">
             <h3>📝 Registro Manual por Código</h3>
             
@@ -1033,6 +1137,7 @@ const Prestamos = () => {
               </button>
             </div>
           </div>
+          )}
 
           {/* Lista de Préstamos Pendientes */}
           <div className="lista-pendientes-section">
