@@ -328,7 +328,22 @@ class ProductoController extends Controller
                 // Obtener tipo_producto de la familia de la subfamilia
                 $subfamilia = \App\Models\Subfamilia::with('familiaNueva')->find($request->id_subfamilia);
                 if ($subfamilia && $subfamilia->familiaNueva) {
-                    $datosProducto['tipo_producto'] = $subfamilia->familiaNueva->tipo_producto_legacy ?? $subfamilia->familiaNueva->prefijo_codigo;
+                    // Intentar usar tipo_producto_legacy si existe
+                    $tipoProducto = $subfamilia->familiaNueva->tipo_producto_legacy ?? $subfamilia->familiaNueva->prefijo_codigo;
+                    
+                    // Verificar si existe en tabla familia antigua
+                    $existeEnFamilia = DB::table('familia')
+                        ->where('tipo_producto', $tipoProducto)
+                        ->exists();
+                    
+                    if ($existeEnFamilia) {
+                        $datosProducto['tipo_producto'] = $tipoProducto;
+                    } else {
+                        // Usar el primero disponible como fallback (HERR es común)
+                        $tipoFallback = DB::table('familia')
+                            ->value('tipo_producto');
+                        $datosProducto['tipo_producto'] = $tipoFallback ?? 'HERR';
+                    }
                 }
             } else {
                 // Sistema antiguo: usar tipo_producto enviado

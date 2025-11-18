@@ -21,7 +21,8 @@ class Producto extends Model
         'descripcion',
         'unidad',
         'consumible',
-        'observacion'
+        'observacion',
+        'id_subfamilia'
     ];
 
     // Relaciones
@@ -33,6 +34,11 @@ class Producto extends Model
     public function familia()
     {
         return $this->belongsTo(Familia::class, 'tipo_producto', 'tipo_producto');
+    }
+
+    public function subfamilia()
+    {
+        return $this->belongsTo(Subfamilia::class, 'id_subfamilia', 'id_subfamilia');
     }
 
     // Scopes
