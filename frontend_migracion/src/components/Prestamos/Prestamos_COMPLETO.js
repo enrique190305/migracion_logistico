@@ -1141,7 +1141,10 @@ const Prestamos = () => {
 
           {/* Lista de Préstamos Pendientes */}
           <div className="lista-pendientes-section">
-            <h3>📋 Lista de Préstamos Pendientes ({listaPrestamosPendientes.length})</h3>
+            <h3>
+              📋 Lista de Préstamos Pendientes
+              <span className="contador-badge">{listaPrestamosPendientes.length}</span>
+            </h3>
             
             <div className="tabla-wrapper">
               <table className="tabla-prestamos">
