@@ -26,57 +26,86 @@ class Subfamilia extends Model
         'fecha_modificacion'
     ];
 
-    // Relación: Una subfamilia pertenece a una familia
-    public function familia()
+    /**
+     * Relación: Una subfamilia pertenece a una familia nueva
+     */
+    public function familiaNueva()
     {
-        return $this->belongsTo(Familia::class, 'id_familia', 'id_familia');
+        return $this->belongsTo(FamiliaNueva::class, 'id_familia', 'id_familia');
     }
 
-    // Relación: Una subfamilia tiene muchos productos
+    /**
+     * Relación: Una subfamilia tiene muchos productos
+     */
     public function productos()
     {
         return $this->hasMany(Producto::class, 'id_subfamilia', 'id_subfamilia');
     }
 
-    // Scope para solo activos
+    /**
+     * Scope para solo activos
+     */
     public function scopeActivo($query)
     {
         return $query->where('estado', 'ACTIVO');
     }
 
-    // Accessor para obtener el código completo (prefijo familia + prefijo sub)
-    public function getCodigoCompletoAttribute()
+    /**
+     * Scope para filtrar por familia
+     */
+    public function scopePorFamilia($query, $idFamilia)
     {
-        return $this->familia->prefijo_codigo . '-' . $this->prefijo_sub;
+        return $query->where('id_familia', $idFamilia);
     }
 
-    // Accessor para obtener cantidad de productos
-    public function getProductosCountAttribute()
+    /**
+     * Accessor para obtener el código completo (prefijo familia + prefijo sub)
+     */
+    public function getCodigoCompletoAttribute()
+    {
+        return $this->familiaNueva->prefijo_codigo . '-' . $this->prefijo_sub;
+    }
+
+    /**
+     * Accessor para obtener cantidad de productos
+     */
+    public function getCantidadProductosAttribute()
     {
         return $this->productos()->count();
     }
 
-    // Método para generar el siguiente código de producto
+    /**
+     * Método para generar el siguiente código de producto
+     */
     public function generarSiguienteCodigoProducto()
     {
         $ultimoProducto = $this->productos()
-            ->orderBy('id_producto', 'desc')
+            ->orderBy('codigo_producto', 'desc')
             ->first();
 
         $ultimoNumero = 0;
         if ($ultimoProducto) {
-            // Extraer el número del código: FAMI-SUB-0001 → 0001
-            $partes = explode('-', $ultimoProducto->codigo_producto);
-            $ultimoNumero = (int) end($partes);
+            // Extraer el número del código: HERR-MANU-0001 → 0001
+            preg_match('/(\d+)$/', $ultimoProducto->codigo_producto, $matches);
+            $ultimoNumero = isset($matches[1]) ? intval($matches[1]) : 0;
         }
 
         $nuevoNumero = $ultimoNumero + 1;
 
         return sprintf(
             '%s-%s-%04d',
-            $this->familia->prefijo_codigo,
+            $this->familiaNueva->prefijo_codigo,
             $this->prefijo_sub,
             $nuevoNumero
         );
+    }
+
+    /**
+     * Método para validar si un código pertenece a esta subfamilia
+     */
+    public function perteneceCodigoProducto($codigoProducto)
+    {
+        $prefijoEsperado = $this->codigo_completo;
+        return strpos($codigoProducto, $prefijoEsperado) === 0;
     }
 }

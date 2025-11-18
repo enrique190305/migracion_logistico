@@ -165,7 +165,7 @@
             color: #1e3a8a;
             font-weight: bold;
             border: 2px solid #1e3a8a;
-        }
+        
         
         .conditions {
             margin-top: 20px;

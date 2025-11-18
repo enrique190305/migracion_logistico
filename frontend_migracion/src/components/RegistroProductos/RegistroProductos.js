@@ -10,6 +10,11 @@ import {
   actualizarProducto,
   eliminarProducto
 } from '../../services/productosAPI';
+import {
+  listarFamiliasNuevas,
+  listarSubfamilias,
+  generarCodigoConSubfamilia
+} from '../../services/familiaAPI';
 
 // ============================================
 // COMPONENTE: Toast Notification
@@ -46,6 +51,13 @@ const RegistroProductos = () => {
   const [estadisticas, setEstadisticas] = useState(null);
   const [toast, setToast] = useState(null);
   
+  // Estados del sistema de subfamilias
+  const [usarSubfamilias, setUsarSubfamilias] = useState(false);
+  const [familiasNuevas, setFamiliasNuevas] = useState([]);
+  const [subfamilias, setSubfamilias] = useState([]);
+  const [subfamiliasDisponibles, setSubfamiliasDisponibles] = useState([]);
+  const [codigoPreview, setCodigoPreview] = useState('');
+  
   // Estados de filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
   const [filtroTipo, setFiltroTipo] = useState('todos');
@@ -75,7 +87,9 @@ const RegistroProductos = () => {
     codigo_producto: '',
     unidad: '',
     consumible: 'NO',
-    observacion: ''
+    observacion: '',
+    id_familia_nueva: '',
+    id_subfamilia: ''
   });
 
   const showToast = (message, type = 'info') => {
@@ -90,6 +104,25 @@ const RegistroProductos = () => {
   useEffect(() => {
     cargarDatosIniciales();
   }, []);
+
+  // Cargar subfamilias cuando cambia la familia seleccionada
+  useEffect(() => {
+    if (usarSubfamilias && formulario.id_familia_nueva) {
+      cargarSubfamiliasDeFamilia(formulario.id_familia_nueva);
+    } else {
+      setSubfamiliasDisponibles([]);
+      setFormulario(prev => ({ ...prev, id_subfamilia: '' }));
+    }
+  }, [usarSubfamilias, formulario.id_familia_nueva]);
+
+  // Generar preview del código cuando cambien los parámetros
+  useEffect(() => {
+    if (usarSubfamilias && formulario.id_subfamilia) {
+      generarPreviewCodigo();
+    } else if (!usarSubfamilias && formulario.tipo_producto) {
+      setCodigoPreview('');
+    }
+  }, [usarSubfamilias, formulario.id_subfamilia]);
 
   // Aplicar filtros cuando cambien (con debounce para search)
   useEffect(() => {
@@ -112,7 +145,9 @@ const RegistroProductos = () => {
         cargarProductos(),
         cargarFamilias(),
         cargarUnidades(),
-        cargarEstadisticas()
+        cargarEstadisticas(),
+        cargarFamiliasNuevas(),
+        cargarTodasSubfamilias()
       ]);
     } catch (err) {
       console.error('Error al cargar datos iniciales:', err);
@@ -186,13 +221,101 @@ const RegistroProductos = () => {
   };
 
   /**
+   * Cargar familias nuevas (sistema con subfamilias)
+   */
+  const cargarFamiliasNuevas = async () => {
+    try {
+      const data = await listarFamiliasNuevas();
+      console.log('📁 Familias nuevas cargadas:', data);
+      setFamiliasNuevas(data);
+    } catch (err) {
+      console.error('Error al cargar familias nuevas:', err);
+      setFamiliasNuevas([]);
+    }
+  };
+
+  /**
+   * Cargar todas las subfamilias
+   */
+  const cargarTodasSubfamilias = async () => {
+    try {
+      const data = await listarSubfamilias();
+      console.log('🏷️ Subfamilias cargadas:', data);
+      setSubfamilias(data);
+    } catch (err) {
+      console.error('Error al cargar subfamilias:', err);
+      setSubfamilias([]);
+    }
+  };
+
+  /**
+   * Cargar subfamilias de una familia específica
+   */
+  const cargarSubfamiliasDeFamilia = async (idFamilia) => {
+    try {
+      const subfamiliasFiltered = subfamilias.filter(
+        sub => sub.id_familia === parseInt(idFamilia)
+      );
+      console.log(`🏷️ Subfamilias de familia ${idFamilia}:`, subfamiliasFiltered);
+      setSubfamiliasDisponibles(subfamiliasFiltered);
+    } catch (err) {
+      console.error('Error al filtrar subfamilias:', err);
+      setSubfamiliasDisponibles([]);
+    }
+  };
+
+  /**
+   * Generar preview del código con subfamilia
+   */
+  const generarPreviewCodigo = async () => {
+    if (!formulario.id_subfamilia) {
+      setCodigoPreview('');
+      return;
+    }
+
+    try {
+      const subfamilia = subfamiliasDisponibles.find(
+        sub => sub.id_subfamilia === parseInt(formulario.id_subfamilia)
+      );
+      const familia = familiasNuevas.find(
+        fam => fam.id_familia === subfamilia?.id_familia
+      );
+
+      if (subfamilia && familia) {
+        const preview = `${familia.prefijo_codigo}-${subfamilia.prefijo_sub}-XXXX`;
+        setCodigoPreview(preview);
+      } else {
+        setCodigoPreview('');
+      }
+    } catch (err) {
+      console.error('Error al generar preview:', err);
+      setCodigoPreview('');
+    }
+  };
+
+  /**
    * Generar código automático
    */
   const handleGenerarCodigo = async () => {
     try {
-      const codigo = await generarCodigo(formulario.tipo_producto);
-      console.log('🔢 Código generado:', codigo);
-      setFormulario({ ...formulario, codigo_producto: codigo });
+      let codigoGenerado;
+      
+      if (usarSubfamilias && formulario.id_subfamilia) {
+        // Sistema nuevo: generar con subfamilia
+        codigoGenerado = await generarCodigoConSubfamilia(formulario.id_subfamilia);
+        console.log('🔢 Código con subfamilia generado:', codigoGenerado);
+      } else if (!usarSubfamilias && formulario.tipo_producto) {
+        // Sistema antiguo: generar con tipo de producto
+        const resultado = await generarCodigo(formulario.tipo_producto);
+        codigoGenerado = resultado.codigo; // Extraer solo el código del objeto
+        console.log('🔢 Código clásico generado:', codigoGenerado);
+      } else {
+        showToast('Debe seleccionar ' + (usarSubfamilias ? 'una subfamilia' : 'un tipo de producto'), 'warning');
+        return;
+      }
+      
+      setFormulario({ ...formulario, codigo_producto: codigoGenerado });
+      showToast('Código generado exitosamente', 'success');
     } catch (err) {
       console.error('Error al generar código:', err);
       showToast('Error al generar código automático', 'error');
@@ -211,14 +334,40 @@ const RegistroProductos = () => {
   };
 
   /**
+   * Manejar cambio de modo (subfamilias vs clásico)
+   */
+  const handleToggleSubfamilias = (e) => {
+    const activar = e.target.checked;
+    setUsarSubfamilias(activar);
+    
+    // Limpiar campos relacionados al cambiar de modo
+    setFormulario({
+      ...formulario,
+      tipo_producto: '',
+      codigo_producto: '',
+      id_familia_nueva: '',
+      id_subfamilia: ''
+    });
+    setCodigoPreview('');
+  };
+
+  /**
    * Registrar o actualizar producto
    */
   const handleRegistrar = async () => {
-    // Validaciones
-    if (!formulario.tipo_producto || !formulario.descripcion || !formulario.codigo_producto || !formulario.unidad) {
-      setError('Por favor complete todos los campos obligatorios');
-      setTimeout(() => setError(null), 3000);
-      return;
+    // Validaciones según el modo
+    if (usarSubfamilias) {
+      if (!formulario.id_subfamilia || !formulario.descripcion || !formulario.codigo_producto || !formulario.unidad) {
+        setError('Por favor complete todos los campos obligatorios (subfamilia, descripción, código, unidad)');
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
+    } else {
+      if (!formulario.tipo_producto || !formulario.descripcion || !formulario.codigo_producto || !formulario.unidad) {
+        setError('Por favor complete todos los campos obligatorios (tipo producto, descripción, código, unidad)');
+        setTimeout(() => setError(null), 3000);
+        return;
+      }
     }
 
     setLoadingModal(true);
@@ -244,14 +393,30 @@ const RegistroProductos = () => {
         });
       } else {
         // Crear nuevo producto
-        const result = await crearProducto({
+        const productoData = {
           codigo_producto: formulario.codigo_producto,
-          tipo_producto: formulario.tipo_producto,
           descripcion: formulario.descripcion,
           unidad: formulario.unidad,
           consumible: formulario.consumible,
           observacion: formulario.observacion
-        });
+        };
+
+        // Agregar tipo_producto o id_subfamilia según el modo
+        if (usarSubfamilias && formulario.id_subfamilia) {
+          // Sistema nuevo: solo enviar id_subfamilia
+          productoData.id_subfamilia = parseInt(formulario.id_subfamilia);
+          console.log('📦 Creando producto con subfamilia:', productoData);
+        } else if (!usarSubfamilias && formulario.tipo_producto) {
+          // Sistema antiguo: enviar tipo_producto
+          productoData.tipo_producto = formulario.tipo_producto;
+          console.log('📦 Creando producto clásico:', productoData);
+        } else {
+          showToast('Error: Faltan datos requeridos para crear el producto', 'error');
+          setLoadingModal(false);
+          return;
+        }
+        
+        const result = await crearProducto(productoData);
         
         console.log('✅ Producto creado:', result);
         
@@ -259,7 +424,7 @@ const RegistroProductos = () => {
         setModalExito({
           mostrar: true,
           titulo: '✅ Producto Registrado Exitosamente',
-          mensaje: `Código: ${formulario.codigo_producto}\nDescripción: ${formulario.descripcion}`
+          mensaje: `Código: ${formulario.codigo_producto}\nDescripción: ${formulario.descripcion}\nSistema: ${usarSubfamilias ? 'Subfamilias' : 'Clásico'}`
         });
       }
       
@@ -289,10 +454,14 @@ const RegistroProductos = () => {
       codigo_producto: '',
       unidad: '',
       consumible: 'NO',
-      observacion: ''
+      observacion: '',
+      id_familia_nueva: '',
+      id_subfamilia: ''
     });
     setModoEdicion(false);
     setProductoEditando(null);
+    setCodigoPreview('');
+    setSubfamiliasDisponibles([]);
   };
 
   /**
@@ -640,23 +809,136 @@ const RegistroProductos = () => {
             </div>
             
             <div className="modal-body-productos">
-              <div className="form-group-productos">
-                <label>📁 Tipo de Producto: *</label>
-                <select
-                  name="tipo_producto"
-                  value={formulario.tipo_producto}
-                  onChange={handleInputChange}
-                  required
-                  disabled={loadingModal}
-                >
-                  <option value="">Seleccione un tipo...</option>
-                  {familias.map((familia) => (
-                    <option key={familia.tipo_producto} value={familia.tipo_producto}>
-                      {familia.descripcion}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* Toggle Sistema de Subfamilias */}
+              {!modoEdicion && (
+                <div className="form-group-productos" style={{ 
+                  padding: '15px', 
+                  backgroundColor: '#f0f9ff', 
+                  borderRadius: '8px',
+                  border: '2px solid #3b82f6',
+                  marginBottom: '20px'
+                }}>
+                  <label style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={usarSubfamilias}
+                      onChange={handleToggleSubfamilias}
+                      disabled={loadingModal}
+                      style={{ 
+                        marginRight: '10px', 
+                        width: '18px', 
+                        height: '18px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <span>🏷️ ¿Usar sistema de SUBFAMILIAS? (Códigos alfanuméricos)</span>
+                  </label>
+                  <div style={{ 
+                    marginTop: '8px', 
+                    fontSize: '12px', 
+                    color: '#475569',
+                    marginLeft: '28px'
+                  }}>
+                    {usarSubfamilias 
+                      ? '✅ Sistema activado: Los códigos tendrán formato HERR-MANU-0001' 
+                      : '📌 Sistema clásico: Los códigos tendrán formato HERR-001'}
+                  </div>
+                </div>
+              )}
+
+              {/* Selector de Familia/Subfamilia o Tipo de Producto */}
+              {usarSubfamilias ? (
+                <>
+                  {/* Sistema Nuevo: Familia + Subfamilia */}
+                  <div className="form-group-productos">
+                    <label>📁 Familia Principal: *</label>
+                    <select
+                      name="id_familia_nueva"
+                      value={formulario.id_familia_nueva}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loadingModal}
+                    >
+                      <option value="">Seleccione una familia...</option>
+                      {familiasNuevas.map((familia) => (
+                        <option key={familia.id_familia} value={familia.id_familia}>
+                          {familia.nombre_familia} ({familia.prefijo_codigo})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group-productos">
+                    <label>🏷️ Subfamilia: *</label>
+                    <select
+                      name="id_subfamilia"
+                      value={formulario.id_subfamilia}
+                      onChange={handleInputChange}
+                      required
+                      disabled={loadingModal || !formulario.id_familia_nueva}
+                    >
+                      <option value="">
+                        {formulario.id_familia_nueva 
+                          ? 'Seleccione una subfamilia...' 
+                          : 'Primero seleccione una familia'}
+                      </option>
+                      {subfamiliasDisponibles.map((subfamilia) => (
+                        <option key={subfamilia.id_subfamilia} value={subfamilia.id_subfamilia}>
+                          {subfamilia.nombre_subfamilia} ({subfamilia.prefijo_sub})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Preview del código */}
+                  {codigoPreview && (
+                    <div style={{
+                      padding: '12px',
+                      backgroundColor: '#ecfdf5',
+                      border: '2px solid #10b981',
+                      borderRadius: '8px',
+                      marginBottom: '15px'
+                    }}>
+                      <div style={{ fontSize: '12px', color: '#059669', marginBottom: '5px' }}>
+                        📋 Preview del código:
+                      </div>
+                      <div style={{ 
+                        fontSize: '16px', 
+                        fontWeight: 'bold', 
+                        color: '#047857',
+                        fontFamily: 'monospace'
+                      }}>
+                        {codigoPreview}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                /* Sistema Antiguo: Tipo de Producto */
+                <div className="form-group-productos">
+                  <label>📁 Tipo de Producto: *</label>
+                  <select
+                    name="tipo_producto"
+                    value={formulario.tipo_producto}
+                    onChange={handleInputChange}
+                    required
+                    disabled={loadingModal}
+                  >
+                    <option value="">Seleccione un tipo...</option>
+                    {familias.map((familia) => (
+                      <option key={familia.tipo_producto} value={familia.tipo_producto}>
+                        {familia.descripcion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="form-group-productos">
                 <label>📝 Descripción: *</label>

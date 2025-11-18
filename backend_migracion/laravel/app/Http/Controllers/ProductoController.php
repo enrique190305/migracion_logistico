@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use App\Models\Familia;
+use App\Models\Subfamilia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -168,19 +169,68 @@ class ProductoController extends Controller
     /**
      * Generar siguiente código de producto
      * GET /api/productos/generar-codigo
+     * Soporta AMBOS sistemas: antiguo (sin subfamilia) y nuevo (con subfamilia)
      */
     public function generarCodigo(Request $request)
     {
         try {
             $tipoProducto = $request->get('tipo_producto', '');
+            $idSubfamilia = $request->get('id_subfamilia', null);
             
-            // Obtener el último código registrado
+            // SISTEMA NUEVO: Con subfamilia (genera HERR-MANU-0001)
+            if ($idSubfamilia) {
+                $subfamilia = Subfamilia::with('familiaNueva')->find($idSubfamilia);
+                
+                if (!$subfamilia) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Subfamilia no encontrada'
+                    ], 404);
+                }
+                
+                // Generar código con formato: FAMILIA-SUBFAMILIA-####
+                $nuevoCodigo = $subfamilia->generarSiguienteCodigoProducto();
+                
+                return response()->json([
+                    'success' => true,
+                    'codigo' => $nuevoCodigo,
+                    'sistema' => 'NUEVO',
+                    'familia' => $subfamilia->familiaNueva->nombre_familia,
+                    'subfamilia' => $subfamilia->nombre_subfamilia
+                ], 200);
+            }
+            
+            // SISTEMA ANTIGUO: Sin subfamilia (genera HERR-001, MATE-002, etc.)
+            if ($tipoProducto) {
+                // Obtener el último producto de este tipo SIN subfamilia
+                $ultimoProducto = Producto::where('tipo_producto', $tipoProducto)
+                    ->whereNull('id_subfamilia')
+                    ->orderBy('codigo_producto', 'desc')
+                    ->first();
+                
+                $numero = 1;
+                if ($ultimoProducto) {
+                    // Extraer número del código: HERR-001 → 001
+                    preg_match('/(\d+)$/', $ultimoProducto->codigo_producto, $matches);
+                    $numero = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
+                }
+                
+                // Formato: TIPO-###
+                $nuevoCodigo = $tipoProducto . '-' . str_pad($numero, 3, '0', STR_PAD_LEFT);
+                
+                return response()->json([
+                    'success' => true,
+                    'codigo' => $nuevoCodigo,
+                    'sistema' => 'ANTIGUO'
+                ], 200);
+            }
+            
+            // Si no se especifica nada, generar código genérico
             $ultimoProducto = Producto::orderBy('codigo_producto', 'desc')->first();
             
             if (!$ultimoProducto) {
                 $nuevoCodigo = 'PROD-001';
             } else {
-                // Extraer el número del último código
                 preg_match('/(\d+)$/', $ultimoProducto->codigo_producto, $matches);
                 $numero = isset($matches[1]) ? intval($matches[1]) + 1 : 1;
                 $nuevoCodigo = 'PROD-' . str_pad($numero, 3, '0', STR_PAD_LEFT);
@@ -188,7 +238,8 @@ class ProductoController extends Controller
 
             return response()->json([
                 'success' => true,
-                'codigo' => $nuevoCodigo
+                'codigo' => $nuevoCodigo,
+                'sistema' => 'GENERICO'
             ], 200);
 
         } catch (Exception $e) {
@@ -227,38 +278,64 @@ class ProductoController extends Controller
     /**
      * Crear un nuevo producto
      * POST /api/productos
+     * Soporta AMBOS sistemas: con o sin subfamilia
      */
     public function store(Request $request)
     {
-        // Validación
-        $request->validate([
-            'codigo_producto' => 'required|string|max:20|unique:producto,codigo_producto',
-            'tipo_producto' => 'required|string|max:20|exists:familia,tipo_producto',
+        // Validación: tipo_producto es requerido solo si NO hay subfamilia
+        $rules = [
+            'codigo_producto' => 'required|string|max:50|unique:producto,codigo_producto',
             'descripcion' => 'required|string|max:255',
             'unidad' => 'required|string|max:10',
             'consumible' => 'nullable|in:SI,NO',
-            'observacion' => 'nullable|string'
-        ], [
+            'observacion' => 'nullable|string',
+            'id_subfamilia' => 'nullable|exists:subfamilia,id_subfamilia'
+        ];
+
+        // Si se usa subfamilia, tipo_producto es opcional; si no, es requerido
+        if ($request->has('id_subfamilia') && $request->id_subfamilia) {
+            $rules['tipo_producto'] = 'nullable|string|max:20';
+        } else {
+            $rules['tipo_producto'] = 'required|string|max:20|exists:familia,tipo_producto';
+        }
+
+        $request->validate($rules, [
             'codigo_producto.required' => 'El código del producto es obligatorio',
             'codigo_producto.unique' => 'El código del producto ya existe',
             'tipo_producto.required' => 'El tipo de producto es obligatorio',
             'tipo_producto.exists' => 'El tipo de producto no es válido',
             'descripcion.required' => 'La descripción es obligatoria',
             'unidad.required' => 'La unidad de medida es obligatoria',
-            'consumible.in' => 'El valor de consumible debe ser SI o NO'
+            'consumible.in' => 'El valor de consumible debe ser SI o NO',
+            'id_subfamilia.exists' => 'La subfamilia seleccionada no existe'
         ]);
 
         DB::beginTransaction();
 
         try {
-            $producto = Producto::create([
+            // Crear producto con o sin subfamilia
+            $datosProducto = [
                 'codigo_producto' => strtoupper(trim($request->codigo_producto)),
-                'tipo_producto' => strtoupper(trim($request->tipo_producto)),
                 'descripcion' => trim($request->descripcion),
                 'unidad' => strtoupper(trim($request->unidad)),
                 'consumible' => $request->consumible ?? 'NO',
                 'observacion' => $request->observacion ? trim($request->observacion) : null
-            ]);
+            ];
+            
+            // Agregar subfamilia si se especifica (SISTEMA NUEVO)
+            if ($request->has('id_subfamilia') && $request->id_subfamilia) {
+                $datosProducto['id_subfamilia'] = $request->id_subfamilia;
+                // Obtener tipo_producto de la familia de la subfamilia
+                $subfamilia = \App\Models\Subfamilia::with('familiaNueva')->find($request->id_subfamilia);
+                if ($subfamilia && $subfamilia->familiaNueva) {
+                    $datosProducto['tipo_producto'] = $subfamilia->familiaNueva->tipo_producto_legacy ?? $subfamilia->familiaNueva->prefijo_codigo;
+                }
+            } else {
+                // Sistema antiguo: usar tipo_producto enviado
+                $datosProducto['tipo_producto'] = strtoupper(trim($request->tipo_producto));
+            }
+            
+            $producto = Producto::create($datosProducto);
 
             DB::commit();
 
@@ -272,7 +349,9 @@ class ProductoController extends Controller
                     'descripcion' => $producto->descripcion,
                     'unidad' => $producto->unidad,
                     'consumible' => $producto->consumible,
-                    'observacion' => $producto->observacion
+                    'observacion' => $producto->observacion,
+                    'id_subfamilia' => $producto->id_subfamilia,
+                    'sistema' => $producto->id_subfamilia ? 'NUEVO' : 'ANTIGUO'
                 ]
             ], 201);
 

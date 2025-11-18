@@ -201,14 +201,31 @@ export const obtenerEstadisticas = async () => {
 
 /**
  * Generar siguiente código de producto
+ * Soporta AMBOS sistemas: antiguo (sin subfamilia) y nuevo (con subfamilia)
  * @param {string} tipo_producto - Tipo de producto (opcional)
- * @returns {Promise<string>} Código generado
+ * @param {number} id_subfamilia - ID de subfamilia (opcional, para sistema nuevo)
+ * @returns {Promise<Object>} {codigo, sistema, familia, subfamilia}
  */
-export const generarCodigo = async (tipo_producto = '') => {
+export const generarCodigo = async (tipo_producto = '', id_subfamilia = null) => {
   try {
-    const params = tipo_producto ? `?tipo_producto=${tipo_producto}` : '';
+    let params = '';
+    
+    // Sistema nuevo: con subfamilia
+    if (id_subfamilia) {
+      params = `?id_subfamilia=${id_subfamilia}`;
+    } 
+    // Sistema antiguo: con tipo_producto
+    else if (tipo_producto) {
+      params = `?tipo_producto=${tipo_producto}`;
+    }
+    
     const result = await fetchAPI(`/generar-codigo${params}`);
-    return result.codigo || '';
+    return {
+      codigo: result.codigo || '',
+      sistema: result.sistema || 'ANTIGUO',
+      familia: result.familia || '',
+      subfamilia: result.subfamilia || ''
+    };
   } catch (error) {
     console.error('Error al generar código:', error);
     throw error;

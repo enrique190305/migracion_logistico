@@ -398,6 +398,26 @@
   font-family: inherit;
 }
 
+.form-group-modal-familia textarea,
+.form-group-modal-familia select {
+  width: 100%;
+  padding: 13px 16px;
+  border: 2px solid #d5d8dc;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.form-group-modal-familia input:focus,
+.form-group-modal-familia textarea:focus,
+.form-group-modal-familia select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
+}
+
 .form-group-modal-familia input:focus {
   outline: none;
   border-color: #3498db;
@@ -711,6 +731,36 @@
   box-shadow: 0 4px 8px rgba(255, 193, 7, 0.4);
 }
 
+/* BOTÓN VER PRODUCTOS */
+.btn-ver-productos {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-ver-productos:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.btn-ver-productos:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .registro-familia-container-new {
@@ -782,4 +832,34 @@
 
 .modal-content-familia::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+}
+
+/* BOTÓN VER PRODUCTOS */
+.btn-ver-productos {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-ver-productos:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+}
+
+.btn-ver-productos:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
 }

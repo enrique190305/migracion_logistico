@@ -20,6 +20,7 @@ use App\Http\Controllers\BodegaController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\PersonalController;
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\FamiliaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -188,6 +189,33 @@ Route::prefix('kardex')->group(function () {
     
     // Stock actual de un producto
     Route::get('/stock/{codigo}/{proyecto?}', [KardexController::class, 'getStockProducto']);
+});
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - FAMILIAS NUEVAS Y SUBFAMILIAS (SISTEMA DUAL)
+|--------------------------------------------------------------------------
+*/
+
+Route::prefix('familias-nuevas')->group(function () {
+    // CRUD Familias Nuevas
+    Route::get('/', [FamiliaController::class, 'index']);
+    Route::post('/', [FamiliaController::class, 'store']);
+    Route::get('/{id}', [FamiliaController::class, 'show']);
+    Route::put('/{id}', [FamiliaController::class, 'update']);
+});
+
+Route::prefix('subfamilias')->group(function () {
+    // CRUD Subfamilias
+    Route::get('/', [FamiliaController::class, 'indexSubfamilias']);
+    Route::post('/', [FamiliaController::class, 'storeSubfamilia']);
+    Route::put('/{id}', [FamiliaController::class, 'updateSubfamilia']);
+    
+    // Generar código de producto para subfamilia
+    Route::get('/{id}/generar-codigo', [FamiliaController::class, 'generarCodigoProducto']);
+    
+    // Obtener productos de una subfamilia
+    Route::get('/{id}/productos', [FamiliaController::class, 'productosSubfamilia']);
 });
 
 /*

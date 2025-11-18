@@ -1,5 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './RegistroFamilia.css';
+import { 
+  listarFamiliasNuevas, 
+  crearFamiliaNueva, 
+  actualizarFamiliaNueva,
+  listarSubfamilias,
+  crearSubfamilia,
+  actualizarSubfamilia,
+  obtenerProductosSubfamilia
+} from '../../services/familiaAPI';
 
 // ============================================
 // COMPONENTE: Toast Notification
@@ -58,44 +67,57 @@ const ConfirmModal = ({ title, message, onConfirm, onCancel, confirmText = 'Conf
 };
 
 const RegistroFamilia = () => {
-  const [familias, setFamilias] = useState([
-    {
-      id: 1,
-      tipoFamilia: 'HERRAMIENTAS',
-      equivalencia: 'HERR',
-      fechaCreacion: '21/10/2025'
-    },
-    {
-      id: 2,
-      tipoFamilia: 'MATERIALES',
-      equivalencia: 'MATE',
-      fechaCreacion: '21/10/2025'
-    },
-    {
-      id: 3,
-      tipoFamilia: 'EQUIPOS',
-      equivalencia: 'EQUI',
-      fechaCreacion: '21/10/2025'
-    },
-    {
-      id: 4,
-      tipoFamilia: 'SUMINISTROS',
-      equivalencia: 'SUMI',
-      fechaCreacion: '21/10/2025'
-    },
-    {
-      id: 5,
-      tipoFamilia: 'ACTIVOS FIJOS',
-      equivalencia: 'ACFI',
-      fechaCreacion: '21/10/2025'
-    }
-  ]);
-
+  // Estados principales
+  const [familias, setFamilias] = useState([]);
+  const [subfamilias, setSubfamilias] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [vistaActual, setVistaActual] = useState('familias'); // 'familias' o 'subfamilias'
+  
+  // Estados de modales y UI
   const [familiaSeleccionada, setFamiliaSeleccionada] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [modalSubfamilia, setModalSubfamilia] = useState(false);
+  const [modalProductos, setModalProductos] = useState(false);
+  const [productosSubfamilia, setProductosSubfamilia] = useState([]);
+  const [subfamiliaActual, setSubfamiliaActual] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [toast, setToast] = useState(null);
   const [confirmModal, setConfirmModal] = useState(null);
+
+  // Formularios
+  const [formulario, setFormulario] = useState({
+    nombre_familia: '',
+    prefijo_codigo: '',
+    descripcion: ''
+  });
+
+  const [formularioSubfamilia, setFormularioSubfamilia] = useState({
+    id_familia: '',
+    nombre_subfamilia: '',
+    prefijo_sub: '',
+    descripcion: ''
+  });
+
+  // Cargar datos al inicio
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  const cargarDatos = async () => {
+    setLoading(true);
+    try {
+      const [dataFamilias, dataSubfamilias] = await Promise.all([
+        listarFamiliasNuevas(),
+        listarSubfamilias()
+      ]);
+      setFamilias(dataFamilias);
+      setSubfamilias(dataSubfamilias);
+    } catch (error) {
+      showToast('Error al cargar datos: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -105,24 +127,12 @@ const RegistroFamilia = () => {
     setToast(null);
   };
 
-  const [formulario, setFormulario] = useState({
-    tipoFamilia: '',
-    equivalencia: ''
-  });
-
+  // Handlers para Familias
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormulario({
       ...formulario,
-      [name]: value
-    });
-  };
-
-  const handleFamiliaClick = (familia) => {
-    setFamiliaSeleccionada(familia);
-    setFormulario({
-      tipoFamilia: familia.tipoFamilia,
-      equivalencia: familia.equivalencia
+      [name]: value.toUpperCase()
     });
   };
 
@@ -130,35 +140,139 @@ const RegistroFamilia = () => {
     setModalAbierto(true);
     setFamiliaSeleccionada(null);
     setFormulario({
-      tipoFamilia: '',
-      equivalencia: ''
+      nombre_familia: '',
+      prefijo_codigo: '',
+      descripcion: ''
     });
   };
 
   const handleCerrarModal = () => {
     setModalAbierto(false);
+    setFamiliaSeleccionada(null);
     setFormulario({
-      tipoFamilia: '',
-      equivalencia: ''
+      nombre_familia: '',
+      prefijo_codigo: '',
+      descripcion: ''
     });
   };
 
-  const handleGuardar = () => {
-    if (!formulario.tipoFamilia || !formulario.equivalencia) {
+  const handleGuardarFamilia = async () => {
+    if (!formulario.nombre_familia || !formulario.prefijo_codigo) {
+      showToast('Por favor complete los campos obligatorios', 'warning');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (familiaSeleccionada) {
+        await actualizarFamiliaNueva(familiaSeleccionada.id_familia, formulario);
+        showToast('Familia actualizada exitosamente', 'success');
+      } else {
+        await crearFamiliaNueva(formulario);
+        showToast('Familia creada exitosamente', 'success');
+      }
+      await cargarDatos();
+      handleCerrarModal();
+    } catch (error) {
+      showToast('Error: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditarFamilia = (familia) => {
+    setFamiliaSeleccionada(familia);
+    setFormulario({
+      nombre_familia: familia.nombre_familia,
+      prefijo_codigo: familia.prefijo_codigo,
+      descripcion: familia.descripcion || ''
+    });
+    setModalAbierto(true);
+  };
+
+  // Handlers para Subfamilias
+  const handleInputChangeSubfamilia = (e) => {
+    const { name, value } = e.target;
+    setFormularioSubfamilia({
+      ...formularioSubfamilia,
+      [name]: name === 'prefijo_sub' ? value.toUpperCase() : value
+    });
+  };
+
+  const handleNuevaSubfamilia = () => {
+    if (familias.length === 0) {
+      showToast('Primero debe crear al menos una familia', 'warning');
+      return;
+    }
+    setModalSubfamilia(true);
+    setFormularioSubfamilia({
+      id_familia: familias[0]?.id_familia || '',
+      nombre_subfamilia: '',
+      prefijo_sub: '',
+      descripcion: ''
+    });
+  };
+
+  const handleCerrarModalSubfamilia = () => {
+    setModalSubfamilia(false);
+    setFormularioSubfamilia({
+      id_familia: '',
+      nombre_subfamilia: '',
+      prefijo_sub: '',
+      descripcion: ''
+    });
+  };
+
+  const handleGuardarSubfamilia = async () => {
+    if (!formularioSubfamilia.id_familia || !formularioSubfamilia.nombre_subfamilia || !formularioSubfamilia.prefijo_sub) {
       showToast('Por favor complete todos los campos obligatorios', 'warning');
       return;
     }
 
-    const nuevaFamilia = {
-      id: familias.length + 1,
-      tipoFamilia: formulario.tipoFamilia.toUpperCase(),
-      equivalencia: formulario.equivalencia.toUpperCase(),
-      fechaCreacion: new Date().toLocaleDateString('es-ES')
-    };
+    setLoading(true);
+    try {
+      await crearSubfamilia(formularioSubfamilia);
+      showToast('Subfamilia creada exitosamente', 'success');
+      await cargarDatos();
+      handleCerrarModalSubfamilia();
+    } catch (error) {
+      showToast('Error: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setFamilias([...familias, nuevaFamilia]);
-    showToast(`Familia creada correctamente\n\nTipo: ${nuevaFamilia.tipoFamilia}\nEquivalencia: ${nuevaFamilia.equivalencia}`, 'success');
-    handleCerrarModal();
+  // Filtros
+  const filteredFamilias = familias.filter(fam =>
+    fam.nombre_familia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    fam.prefijo_codigo.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredSubfamilias = subfamilias.filter(sub =>
+    sub.nombre_subfamilia.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sub.prefijo_sub.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sub.familia?.nombre_familia?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Ver productos de una subfamilia
+  const handleVerProductos = async (subfamilia) => {
+    setLoading(true);
+    setSubfamiliaActual(subfamilia);
+    try {
+      const response = await obtenerProductosSubfamilia(subfamilia.id_subfamilia);
+      setProductosSubfamilia(response.productos || []);
+      setModalProductos(true);
+    } catch (error) {
+      showToast('Error al cargar productos: ' + error.message, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCerrarModalProductos = () => {
+    setModalProductos(false);
+    setProductosSubfamilia([]);
+    setSubfamiliaActual(null);
   };
 
   const handleEliminar = (id) => {
@@ -179,153 +293,229 @@ const RegistroFamilia = () => {
     });
   };
 
-  const handleEditar = (familia) => {
-    setFamiliaSeleccionada(familia);
-    setFormulario({
-      tipoFamilia: familia.tipoFamilia,
-      equivalencia: familia.equivalencia
-    });
-    setModalAbierto(true);
-  };
-
-  const handleActualizar = () => {
-    if (!formulario.tipoFamilia || !formulario.equivalencia) {
-      showToast('Por favor complete todos los campos obligatorios', 'warning');
-      return;
-    }
-
-    setFamilias(familias.map(fam => 
-      fam.id === familiaSeleccionada.id 
-        ? { ...fam, tipoFamilia: formulario.tipoFamilia.toUpperCase(), equivalencia: formulario.equivalencia.toUpperCase() }
-        : fam
-    ));
-
-    showToast(`Familia actualizada correctamente\n\nTipo: ${formulario.tipoFamilia}\nEquivalencia: ${formulario.equivalencia}`, 'success');
-    handleCerrarModal();
-  };
-
-  const filteredFamilias = familias.filter(fam =>
-    fam.tipoFamilia.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fam.equivalencia.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Colores para las categorías
-  const getCategoriaColor = (tipo) => {
+  const getCategoriaColor = (prefijo) => {
     const colores = {
-      'HERRAMIENTAS': '#f39c12',
-      'MATERIALES': '#3498db',
-      'EQUIPOS': '#2ecc71',
-      'SUMINISTROS': '#e74c3c',
-      'ACTIVOS FIJOS': '#9b59b6'
+      'HERR': '#f39c12',
+      'MATE': '#3498db',
+      'EQUI': '#2ecc71',
+      'SUMI': '#e74c3c',
+      'ACFI': '#9b59b6'
     };
-    return colores[tipo] || '#95a5a6';
+    return colores[prefijo] || '#95a5a6';
   };
 
   return (
     <div className="registro-familia-container-new">
-      {/* Header */}
+      {/* Toast Notifications */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
+      
+      {/* Confirm Modal */}
+      {confirmModal && (
+        <ConfirmModal
+          title={confirmModal.title}
+          message={confirmModal.message}
+          type={confirmModal.type}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={confirmModal.onCancel}
+          confirmText={confirmModal.confirmText}
+          cancelText={confirmModal.cancelText}
+        />
+      )}
+
+      {/* Header con tabs */}
       <div className="registro-familia-header-new">
         <div className="header-left-familia">
           <span className="header-icon-familia-new">📁</span>
           <div>
-            <h1>REGISTRO DE FAMILIA</h1>
-            <p>Gestione las familias de productos del sistema</p>
+            <h1>GESTIÓN DE FAMILIAS Y SUBFAMILIAS</h1>
+            <p>Sistema de códigos alfanuméricos para productos</p>
           </div>
         </div>
-        <button className="btn-nueva-familia-new" onClick={handleNuevaFamilia}>
-          <span>➕</span> NUEVA FAMILIA
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            className={vistaActual === 'familias' ? "btn-nueva-familia-new" : "btn-nueva-familia-new btn-secondary"}
+            onClick={() => setVistaActual('familias')}
+          >
+            📁 Familias ({familias.length})
+          </button>
+          <button 
+            className={vistaActual === 'subfamilias' ? "btn-nueva-familia-new" : "btn-nueva-familia-new btn-secondary"}
+            onClick={() => setVistaActual('subfamilias')}
+          >
+            📂 Subfamilias ({subfamilias.length})
+          </button>
+        </div>
       </div>
 
-      {/* Buscador */}
-      <div className="search-familia-new">
-        <input
-          type="text"
-          placeholder="🔍 Buscar por tipo de familia o equivalencia..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+      {/* Buscador y botón crear */}
+      <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+        <div className="search-familia-new" style={{ flex: 1 }}>
+          <input
+            type="text"
+            placeholder={`🔍 Buscar ${vistaActual}...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        {vistaActual === 'familias' ? (
+          <button className="btn-nueva-familia-new" onClick={handleNuevaFamilia} disabled={loading}>
+            <span>➕</span> NUEVA FAMILIA
+          </button>
+        ) : (
+          <button className="btn-nueva-familia-new" onClick={handleNuevaSubfamilia} disabled={loading}>
+            <span>➕</span> NUEVA SUBFAMILIA
+          </button>
+        )}
       </div>
 
-      {/* Tabla de Familias */}
-      <div className="tabla-familia-container-new">
-        <table className="tabla-familia-new">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>TIPO DE FAMILIA</th>
-              <th>EQUIVALENCIA</th>
-              <th>FECHA CREACIÓN</th>
-              <th>ACCIONES</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredFamilias.length > 0 ? (
-              filteredFamilias.map((familia) => (
-                <tr key={familia.id}>
-                  <td>{familia.id}</td>
-                  <td>
-                    <span 
-                      className="badge-familia-new"
-                      style={{ backgroundColor: getCategoriaColor(familia.tipoFamilia) }}
-                    >
-                      {familia.tipoFamilia}
-                    </span>
+      {/* Vista de Familias */}
+      {vistaActual === 'familias' && (
+        <div className="tabla-familia-container-new">
+          <table className="tabla-familia-new">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>NOMBRE FAMILIA</th>
+                <th>CÓDIGO</th>
+                <th>DESCRIPCIÓN</th>
+                <th>SUBFAMILIAS</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
+                    Cargando...
                   </td>
-                  <td><strong>{familia.equivalencia}</strong></td>
-                  <td>{familia.fechaCreacion}</td>
-                  <td>
-                    <div className="acciones-familia-new">
+                </tr>
+              ) : filteredFamilias.length > 0 ? (
+                filteredFamilias.map((familia) => (
+                  <tr key={familia.id_familia}>
+                    <td>{familia.id_familia}</td>
+                    <td>
+                      <span 
+                        className="badge-familia-new"
+                        style={{ backgroundColor: getCategoriaColor(familia.prefijo_codigo) }}
+                      >
+                        {familia.nombre_familia}
+                      </span>
+                    </td>
+                    <td><strong>{familia.prefijo_codigo}</strong></td>
+                    <td>{familia.descripcion || '-'}</td>
+                    <td>{familia.cantidad_subfamilias || 0}</td>
+                    <td>
                       <button 
-                        className="btn-accion-familia editar-familia"
-                        onClick={() => handleEditar(familia)}
-                        title="Editar familia"
+                        className="btn-action-familia-new btn-edit-familia-new"
+                        onClick={() => handleEditarFamilia(familia)}
+                        title="Editar"
                       >
                         ✏️
                       </button>
-                      <button 
-                        className="btn-accion-familia eliminar-familia"
-                        onClick={() => handleEliminar(familia.id)}
-                        title="Eliminar familia"
-                      >
-                        🗑️
-                      </button>
-                    </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '30px' }}>
+                    No se encontraron familias
                   </td>
                 </tr>
-              ))
-            ) : (
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Vista de Subfamilias */}
+      {vistaActual === 'subfamilias' && (
+        <div className="tabla-familia-container-new">
+          <table className="tabla-familia-new">
+            <thead>
               <tr>
-                <td colSpan="5" className="empty-message-familia-new">
-                  <div className="empty-state-familia-new">
-                    <span className="empty-icon-familia-new">📁</span>
-                    <p>No se encontraron familias</p>
-                    <small>Prueba con otros criterios de búsqueda</small>
-                  </div>
-                </td>
+                <th>ID</th>
+                <th>FAMILIA</th>
+                <th>NOMBRE SUBFAMILIA</th>
+                <th>CÓDIGO SUB</th>
+                <th>CÓDIGO COMPLETO</th>
+                <th>PRODUCTOS</th>
+                <th>ACCIONES</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
+                    Cargando...
+                  </td>
+                </tr>
+              ) : filteredSubfamilias.length > 0 ? (
+                filteredSubfamilias.map((subfamilia) => (
+                  <tr key={subfamilia.id_subfamilia}>
+                    <td>{subfamilia.id_subfamilia}</td>
+                    <td>
+                      <span 
+                        className="badge-familia-new"
+                        style={{ backgroundColor: '#2ecc71' }}
+                      >
+                        {subfamilia.familia?.nombre_familia || 'N/A'}
+                      </span>
+                    </td>
+                    <td>{subfamilia.nombre_subfamilia}</td>
+                    <td><strong>{subfamilia.prefijo_sub}</strong></td>
+                    <td>
+                      <span style={{ 
+                        color: '#3498db', 
+                        fontWeight: 'bold',
+                        fontFamily: 'monospace',
+                        fontSize: '13px'
+                      }}>
+                        {subfamilia.familia?.prefijo_codigo || 'N/A'}-{subfamilia.prefijo_sub}-XXXX
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{
+                        backgroundColor: subfamilia.cantidad_productos > 0 ? '#27ae60' : '#95a5a6',
+                        color: 'white',
+                        padding: '4px 12px',
+                        borderRadius: '12px',
+                        fontWeight: 'bold',
+                        fontSize: '12px'
+                      }}>
+                        {subfamilia.cantidad_productos || 0}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="btn-ver-productos"
+                        onClick={() => handleVerProductos(subfamilia)}
+                        title="Ver productos"
+                        disabled={!subfamilia.cantidad_productos || subfamilia.cantidad_productos === 0}
+                      >
+                        👁️ Ver
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px' }}>
+                    No se encontraron subfamilias
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Paginación */}
-      <div className="paginacion-familia-new">
-        <button className="btn-paginacion-familia" disabled>
-          ← ANTERIOR
-        </button>
-        <span className="pagina-actual-familia">Página 1 de 1</span>
-        <button className="btn-paginacion-familia" disabled>
-          SIGUIENTE →
-        </button>
-      </div>
-
-      {/* MODAL PARA NUEVA/EDITAR FAMILIA */}
+      {/* Modal Familia */}
       {modalAbierto && (
         <div className="modal-overlay-familia" onClick={handleCerrarModal}>
           <div className="modal-content-familia" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header-familia">
-              <h2>{familiaSeleccionada ? '✏️ EDITAR FAMILIA' : '➕ NUEVA FAMILIA DE PRODUCTOS'}</h2>
+              <h2>{familiaSeleccionada ? '✏️ EDITAR FAMILIA' : '➕ NUEVA FAMILIA'}</h2>
               <button className="btn-cerrar-modal-familia" onClick={handleCerrarModal}>
                 ✖
               </button>
@@ -333,47 +523,61 @@ const RegistroFamilia = () => {
 
             <div className="modal-body-familia">
               <div className="form-group-modal-familia">
-                <label>📂 TIPO DE FAMILIA *</label>
+                <label>📂 NOMBRE DE LA FAMILIA *</label>
                 <input
                   type="text"
-                  name="tipoFamilia"
-                  value={formulario.tipoFamilia}
+                  name="nombre_familia"
+                  value={formulario.nombre_familia}
                   onChange={handleInputChange}
-                  placeholder="Ej: HERRAMIENTAS, MATERIALES, EQUIPOS"
+                  placeholder="Ej: Herramientas, Materiales"
                   autoFocus
+                  disabled={loading}
                 />
-                <span className="hint-text-familia">💡 Nombre completo de la categoría principal</span>
               </div>
 
               <div className="form-group-modal-familia">
-                <label>📝 EQUIVALENCIA (CÓDIGO) *</label>
+                <label>🔠 CÓDIGO (PREFIJO) *</label>
                 <input
                   type="text"
-                  name="equivalencia"
-                  value={formulario.equivalencia}
+                  name="prefijo_codigo"
+                  value={formulario.prefijo_codigo}
                   onChange={handleInputChange}
-                  placeholder="Ej: HERR, MATE, EQUI"
-                  maxLength="6"
+                  placeholder="Ej: HERR, MATE"
+                  maxLength="10"
+                  disabled={loading || familiaSeleccionada}
                 />
-                <span className="hint-text-familia">💡 Código abreviado de 3-4 caracteres en mayúsculas</span>
+                <span className="hint-text-familia">💡 Código de 3-10 caracteres en mayúsculas</span>
+              </div>
+
+              <div className="form-group-modal-familia">
+                <label>📝 DESCRIPCIÓN</label>
+                <textarea
+                  name="descripcion"
+                  value={formulario.descripcion}
+                  onChange={handleInputChange}
+                  placeholder="Descripción opcional de la familia"
+                  rows="3"
+                  disabled={loading}
+                />
               </div>
 
               <div className="info-box-familia">
                 <span className="info-icon-familia">ℹ️</span>
                 <div>
-                  <strong>Información Importante:</strong>
-                  <p>Este código se utilizará para clasificar y organizar todos los productos del sistema. Asegúrese de que sea único y representativo.</p>
+                  <strong>Información:</strong>
+                  <p>Este código se utilizará como prefijo para los productos de esta familia.</p>
                 </div>
               </div>
             </div>
 
             <div className="modal-footer-familia">
-              <button className="btn-cancelar-modal-familia" onClick={handleCerrarModal}>
+              <button className="btn-cancelar-modal-familia" onClick={handleCerrarModal} disabled={loading}>
                 <span>❌</span> CANCELAR
               </button>
               <button 
                 className="btn-guardar-modal-familia" 
-                onClick={familiaSeleccionada ? handleActualizar : handleGuardar}
+                onClick={handleGuardarFamilia}
+                disabled={loading}
               >
                 <span>💾</span> {familiaSeleccionada ? 'ACTUALIZAR' : 'GUARDAR'}
               </button>
@@ -382,26 +586,202 @@ const RegistroFamilia = () => {
         </div>
       )}
 
-      {/* Toast Notification */}
-      {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={closeToast} 
-        />
+      {/* Modal Subfamilia */}
+      {modalSubfamilia && (
+        <div className="modal-overlay-familia" onClick={handleCerrarModalSubfamilia}>
+          <div className="modal-content-familia" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-familia">
+              <h2>➕ NUEVA SUBFAMILIA</h2>
+              <button className="btn-cerrar-modal-familia" onClick={handleCerrarModalSubfamilia}>
+                ✖
+              </button>
+            </div>
+
+            <div className="modal-body-familia">
+              <div className="form-group-modal-familia">
+                <label>📁 FAMILIA PRINCIPAL *</label>
+                <select
+                  name="id_familia"
+                  value={formularioSubfamilia.id_familia}
+                  onChange={handleInputChangeSubfamilia}
+                  disabled={loading}
+                >
+                  <option value="">Seleccione una familia</option>
+                  {familias.map(fam => (
+                    <option key={fam.id_familia} value={fam.id_familia}>
+                      {fam.nombre_familia} ({fam.prefijo_codigo})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group-modal-familia">
+                <label>📂 NOMBRE DE LA SUBFAMILIA *</label>
+                <input
+                  type="text"
+                  name="nombre_subfamilia"
+                  value={formularioSubfamilia.nombre_subfamilia}
+                  onChange={handleInputChangeSubfamilia}
+                  placeholder="Ej: Herramientas Manuales"
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="form-group-modal-familia">
+                <label>🔠 CÓDIGO SUBFAMILIA *</label>
+                <input
+                  type="text"
+                  name="prefijo_sub"
+                  value={formularioSubfamilia.prefijo_sub}
+                  onChange={handleInputChangeSubfamilia}
+                  placeholder="Ej: MANU, ELEC"
+                  maxLength="10"
+                  disabled={loading}
+                />
+                <span className="hint-text-familia">💡 Código de 3-10 caracteres</span>
+              </div>
+
+              <div className="form-group-modal-familia">
+                <label>📝 DESCRIPCIÓN</label>
+                <textarea
+                  name="descripcion"
+                  value={formularioSubfamilia.descripcion}
+                  onChange={handleInputChangeSubfamilia}
+                  placeholder="Descripción opcional"
+                  rows="3"
+                  disabled={loading}
+                />
+              </div>
+
+              {formularioSubfamilia.id_familia && formularioSubfamilia.prefijo_sub && (
+                <div className="info-box-familia" style={{ background: '#e8f4fd' }}>
+                  <span className="info-icon-familia">🔍</span>
+                  <div>
+                    <strong>Vista previa del código:</strong>
+                    <p style={{ fontSize: '18px', color: '#3498db', fontWeight: 'bold' }}>
+                      {familias.find(f => f.id_familia == formularioSubfamilia.id_familia)?.prefijo_codigo}-{formularioSubfamilia.prefijo_sub}-####
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer-familia">
+              <button className="btn-cancelar-modal-familia" onClick={handleCerrarModalSubfamilia} disabled={loading}>
+                <span>❌</span> CANCELAR
+              </button>
+              <button 
+                className="btn-guardar-modal-familia" 
+                onClick={handleGuardarSubfamilia}
+                disabled={loading}
+              >
+                <span>💾</span> GUARDAR
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Modal de Confirmación */}
-      {confirmModal && (
-        <ConfirmModal
-          title={confirmModal.title}
-          message={confirmModal.message}
-          type={confirmModal.type}
-          onConfirm={confirmModal.onConfirm}
-          onCancel={confirmModal.onCancel}
-          confirmText="Sí, eliminar"
-          cancelText="Cancelar"
-        />
+      {/* Modal Productos de Subfamilia */}
+      {modalProductos && (
+        <div className="modal-overlay-familia" onClick={handleCerrarModalProductos}>
+          <div className="modal-content-familia" style={{ maxWidth: '900px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-familia">
+              <h2>📦 PRODUCTOS - {subfamiliaActual?.nombre_subfamilia}</h2>
+              <button className="btn-cerrar-modal-familia" onClick={handleCerrarModalProductos}>
+                ✖
+              </button>
+            </div>
+
+            <div className="modal-body-familia">
+              {/* Info de la subfamilia */}
+              <div style={{
+                background: '#f0f9ff',
+                padding: '15px',
+                borderRadius: '8px',
+                marginBottom: '20px',
+                border: '2px solid #3498db'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong>Familia:</strong> {subfamiliaActual?.familia?.nombre_familia}
+                  </div>
+                  <div>
+                    <strong>Código:</strong> {subfamiliaActual?.familia?.prefijo_codigo}-{subfamiliaActual?.prefijo_sub}
+                  </div>
+                  <div>
+                    <strong>Total:</strong> <span style={{ 
+                      backgroundColor: '#27ae60', 
+                      color: 'white', 
+                      padding: '4px 12px', 
+                      borderRadius: '12px',
+                      fontWeight: 'bold'
+                    }}>
+                      {productosSubfamilia.length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabla de productos */}
+              {productosSubfamilia.length > 0 ? (
+                <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                  <table className="tabla-familia-new">
+                    <thead>
+                      <tr>
+                        <th>CÓDIGO</th>
+                        <th>DESCRIPCIÓN</th>
+                        <th>UNIDAD</th>
+                        <th>CONSUMIBLE</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productosSubfamilia.map((producto, index) => (
+                        <tr key={index}>
+                          <td>
+                            <span style={{
+                              fontFamily: 'monospace',
+                              fontWeight: 'bold',
+                              color: '#3498db',
+                              fontSize: '13px'
+                            }}>
+                              {producto.codigo_producto}
+                            </span>
+                          </td>
+                          <td>{producto.descripcion}</td>
+                          <td>{producto.unidad}</td>
+                          <td>
+                            <span style={{
+                              backgroundColor: producto.consumible === 'SI' ? '#e74c3c' : '#95a5a6',
+                              color: 'white',
+                              padding: '3px 10px',
+                              borderRadius: '10px',
+                              fontSize: '11px',
+                              fontWeight: 'bold'
+                            }}>
+                              {producto.consumible}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#7f8c8d' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '15px' }}>📭</div>
+                  <p>No hay productos registrados en esta subfamilia</p>
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer-familia">
+              <button className="btn-cancelar-modal-familia" onClick={handleCerrarModalProductos}>
+                <span>✖</span> CERRAR
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
