@@ -16,13 +16,18 @@ import RegistroProveedor from '../RegistroProveedor/RegistroProveedor';
 import EditarProveedor from '../EditarProveedor/EditarProveedor';
 import RegistroFamilia from '../RegistroFamilia/RegistroFamilia';
 
-import RegistroPersonal from '../RegistroPersonal/RegistroPersonal';
 import IngresoMateriales from '../IngresoMateriales/IngresoMateriales';
 import TrasladoMateriales from '../TrasladoMateriales/TrasladoMateriales';
 import SalidaMateriales from '../SalidaMateriales/SalidaMateriales';
 import AjusteInventario from '../AjusteInventario/AjusteInventario';
 import Reporteria from '../Reporteria/Reporteria';
 import Prestamos from '../Prestamos/Prestamos_COMPLETO';
+import DashboardSupervisor from '../DashboardSupervisor/DashboardSupervisor';
+import ReportesAsistencia from '../ReportesAsistencia/ReportesAsistencia';
+import ReportesEmergencias from '../ReportesEmergencias/ReportesEmergencias';
+import ReportesHorarios from '../ReportesHorarios/ReportesHorarios';
+import GestionUsuarios from '../GestionUsuarios/GestionUsuarios';
+import DashboardAdministrador from '../DashboardAdministrador/DashboardAdministrador';
 
 
 
@@ -120,8 +125,6 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <EditarProveedor />;
       case 'registro-proyecto':
         return <RegistroProyecto />;
-      case 'registro-personal':
-        return <RegistroPersonal/>;
       case 'kardex':
         return <Kardex />;
       case 'registro-familia':
@@ -134,6 +137,18 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <Aprobacion />;
       case 'reporteria':
         return <Reporteria />;
+      case 'dashboard-supervisor':
+        return <DashboardSupervisor />;
+      case 'reportes-asistencia-rrhh':
+        return <ReportesAsistencia />;
+      case 'reportes-emergencias-rrhh':
+        return <ReportesEmergencias />;
+      case 'reportes-horarios-rrhh':
+        return <ReportesHorarios />;
+      case 'gestion-usuarios-rrhh':
+        return <GestionUsuarios />;
+      case 'dashboard-admin-rrhh':
+        return <DashboardAdministrador />;
       default:
         return <DashboardContent />;
     }
@@ -455,13 +470,18 @@ const getModuleTitle = (moduleId) => {
     'registro-proveedores': 'Registro de Proveedores',
     'editar-proveedores': 'Editar Proveedores',
     'registro-proyecto': 'Registro de Proyecto',
-    'registro-personal': 'Registro de Personal',
     'kardex': 'Kardex',
     'registro-familia': 'Registro de Familia',
     'prestamos': 'Préstamos',
     'historial-prestamos': 'Historial de Préstamos',
     'aprobacion-ordenes': 'Aprobación de Órdenes',
-    'reporteria': 'Reportería'
+    'reporteria': 'Reportería',
+    'dashboard-supervisor': 'Dashboard Supervisor',
+    'reportes-asistencia-rrhh': 'Reportes de Asistencia',
+    'reportes-horarios-rrhh': 'Reportes Horarios',
+    'reportes-emergencias-rrhh': 'Reportes de Emergencias',
+    'gestion-usuarios-rrhh': 'Gestión de Usuarios',
+    'dashboard-admin-rrhh': 'Dashboard Administrador'
   };
   return titles[moduleId] || 'Módulo';
 };

@@ -30,6 +30,9 @@ const Toast = ({ message, type, onClose }) => {
 
 const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin, user }) => {
   const [expandedCategories, setExpandedCategories] = useState({
+    logistica: true,
+    recursosHumanos: false,
+    dashboard: false,
     activos: false,
     compras: true,
     materiales: false,
@@ -53,89 +56,146 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
 
   const menuCategories = [
     {
-      id: 'activos',
-      title: 'Administración de Activos',
-      icon: '📦',
-      color: '#e74c3c',
-      items: [
-        { id: 'registro-empresa', title: 'Registro de Empresa', icon: '🏢' },
-        { id: 'registro-bodega', title: 'Registro de Bodega', icon: '📦' },
-        { id: 'registro-reserva', title: 'Registro de Reserva', icon: '📋' },
+      id: 'logistica',
+      title: 'LOGÍSTICA',
+      icon: '🚚',
+      color: '#3498db',
+      isMainModule: true,
+      subcategories: [
+        {
+          id: 'dashboard',
+          title: 'Dashboard',
+          icon: '🏠',
+          color: '#2c3e50',
+          items: [
+            { id: 'dashboard', title: 'Panel Principal', icon: '📊' }
+          ]
+        },
+        {
+          id: 'activos',
+          title: 'Administración de Activos',
+          icon: '📦',
+          color: '#e74c3c',
+          items: [
+            { id: 'registro-empresa', title: 'Registro de Empresa', icon: '🏢' },
+            { id: 'registro-bodega', title: 'Registro de Bodega', icon: '📦' },
+            { id: 'registro-reserva', title: 'Registro de Reserva', icon: '📋' },
+          ]
+        },
+        {
+          id: 'compras',
+          title: 'Compras y Productos',
+          icon: '🛒',
+          color: '#4a90e2',
+          items: [
+            { id: 'orden-pedido', title: 'Orden de Pedido', icon: '📝' },
+            { id: 'ordenes-compra', title: 'Órdenes de Compra/Servicio', icon: '📋' },
+            { id: 'registro-productos', title: 'Registro de Productos', icon: '📦' },
+            { id: 'eliminar-oc', title: 'Eliminar OC/OS', icon: '🗑️' }
+          ]
+        },
+        {
+          id: 'materiales',
+          title: 'Gestión de Materiales',
+          icon: '📊',
+          color: '#9b59b6',
+          items: [
+            { id: 'ingreso-materiales', title: 'Ingreso de Materiales', icon: '📥' },
+            { id: 'traslado-materiales', title: 'Traslado de Materiales', icon: '🔄' },
+            { id: 'salida-materiales', title: 'Salida de Materiales', icon: '📤' },
+            { id: 'ajuste-inventario', title: 'Ajuste de Inventario (Solo Admin)', icon: '⚖️', adminOnly: true }
+          ]
+        },
+        {
+          id: 'proveedores',
+          title: 'Proveedores y Proyectos',
+          icon: '🏢',
+          color: '#27ae60',
+          items: [
+            { id: 'registro-proveedores', title: 'Registro de Proveedores', icon: '🏢' },
+            { id: 'editar-proveedores', title: 'Editar Proveedores', icon: '✏️' },
+            { id: 'registro-proyecto', title: 'Registro de Proyecto', icon: '📊' }
+          ]
+        },
+        {
+          id: 'personal',
+          title: 'Personal y Kardex',
+          icon: '👥',
+          color: '#f39c12',
+          items: [
+            { id: 'kardex', title: 'Kardex', icon: '📝' },
+            { id: 'registro-familia', title: 'Registro de Familia', icon: '👨‍👩‍👧' }
+          ]
+        },
+        {
+          id: 'prestamos',
+          title: 'Gestión de Préstamos',
+          icon: '💳',
+          color: '#e67e22',
+          items: [
+            { id: 'prestamos', title: 'Préstamos', icon: '💰' },
+            { id: 'historial-prestamos', title: 'Historial de Préstamos', icon: '📜' }
+          ]
+        },
+        {
+          id: 'aprobacion',
+          title: 'Aprobación (Solo Admin)',
+          icon: '✅',
+          color: '#8e44ad',
+          adminOnly: true,
+          items: [
+            { id: 'aprobacion-ordenes', title: 'Aprobación de Órdenes', icon: '✅' }
+          ]
+        },
+        {
+          id: 'reporteria',
+          title: 'Reportería',
+          icon: '📊',
+          color: '#16a085',
+          items: [
+            { id: 'reporteria', title: 'Reportería', icon: '📊' }
+          ]
+        }
       ]
     },
     {
-      id: 'compras',
-      title: 'Compras y Productos',
-      icon: '🛒',
-      color: '#4a90e2',
-      items: [
-        { id: 'orden-pedido', title: 'Orden de Pedido', icon: '📝' },
-        { id: 'ordenes-compra', title: 'Órdenes de Compra/Servicio', icon: '📋' },
-        { id: 'registro-productos', title: 'Registro de Productos', icon: '📦' },
-        { id: 'eliminar-oc', title: 'Eliminar OC/OS', icon: '🗑️' }
-      ]
-    },
-    {
-      id: 'materiales',
-      title: 'Gestión de Materiales',
-      icon: '📊',
-      color: '#9b59b6',
-      items: [
-        { id: 'ingreso-materiales', title: 'Ingreso de Materiales', icon: '📥' },
-        { id: 'traslado-materiales', title: 'Traslado de Materiales', icon: '🔄' },
-        { id: 'salida-materiales', title: 'Salida de Materiales', icon: '📤' },
-        { id: 'ajuste-inventario', title: 'Ajuste de Inventario (Solo Admin)', icon: '⚖️', adminOnly: true }
-      ]
-    },
-    {
-      id: 'proveedores',
-      title: 'Proveedores y Proyectos',
-      icon: '🏢',
-      color: '#27ae60',
-      items: [
-        { id: 'registro-proveedores', title: 'Registro de Proveedores', icon: '🏢' },
-        { id: 'editar-proveedores', title: 'Editar Proveedores', icon: '✏️' },
-        { id: 'registro-proyecto', title: 'Registro de Proyecto', icon: '📊' }
-      ]
-    },
-    {
-      id: 'personal',
-      title: 'Personal y Kardex',
-      icon: '👥',
-      color: '#f39c12',
-      items: [
-        { id: 'registro-personal', title: 'Registro de Personal', icon: '👤' },
-        { id: 'kardex', title: 'Kardex', icon: '📝' },
-        { id: 'registro-familia', title: 'Registro de Familia', icon: '👨‍👩‍👧' }
-      ]
-    },
-    {
-      id: 'prestamos',
-      title: 'Gestión de Préstamos',
-      icon: '💳',
+      id: 'recursosHumanos',
+      title: 'RECURSOS HUMANOS',
+      icon: '👔',
       color: '#e67e22',
-      items: [
-        { id: 'prestamos', title: 'Préstamos', icon: '💰' },
-        { id: 'historial-prestamos', title: 'Historial de Préstamos', icon: '📜' }
-      ]
-    },
-    {
-      id: 'aprobacion',
-      title: 'Aprobación (Solo Admin)',
-      icon: '✅',
-      color: '#8e44ad',
-      adminOnly: true,
-      items: [
-        { id: 'aprobacion-ordenes', title: 'Aprobación de Órdenes', icon: '✅' }
-      ]
-    },
-    {
-      id: 'reporteria',
-      title: 'Reportería',
-      icon: '📊',
-      color: '#16a085',
-      items: [
-        { id: 'reporteria', title: 'Reportería', icon: '📊' }
+      isMainModule: true,
+      subcategories: [
+        {
+          id: 'dashboard-supervisor',
+          title: 'Dashboard Supervisor',
+          icon: '📊',
+          color: '#3498db',
+          items: [
+            { id: 'dashboard-supervisor', title: 'Panel Supervisor', icon: '👁️' }
+          ]
+        },
+        {
+          id: 'reportes-rrhh',
+          title: 'Reportes',
+          icon: '📋',
+          color: '#9b59b6',
+          items: [
+            { id: 'reportes-asistencia-rrhh', title: 'Reportes de Asistencia', icon: '📅' },
+            { id: 'reportes-horarios-rrhh', title: 'Reportes Horarios', icon: '🕐' },
+            { id: 'reportes-emergencias-rrhh', title: 'Reportes de Emergencias', icon: '🚨' }
+          ]
+        },
+        {
+          id: 'gestion-usuarios-rrhh',
+          title: 'Gestión de Usuarios (Admin)',
+          icon: '👥',
+          color: '#27ae60',
+          adminOnly: true,
+          items: [
+            { id: 'gestion-usuarios-rrhh', title: 'Administrar Usuarios', icon: '👤' },
+            { id: 'dashboard-admin-rrhh', title: 'Dashboard Administrador', icon: '🎯' }
+          ]
+        }
       ]
     }
   ];
@@ -203,55 +263,75 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         </button>
       </div>
 
-      {/* Dashboard Item */}
+      {/* Módulos Principales */}
       <div className="sidebar-content">
-        <div 
-          className={`menu-item dashboard-item ${activeModule === 'dashboard' ? 'active' : ''}`}
-          onClick={() => handleItemClick('dashboard')}
-        >
-          <span className="menu-icon">🏠</span>
-          {!isCollapsed && <span className="menu-title">Dashboard</span>}
-        </div>
-
-        {/* Categorías del Menú */}
-        {menuCategories.map(category => {
-          // Ocultar categorías solo para admin si el usuario no es admin
-          if (category.adminOnly && !isAdmin) {
-            return null;
-          }
-
+        {menuCategories.map(mainModule => {
           return (
-            <div key={category.id} className="menu-category">
+            <div key={mainModule.id} className="main-module">
+              {/* Header del Módulo Principal */}
               <div 
-                className={`category-header ${expandedCategories[category.id] ? 'expanded' : ''} ${category.adminOnly && !isAdmin ? 'disabled' : ''}`}
-                onClick={() => toggleCategory(category.id)}
-                style={{ '--category-color': category.color }}
+                className={`main-module-header ${expandedCategories[mainModule.id] ? 'expanded' : ''}`}
+                onClick={() => toggleCategory(mainModule.id)}
+                style={{ '--module-color': mainModule.color }}
+                title={isCollapsed ? mainModule.title : ''}
               >
-                <span className="category-icon">{category.icon}</span>
+                <span className="module-icon">{mainModule.icon}</span>
                 {!isCollapsed && (
                   <>
-                    <span className="category-title">{category.title}</span>
+                    <span className="module-title">{mainModule.title}</span>
                     <span className="expand-icon">
-                      {expandedCategories[category.id] ? '▼' : '▶'}
+                      {expandedCategories[mainModule.id] ? '▼' : '▶'}
                     </span>
                   </>
                 )}
               </div>
-              
-              {!isCollapsed && expandedCategories[category.id] && (
-                <div className="category-items">
-                  {category.items
-                    .filter(item => !item.adminOnly || isAdmin) // Filtrar ítems que requieren admin
-                    .map(item => (
-                    <div 
-                      key={item.id}
-                      className={`menu-item ${activeModule === item.id ? 'active' : ''}`}
-                      onClick={() => handleItemClick(item.id)}
-                    >
-                      <span className="menu-icon">{item.icon}</span>
-                      <span className="menu-title">{item.title}</span>
-                    </div>
-                  ))}
+
+              {/* Subcategorías del Módulo */}
+              {!isCollapsed && expandedCategories[mainModule.id] && (
+                <div className="module-subcategories">
+                  {mainModule.subcategories.map(category => {
+                    // Ocultar categorías solo para admin si el usuario no es admin
+                    if (category.adminOnly && !isAdmin) {
+                      return null;
+                    }
+
+                    return (
+                      <div key={category.id} className="menu-category">
+                        <div 
+                          className={`category-header ${expandedCategories[category.id] ? 'expanded' : ''}`}
+                          onClick={() => toggleCategory(category.id)}
+                          style={{ '--category-color': category.color }}
+                        >
+                          <span className="category-icon">{category.icon}</span>
+                          {!isCollapsed && (
+                            <>
+                              <span className="category-title">{category.title}</span>
+                              <span className="expand-icon">
+                                {expandedCategories[category.id] ? '▼' : '▶'}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        
+                        {!isCollapsed && expandedCategories[category.id] && (
+                          <div className="category-items">
+                            {category.items
+                              .filter(item => !item.adminOnly || isAdmin)
+                              .map(item => (
+                              <div 
+                                key={item.id}
+                                className={`menu-item ${activeModule === item.id ? 'active' : ''}`}
+                                onClick={() => handleItemClick(item.id)}
+                              >
+                                <span className="menu-icon">{item.icon}</span>
+                                <span className="menu-title">{item.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

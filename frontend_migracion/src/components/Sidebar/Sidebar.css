@@ -135,6 +135,52 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* Módulos Principales */
+.main-module {
+  margin: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.main-module-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.2);
+  border-left: 4px solid transparent;
+}
+
+.main-module-header:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-left-color: var(--module-color);
+}
+
+.main-module-header.expanded {
+  background: rgba(255, 255, 255, 0.15);
+  border-left-color: var(--module-color);
+}
+
+.module-icon {
+  font-size: 20px;
+  margin-right: 12px;
+  min-width: 22px;
+  text-align: center;
+}
+
+.module-title {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.module-subcategories {
+  padding: 5px 0;
+  background: rgba(0, 0, 0, 0.1);
+}
+
 /* Categorías del Menú */
 .menu-category {
   margin: 5px 0;
@@ -251,6 +297,41 @@
 }
 
 /* Estados collapsed */
+.sidebar.collapsed .main-module-header {
+  justify-content: center;
+  padding: 14px 10px;
+  border-left: none;
+  position: relative;
+}
+
+.sidebar.collapsed .main-module-header:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.sidebar.collapsed .main-module-header.expanded {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sidebar.collapsed .module-title,
+.sidebar.collapsed .expand-icon {
+  display: none;
+}
+
+.sidebar.collapsed .module-subcategories {
+  display: none;
+}
+
+.sidebar.collapsed .module-icon {
+  margin-right: 0;
+  font-size: 24px;
+  transition: transform 0.3s ease;
+}
+
+.sidebar.collapsed .main-module-header:hover .module-icon {
+  transform: scale(1.1);
+}
+
 .sidebar.collapsed .category-header {
   justify-content: center;
   padding: 12px 10px;
@@ -262,8 +343,7 @@
 }
 
 .sidebar.collapsed .category-title,
-.sidebar.collapsed .menu-title,
-.sidebar.collapsed .expand-icon {
+.sidebar.collapsed .menu-title {
   display: none;
 }
 
@@ -488,6 +568,10 @@
     font-size: 16px;
   }
 
+  .module-icon {
+    font-size: 18px;
+  }
+
   .category-title {
     font-size: 13px;
   }
@@ -570,6 +654,11 @@
 
   .category-icon {
     font-size: 15px;
+    margin-right: 8px;
+  }
+
+  .module-icon {
+    font-size: 17px;
     margin-right: 8px;
   }
 
@@ -675,6 +764,11 @@
 
   .category-icon {
     font-size: 14px;
+    margin-right: 6px;
+  }
+
+  .module-icon {
+    font-size: 16px;
     margin-right: 6px;
   }
 
