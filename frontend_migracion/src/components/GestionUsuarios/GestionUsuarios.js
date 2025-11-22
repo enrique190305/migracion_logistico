@@ -50,17 +50,31 @@ const GestionUsuarios = () => {
   };
 
   const filtrarUsuarios = () => {
-    if (!busqueda.trim()) {
+    // Validar que usuarios sea un array
+    if (!Array.isArray(usuarios)) {
+      setUsuariosFiltrados([]);
+      return;
+    }
+    
+    if (!busqueda || !busqueda.trim()) {
       setUsuariosFiltrados([...usuarios]);
     } else {
-      const query = busqueda.toLowerCase();
+      const query = (busqueda || '').toLowerCase();
       setUsuariosFiltrados(
-        usuarios.filter(usuario =>
-          usuario.nombres_completos.toLowerCase().includes(query) ||
-          usuario.documento.includes(query) ||
-          usuario.documento_completo.toLowerCase().includes(query) ||
-          (usuario.correo && usuario.correo.toLowerCase().includes(query))
-        )
+        usuarios.filter(usuario => {
+          // Validar que usuario sea un objeto
+          if (!usuario) return false;
+          
+          const nombresCompletos = (usuario.nombres_completos || '').toLowerCase();
+          const documento = (usuario.documento || '').toString();
+          const documentoCompleto = (usuario.documento_completo || '').toLowerCase();
+          const correo = (usuario.correo || '').toLowerCase();
+          
+          return nombresCompletos.includes(query) ||
+                 documento.includes(busqueda || '') ||
+                 documentoCompleto.includes(query) ||
+                 correo.includes(query);
+        })
       );
     }
   };

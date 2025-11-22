@@ -75,11 +75,16 @@ const ReportesHorarios = () => {
     }
   };
 
-  const trabajadoresFiltrados = trabajadores.filter(t =>
-    (t.nombres_completos || '').toLowerCase().includes(busqueda.toLowerCase()) ||
-    (t.documento || '').includes(busqueda) ||
-    (t.documento_completo || '').toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const trabajadoresFiltrados = trabajadores.filter(t => {
+    const searchTerm = (busqueda || '').toLowerCase();
+    const nombresCompletos = (t.nombres_completos || '').toLowerCase();
+    const documento = (t.documento || '').toString();
+    const documentoCompleto = (t.documento_completo || '').toLowerCase();
+    
+    return nombresCompletos.includes(searchTerm) ||
+           documento.includes(busqueda || '') ||
+           documentoCompleto.includes(searchTerm);
+  });
 
   const abrirGoogleMaps = (latitud, longitud) => {
     const url = `https://maps.google.com/?q=${latitud},${longitud}`;
@@ -131,7 +136,7 @@ const ReportesHorarios = () => {
             />
             <i className="fas fa-search search-icon"></i>
             
-            {showDropdown && busqueda && (
+            {showDropdown && busqueda && busqueda.trim() !== '' && (
               <div className="trabajador-dropdown">
                 {trabajadoresFiltrados.length > 0 ? (
                   trabajadoresFiltrados.map(trabajador => (
