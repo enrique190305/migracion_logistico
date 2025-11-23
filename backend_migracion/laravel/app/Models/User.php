@@ -11,7 +11,7 @@ class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
-    protected $table = 'LOGEO';
+    protected $table = 'logeo';
     protected $primaryKey = 'id';
     public $timestamps = false;
 

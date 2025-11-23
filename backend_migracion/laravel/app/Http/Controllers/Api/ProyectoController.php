@@ -228,7 +228,7 @@ class ProyectoController extends Controller
 
             // Enriquecer con información de subproyectos
             $proyectos = collect($proyectos)->map(function ($proyecto) {
-                if ($proyecto->tipo_movil === 'CON_PROYECTO') {
+                if ($proyecto->tipo_movil === 'CON_PROYECTO' && isset($proyecto->id_referencia) && $proyecto->id_referencia) {
                     // ✅ Contar subproyectos correctamente usando id_referencia
                     $cantidadSubproyectos = MovilProyecto::where('proyecto_padre_id', $proyecto->id_referencia)
                         ->where('estado', 'ACTIVO')

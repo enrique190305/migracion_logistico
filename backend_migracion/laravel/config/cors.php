@@ -20,6 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'https://sistemalogistico.processmart.net',
+        'http://sistemalogistico.processmart.net',
         'http://localhost:3000',
         'http://127.0.0.1:3000',
     ],
@@ -28,10 +30,10 @@ return [
 
     'allowed_headers' => ['*'],
 
-    'exposed_headers' => [],
+    'exposed_headers' => ['*'],
 
-    'max_age' => 0,
+    'max_age' => 600,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
