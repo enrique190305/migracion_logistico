@@ -41,8 +41,12 @@ const Layout = ({ onLogout, user: propUser }) => {
   // Usar el usuario de props si está disponible, sino del localStorage
   const [user, setUser] = useState(propUser || JSON.parse(localStorage.getItem('user') || '{}'));
   
-  // Verificar si el usuario es administrador
+  // Verificar si el usuario es administrador o Recursos Humanos
+  // id_rol === 1: Administrador
+  // id_rol === 2: Usuario
+  // id_rol === 3: Recursos Humanos
   const isAdmin = user?.permissions?.is_admin || user?.id_rol === 1 || false;
+  const isRecursosHumanos = user?.id_rol === 3 || false;
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -182,13 +186,13 @@ const Layout = ({ onLogout, user: propUser }) => {
           <div className="header-right">
             <div className="user-info">
               <div className="user-avatar">
-                <span>👤</span>
+                <span>{isAdmin ? '👑' : (isRecursosHumanos ? '👔' : '👤')}</span>
               </div>
               <div className="user-details">
                 <span className="user-name">{user.nombre || user.name || 'Usuario'}</span>
                 <span className="user-role">
-                  {user.role || user.permissions?.role_name || (isAdmin ? 'Administrador' : 'Usuario')}
-                  {!isAdmin && ' (Acceso Limitado)'}
+                  {user.role || user.permissions?.role_name || (isAdmin ? 'Administrador' : (isRecursosHumanos ? 'Recursos Humanos' : 'Usuario'))}
+                  {(!isAdmin && !isRecursosHumanos) && ' (Acceso Limitado)'}
                 </span>
               </div>
             </div>
@@ -222,8 +226,8 @@ const Layout = ({ onLogout, user: propUser }) => {
           <div className="session-info">
             <span>
               Usuario: {user.nombre || user.name || 'Usuario'} 
-              ({user.role || user.permissions?.role_name || (isAdmin ? 'Administrador' : 'Usuario')})
-              {!isAdmin && ' - Acceso Limitado'}
+              ({user.role || user.permissions?.role_name || (isAdmin ? 'Administrador' : (isRecursosHumanos ? 'Recursos Humanos' : 'Usuario'))})
+              {(!isAdmin && !isRecursosHumanos) && ' - Acceso Limitado'}
               | Sesión iniciada: {new Date().toLocaleDateString('es-PE')}
             </span>
           </div>

@@ -243,6 +243,62 @@ export const authService = {
     return user?.permissions?.is_admin || user?.id_rol === 1 || false;
   },
 
+  // Verificar si el usuario actual es de Recursos Humanos
+  isCurrentUserRecursosHumanos() {
+    const user = this.getCurrentUser();
+    return user?.id_rol === 3 || false;
+  },
+
+  // Obtener el rol del usuario actual
+  getCurrentUserRole() {
+    const user = this.getCurrentUser();
+    const roleId = user?.id_rol || 0;
+    
+    const roles = {
+      1: 'Administrador',
+      2: 'Usuario',
+      3: 'Recursos Humanos'
+    };
+    
+    return {
+      id: roleId,
+      name: roles[roleId] || 'Usuario',
+      isAdmin: roleId === 1,
+      isRecursosHumanos: roleId === 3,
+      canAccessLogistica: true, // Todos pueden acceder a Logística
+      canAccessRecursosHumanos: roleId === 3 // Solo rol 3 puede acceder a RRHH
+    };
+  },
+
+  // Verificar si el usuario puede acceder a un módulo específico
+  canAccessModule(moduleId) {
+    const userRole = this.getCurrentUserRole();
+    
+    // Módulos de RECURSOS HUMANOS
+    const rrhhModules = [
+      'dashboard-supervisor',
+      'reportes-asistencia-rrhh',
+      'reportes-horarios-rrhh',
+      'reportes-emergencias-rrhh',
+      'gestion-usuarios-rrhh',
+      'dashboard-admin-rrhh'
+    ];
+    
+    // Si es un módulo de RRHH, solo el rol 3 puede acceder
+    if (rrhhModules.includes(moduleId)) {
+      return userRole.canAccessRecursosHumanos;
+    }
+    
+    // Módulos solo para admin
+    const adminModules = ['aprobacion-ordenes', 'ajuste-inventario'];
+    if (adminModules.includes(moduleId)) {
+      return userRole.isAdmin;
+    }
+    
+    // Resto de módulos de Logística - todos pueden acceder
+    return true;
+  },
+
   // ✅ NUEVO: Actualizar perfil del usuario (nombre, contraseña, firma)
   async updateProfile(profileData) {
     try {

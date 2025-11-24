@@ -410,6 +410,11 @@
   color: white;
 }
 
+.user-role-small.rrhh {
+  background: linear-gradient(45deg, #3498db, #2980b9);
+  color: white;
+}
+
 .access-notice {
   display: flex;
   align-items: center;

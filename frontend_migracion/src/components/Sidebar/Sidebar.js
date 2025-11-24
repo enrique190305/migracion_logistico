@@ -52,7 +52,16 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     setToast(null);
   };
 
+  // Verificar el rol del usuario
+  // id_rol === 1: Administrador (solo ve LOGÍSTICA)
+  // id_rol === 2: Usuario (solo ve LOGÍSTICA)
+  // id_rol === 3: Recursos Humanos (ve ambos módulos)
+  const userRoleId = user?.id_rol || 0;
+  const isRecursosHumanos = userRoleId === 3;
+  
   console.log('🔍 Sidebar: Usuario es admin?', isAdmin);
+  console.log('🔍 Sidebar: ID Rol del usuario:', userRoleId);
+  console.log('🔍 Sidebar: Es Recursos Humanos?', isRecursosHumanos);
 
   const menuCategories = [
     {
@@ -187,10 +196,10 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         },
         {
           id: 'gestion-usuarios-rrhh',
-          title: 'Gestión de Usuarios (Admin)',
+          title: 'Gestión de Usuarios',
           icon: '👥',
           color: '#27ae60',
-          adminOnly: true,
+          rrhhAccess: true,
           items: [
             { id: 'gestion-usuarios-rrhh', title: 'Administrar Usuarios', icon: '👤' },
             { id: 'dashboard-admin-rrhh', title: 'Dashboard Administrador', icon: '🎯' }
@@ -266,6 +275,12 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
       {/* Módulos Principales */}
       <div className="sidebar-content">
         {menuCategories.map(mainModule => {
+          // Ocultar el módulo RECURSOS HUMANOS para roles Administrador (1) y Usuario (2)
+          // Solo mostrar RECURSOS HUMANOS para rol Recursos Humanos (3)
+          if (mainModule.id === 'recursosHumanos' && !isRecursosHumanos) {
+            return null;
+          }
+
           return (
             <div key={mainModule.id} className="main-module">
               {/* Header del Módulo Principal */}
@@ -292,6 +307,10 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
                   {mainModule.subcategories.map(category => {
                     // Ocultar categorías solo para admin si el usuario no es admin
                     if (category.adminOnly && !isAdmin) {
+                      return null;
+                    }
+                    // Ocultar categorías de RRHH si el usuario no es RRHH
+                    if (category.rrhhAccess && !isRecursosHumanos) {
                       return null;
                     }
 
@@ -344,16 +363,16 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         <div className="user-info-sidebar">
           <div className="user-status">
             <div className="user-avatar-small">
-              <span>{isAdmin ? '👑' : '👤'}</span>
+              <span>{isAdmin ? '👑' : (isRecursosHumanos ? '👔' : '👤')}</span>
             </div>
             <div className="user-details-small">
               <span className="user-name-small">{user?.nombre || 'Usuario'}</span>
-              <span className={`user-role-small ${isAdmin ? 'admin' : 'user'}`}>
-                {isAdmin ? 'Administrador' : 'Usuario'}
+              <span className={`user-role-small ${isAdmin ? 'admin' : (isRecursosHumanos ? 'rrhh' : 'user')}`}>
+                {isAdmin ? 'Administrador' : (isRecursosHumanos ? 'Recursos Humanos' : 'Usuario')}
               </span>
             </div>
           </div>
-          {!isAdmin && (
+          {(!isAdmin && !isRecursosHumanos) && (
             <div className="access-notice">
               <span className="notice-icon">ℹ️</span>
               <span className="notice-text">Acceso limitado - Algunos módulos restringidos</span>
