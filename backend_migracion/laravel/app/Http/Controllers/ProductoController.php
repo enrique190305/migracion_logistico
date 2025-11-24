@@ -18,7 +18,7 @@ class ProductoController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Producto::with('familia:tipo_producto,equivalencia');
+            $query = Producto::with(['familia:tipo_producto,equivalencia', 'subfamilia:id_subfamilia,nombre_subfamilia,id_familia']);
             
             // Filtros opcionales
             if ($request->has('tipo_producto') && $request->tipo_producto !== 'todos') {
@@ -47,6 +47,8 @@ class ProductoController extends Controller
                     'codigo_producto' => $producto->codigo_producto,
                     'tipo_producto' => $producto->tipo_producto,
                     'tipo_producto_nombre' => $producto->familia ? $producto->familia->equivalencia : $producto->tipo_producto,
+                    'id_subfamilia' => $producto->id_subfamilia,
+                    'nombre_subfamilia' => $producto->subfamilia ? $producto->subfamilia->nombre_subfamilia : null,
                     'descripcion' => $producto->descripcion,
                     'unidad' => $producto->unidad,
                     'consumible' => $producto->consumible ?? 'NO',
@@ -133,7 +135,7 @@ class ProductoController extends Controller
     public function show($codigo)
     {
         try {
-            $producto = Producto::with('familia:tipo_producto,descripcion')
+            $producto = Producto::with(['familia:tipo_producto,descripcion', 'subfamilia:id_subfamilia,nombre_subfamilia,id_familia'])
                 ->where('codigo_producto', $codigo)
                 ->first();
 
@@ -151,6 +153,8 @@ class ProductoController extends Controller
                     'codigo_producto' => $producto->codigo_producto,
                     'tipo_producto' => $producto->tipo_producto,
                     'tipo_producto_nombre' => $producto->familia->descripcion ?? $producto->tipo_producto,
+                    'id_subfamilia' => $producto->id_subfamilia,
+                    'nombre_subfamilia' => $producto->subfamilia ? $producto->subfamilia->nombre_subfamilia : null,
                     'descripcion' => $producto->descripcion,
                     'unidad' => $producto->unidad,
                     'observacion' => $producto->observacion

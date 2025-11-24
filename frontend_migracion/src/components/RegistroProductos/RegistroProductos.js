@@ -1144,6 +1144,10 @@ const RegistroProductos = () => {
                 <span>{modalDetalle.producto.tipo_producto_nombre || modalDetalle.producto.tipo_producto}</span>
               </div>
               <div className="detalle-item-productos">
+                <label>Subfamilia:</label>
+                <span>{modalDetalle.producto.nombre_subfamilia || modalDetalle.producto.subfamilia || 'Sin subfamilia'}</span>
+              </div>
+              <div className="detalle-item-productos">
                 <label>Descripción:</label>
                 <span>{modalDetalle.producto.descripcion}</span>
               </div>
