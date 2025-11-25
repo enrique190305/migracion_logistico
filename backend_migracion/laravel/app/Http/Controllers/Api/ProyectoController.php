@@ -125,16 +125,26 @@ class ProyectoController extends Controller
    public function obtenerPersonas()
 {
     try {
-        // ✅ Obtener personas ÚNICAS de movil_persona (solo registros ACTIVOS, sin duplicados por DNI)
+        // ✅ Obtener personas ACTIVAS + personas INACTIVAS que ya están asignadas a proyectos
         $personas = DB::table('movil_persona')
             ->select(
                 DB::raw('MAX(id_movil_persona) as id'),
                 'nom_ape as nombre',
                 'dni',
                 DB::raw('MAX(ciudad) as ciudad'),
+                DB::raw('MAX(estado) as estado'),
                 DB::raw('CONCAT(nom_ape, " - DNI: ", dni) as nombre_completo')
             )
-            ->where('estado', 'ACTIVO')
+            ->where(function($query) {
+                // Mostrar activos
+                $query->where('estado', 'ACTIVO')
+                      // O mostrar inactivos que están asignados a algún proyecto
+                      ->orWhereIn('id_movil_persona', function($subquery) {
+                          $subquery->select('id_responsable')
+                                   ->from('movil_proyecto')
+                                   ->whereNotNull('id_responsable');
+                      });
+            })
             ->whereNotNull('dni')
             ->where('dni', '!=', '')
             ->groupBy('dni', 'nom_ape')
@@ -146,7 +156,8 @@ class ProyectoController extends Controller
                     'nombre' => $persona->nombre,
                     'dni' => $persona->dni,
                     'ciudad' => $persona->ciudad,
-                    'nombre_completo' => $persona->nombre_completo
+                    'nombre_completo' => $persona->nombre_completo,
+                    'estado' => $persona->estado // Para que el frontend pueda mostrar si está inactivo
                 ];
             });
 
@@ -294,7 +305,7 @@ class ProyectoController extends Controller
         // Para móvil CON proyecto
         'movil_nombre' => 'required_if:movil_tipo,con_proyecto|max:100',
         'descripcion' => 'nullable|string',
-        'responsable' => 'required_if:movil_tipo,con_proyecto|exists:personal,id_personal',
+        'responsable' => 'required_if:movil_tipo,con_proyecto|exists:movil_persona,id_movil_persona',
         
         // Para móvil SIN proyecto (campos personales)
         'nom_ape' => 'required_if:movil_tipo,sin_proyecto|max:100',
@@ -482,7 +493,7 @@ class ProyectoController extends Controller
                         'empresa:id_empresa,razon_social',
                         'bodega:id_bodega,nombre',
                         'reserva:id_reserva,tipo_reserva',
-                        'responsable:id_personal,nom_ape,dni' // ✅ Corregido: usar campos de tabla 'personal'
+                        'responsable:id_movil_persona,nom_ape,dni,ciudad' // ✅ Corregido: campos de movil_persona
                     ])
                     ->where('proyecto_padre_id', $movilProyecto->id_movil_proyecto)
                     ->where('estado', 'ACTIVO')
@@ -514,7 +525,7 @@ class ProyectoController extends Controller
         $validator = Validator::make($request->all(), [
             'nombre_proyecto' => 'sometimes|required|max:200',
             'descripcion' => 'nullable|string',
-            'responsable' => 'sometimes|required|exists:personal,id_personal',
+            'responsable' => 'sometimes|required|exists:movil_persona,id_movil_persona',
             'fecha_registro' => 'sometimes|required|date',
             'estado' => 'sometimes|in:ACTIVO,INACTIVO'
         ]);

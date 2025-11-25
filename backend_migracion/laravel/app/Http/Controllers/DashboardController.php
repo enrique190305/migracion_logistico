@@ -273,14 +273,16 @@ class DashboardController extends Controller
     private function getPersonalActivo()
     {
         try {
-            // Usar la tabla PERSONAL que existe (sin columna 'activo')
-            return DB::table('personal')->count();
+            // Contar registros ACTIVOS de movil_persona
+            return DB::table('movil_persona')
+                ->where('estado', 'ACTIVO')
+                ->count();
         } catch (\Exception $e) {
-            // Si hay error, usar conteo de usuarios de LOGEO
+            // Si hay error, intentar contar todos los registros de movil_persona
             try {
-                return DB::table('logeo')->count();
+                return DB::table('movil_persona')->count();
             } catch (\Exception $e2) {
-                return 15; // Valor por defecto
+                return 0; // Valor por defecto
             }
         }
     }
