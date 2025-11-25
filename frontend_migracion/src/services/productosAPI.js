@@ -126,7 +126,7 @@ export const listarProductos = async (filtros = {}) => {
     }
     
     const queryString = params.toString() ? `?${params.toString()}` : '';
-    const result = await fetchAPI(`/${queryString}`);
+    const result = await fetchAPI(queryString);
     return result.data || [];
   } catch (error) {
     console.error('Error al listar productos:', error);

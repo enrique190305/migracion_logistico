@@ -28,6 +28,7 @@ import ReportesEmergencias from '../ReportesEmergencias/ReportesEmergencias';
 import ReportesHorarios from '../ReportesHorarios/ReportesHorarios';
 import GestionUsuarios from '../GestionUsuarios/GestionUsuarios';
 import DashboardAdministrador from '../DashboardAdministrador/DashboardAdministrador';
+import DashboardStats from '../DashboardStats/DashboardStats';
 
 
 
@@ -307,139 +308,8 @@ const DashboardContent = () => {
     );
   }
 
-  // Mostrar error si no hay datos
-  if (!dashboardData && error) {
-    return (
-      <div className="dashboard-content">
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '400px',
-          flexDirection: 'column',
-          gap: '20px',
-          color: '#e74c3c'
-        }}>
-          <div style={{ fontSize: '48px' }}>⚠️</div>
-          <h3>Error al cargar Dashboard</h3>
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
-
-  const stats = dashboardData?.stats || {};
-  const activities = dashboardData?.recent_activity || [];
-  const alerts = dashboardData?.alerts || [];
-
-  return (
-    <div className="dashboard-content">
-      {/* Mostrar alerta de conectividad si hay problemas */}
-      {error && (
-        <div style={{
-          backgroundColor: '#fff3cd',
-          color: '#856404',
-          padding: '10px 15px',
-          borderRadius: '5px',
-          marginBottom: '20px',
-          border: '1px solid #ffeaa7'
-        }}>
-          ⚠️ {error}
-        </div>
-      )}
-
-      <div className="dashboard-grid">
-        {/* Estadísticas principales */}
-        <div className="stats-section">
-          <h2>Estadísticas del Sistema</h2>
-          <div className="stats-cards">
-            <div className="stat-card blue">
-              <div className="stat-icon">📦</div>
-              <div className="stat-info">
-                <h3>{stats.productos_registrados || 0}</h3>
-                <p>Productos Registrados</p>
-              </div>
-            </div>
-            <div className="stat-card green">
-              <div className="stat-icon">📋</div>
-              <div className="stat-info">
-                <h3>{stats.proyectos_activos || 0}</h3>
-                <p>Proyectos Activos</p>
-              </div>
-            </div>
-            <div className="stat-card purple">
-              <div className="stat-icon">📈</div>
-              <div className="stat-info">
-                <h3>{stats.movimientos_mes || 0}</h3>
-                <p>Movimientos este mes</p>
-              </div>
-            </div>
-            <div className="stat-card orange">
-              <div className="stat-icon">👥</div>
-              <div className="stat-info">
-                <h3>{stats.personal_activo || 0}</h3>
-                <p>Personal Activo</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Actividad reciente */}
-        <div className="activity-section">
-          <h2>Actividad Reciente</h2>
-          <div className="activity-list">
-            {activities.length > 0 ? (
-              activities.map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className="activity-icon">{activity.icon}</div>
-                  <div className="activity-info">
-                    <h4>{activity.title}</h4>
-                    <p>{activity.description}</p>
-                    <span className="activity-time">{activity.time}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="activity-item">
-                <div className="activity-icon">📋</div>
-                <div className="activity-info">
-                  <h4>Sin actividad reciente</h4>
-                  <p>No hay movimientos registrados</p>
-                  <span className="activity-time">Ahora</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Alertas */}
-        <div className="alerts-section">
-          <h2>Alertas del Sistema</h2>
-          <div className="alerts-list">
-            {alerts.length > 0 ? (
-              alerts.map((alert, index) => (
-                <div key={index} className={`alert-item ${alert.type}`}>
-                  <div className="alert-icon">{alert.icon}</div>
-                  <div className="alert-info">
-                    <h4>{alert.title}</h4>
-                    <p>{alert.description}</p>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="alert-item info">
-                <div className="alert-icon">✅</div>
-                <div className="alert-info">
-                  <h4>Sistema operativo</h4>
-                  <p>No hay alertas pendientes</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Renderizar el nuevo componente DashboardStats
+  return <DashboardStats dashboardData={dashboardData} error={error} />;
 };
 
 // Componente genérico para módulos en desarrollo

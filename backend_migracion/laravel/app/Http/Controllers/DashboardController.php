@@ -45,7 +45,7 @@ class DashboardController extends Controller
             $activities = [];
 
             // Actividad de salidas de materiales (últimas 3)
-            $salidas = DB::table('SALIDAS_MATERIALES')
+            $salidas = DB::table('salidas_materiales')
                 ->select('fecha_registro', 'proyecto', 'nom_ape', 'area')
                 ->orderBy('fecha_registro', 'desc')
                 ->limit(3)
@@ -63,7 +63,7 @@ class DashboardController extends Controller
             }
 
             // Actividad de ingresos de materiales (últimas 2)
-            $ingresos = DB::table('INGRESO_MATERIAL')
+            $ingresos = DB::table('ingreso_material')
                 ->select('fecha_ingreso', 'observaciones', 'usuario')
                 ->whereNotNull('fecha_ingreso')
                 ->orderBy('fecha_ingreso', 'desc')
@@ -82,7 +82,7 @@ class DashboardController extends Controller
             }
 
             // Actividad de órdenes de compra (últimas 2)
-            $ordenes = DB::table('ORDEN_COMPRA')
+            $ordenes = DB::table('orden_compra')
                 ->select('fecha_oc', 'estado', 'usuario_creacion', 'correlativo')
                 ->whereNotNull('fecha_oc')
                 ->orderBy('fecha_oc', 'desc')
@@ -147,7 +147,7 @@ class DashboardController extends Controller
             $alerts = [];
 
             // Verificar cantidad de productos registrados
-            $totalProductos = DB::table('PRODUCTO')->count();
+            $totalProductos = DB::table('producto')->count();
             
             if ($totalProductos > 100) {
                 $alerts[] = [
@@ -160,7 +160,7 @@ class DashboardController extends Controller
             }
 
             // Órdenes pendientes de aprobación
-            $ordenesPendientes = DB::table('ORDEN_COMPRA')
+            $ordenesPendientes = DB::table('orden_compra')
                 ->where('estado', 'PENDIENTE')
                 ->count();
 
@@ -175,7 +175,7 @@ class DashboardController extends Controller
             }
 
             // Verificar actividad de salidas recientes
-            $salidasRecientes = DB::table('SALIDAS_MATERIALES')
+            $salidasRecientes = DB::table('salidas_materiales')
                 ->whereDate('fecha_registro', '>=', Carbon::now()->subDays(7))
                 ->count();
 
@@ -229,7 +229,7 @@ class DashboardController extends Controller
     private function getProductosCount()
     {
         try {
-            return DB::table('PRODUCTO')->count();
+            return DB::table('producto')->count();
         } catch (\Exception $e) {
             return 0;
         }
@@ -239,7 +239,7 @@ class DashboardController extends Controller
     {
         try {
             // Contar proyectos únicos de la tabla PROYECTO_ALMACEN o similar
-            $count = DB::table('PROYECTO_ALMACEN')->count();
+            $count = DB::table('proyecto_almacen')->count();
             return $count > 0 ? $count : 9; // Fallback al valor actual
         } catch (\Exception $e) {
             return 9; // Valor por defecto
@@ -253,13 +253,13 @@ class DashboardController extends Controller
             $añoActual = Carbon::now()->year;
 
             // Contar movimientos de salida del mes actual usando SALIDAS_MATERIALES
-            $salidas = DB::table('SALIDAS_MATERIALES')
+            $salidas = DB::table('salidas_materiales')
                 ->whereMonth('fecha_registro', $mesActual)
                 ->whereYear('fecha_registro', $añoActual)
                 ->count();
 
             // Contar ingresos del mes actual
-            $ingresos = DB::table('INGRESO_MATERIAL')
+            $ingresos = DB::table('ingreso_material')
                 ->whereMonth('fecha_ingreso', $mesActual)
                 ->whereYear('fecha_ingreso', $añoActual)
                 ->count();
@@ -274,11 +274,11 @@ class DashboardController extends Controller
     {
         try {
             // Usar la tabla PERSONAL que existe (sin columna 'activo')
-            return DB::table('PERSONAL')->count();
+            return DB::table('personal')->count();
         } catch (\Exception $e) {
             // Si hay error, usar conteo de usuarios de LOGEO
             try {
-                return DB::table('LOGEO')->count();
+                return DB::table('logeo')->count();
             } catch (\Exception $e2) {
                 return 15; // Valor por defecto
             }
@@ -308,6 +308,206 @@ class DashboardController extends Controller
     }
 
     /**
+     * Obtener datos para gráfico de movimientos por mes
+     */
+    private function getMovimientosPorMes()
+    {
+        try {
+            $meses = [];
+            $ingresos = [];
+            $salidas = [];
+
+            // Últimos 12 meses
+            for ($i = 11; $i >= 0; $i--) {
+                $fecha = Carbon::now()->subMonths($i);
+                $mes = $fecha->month;
+                $año = $fecha->year;
+                $nombreMes = $fecha->locale('es')->shortMonthName;
+
+                // Contar ingresos del mes desde kardex
+                $ingresosCount = DB::table('movimiento_kardex')
+                    ->whereMonth('fecha_movimiento', $mes)
+                    ->whereYear('fecha_movimiento', $año)
+                    ->where(function($query) {
+                        $query->where('tipo_movimiento', 'INGRESO')
+                              ->orWhere('tipo_movimiento', 'LIKE', '%INGRESO%')
+                              ->orWhere('entrada', '>', 0);
+                    })
+                    ->count();
+
+                // Contar salidas del mes desde kardex
+                $salidasCount = DB::table('movimiento_kardex')
+                    ->whereMonth('fecha_movimiento', $mes)
+                    ->whereYear('fecha_movimiento', $año)
+                    ->where(function($query) {
+                        $query->where('tipo_movimiento', 'SALIDA')
+                              ->orWhere('tipo_movimiento', 'LIKE', '%SALIDA%')
+                              ->orWhere('salida', '>', 0);
+                    })
+                    ->count();
+
+                $meses[] = ucfirst($nombreMes);
+                $ingresos[] = $ingresosCount;
+                $salidas[] = $salidasCount;
+            }
+
+            return [
+                'labels' => $meses,
+                'ingresos' => $ingresos,
+                'salidas' => $salidas
+            ];
+        } catch (\Exception $e) {
+            // Datos de fallback
+            return [
+                'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                'ingresos' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                'salidas' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ];
+        }
+    }
+
+    /**
+     * Obtener productos agrupados por familia
+     */
+    private function getProductosPorFamilia()
+    {
+        try {
+            $familias = DB::table('producto')
+                ->join('familia', 'producto.id_familia', '=', 'familia.id_familia')
+                ->select('familia.nombre_familia', DB::raw('COUNT(*) as total'))
+                ->groupBy('familia.id_familia', 'familia.nombre_familia')
+                ->orderBy('total', 'desc')
+                ->limit(6)
+                ->get();
+
+            $labels = [];
+            $data = [];
+
+            foreach ($familias as $familia) {
+                $labels[] = $familia->nombre_familia;
+                $data[] = (int)$familia->total;
+            }
+
+            if (empty($labels)) {
+                return [
+                    'labels' => ['Sin datos'],
+                    'data' => [0]
+                ];
+            }
+
+            return [
+                'labels' => $labels,
+                'data' => $data
+            ];
+        } catch (\Exception $e) {
+            return [
+                'labels' => ['Sin datos'],
+                'data' => [0]
+            ];
+        }
+    }
+
+    /**
+     * Obtener inventario por bodega
+     */
+    private function getInventarioPorBodega()
+    {
+        try {
+            // Primero intentar desde kardex
+            $bodegas = DB::table('movimiento_kardex as mk')
+                ->join('bodega as b', 'mk.id_bodega', '=', 'b.id_bodega')
+                ->select('b.nombre_bodega', DB::raw('SUM(mk.saldo) as total_stock'))
+                ->groupBy('b.id_bodega', 'b.nombre_bodega')
+                ->having('total_stock', '>', 0)
+                ->orderBy('total_stock', 'desc')
+                ->get();
+
+            $labels = [];
+            $data = [];
+
+            foreach ($bodegas as $bodega) {
+                $labels[] = $bodega->nombre_bodega;
+                $data[] = (int)$bodega->total_stock;
+            }
+
+            // Si no hay datos en kardex, contar productos por bodega
+            if (empty($labels)) {
+                $bodegas = DB::table('producto')
+                    ->join('bodega', 'producto.id_bodega', '=', 'bodega.id_bodega')
+                    ->select('bodega.nombre_bodega', DB::raw('COUNT(*) as total'))
+                    ->groupBy('bodega.id_bodega', 'bodega.nombre_bodega')
+                    ->orderBy('total', 'desc')
+                    ->get();
+
+                foreach ($bodegas as $bodega) {
+                    $labels[] = $bodega->nombre_bodega;
+                    $data[] = (int)$bodega->total;
+                }
+            }
+
+            if (empty($labels)) {
+                return [
+                    'labels' => ['Sin datos'],
+                    'data' => [0]
+                ];
+            }
+
+            return [
+                'labels' => $labels,
+                'data' => $data
+            ];
+        } catch (\Exception $e) {
+            // Datos de fallback
+            return [
+                'labels' => ['Sin datos'],
+                'data' => [0]
+            ];
+        }
+    }
+
+    /**
+     * Obtener proyectos por estado
+     */
+    private function getProyectosPorEstado()
+    {
+        try {
+            // Intentar obtener estados reales si existe columna estado
+            $estados = DB::table('proyecto_almacen')
+                ->select(DB::raw('COALESCE(estado, "Activo") as estado'), DB::raw('COUNT(*) as total'))
+                ->groupBy('estado')
+                ->get();
+
+            $labels = [];
+            $data = [];
+
+            // Si hay datos de estados
+            if ($estados->count() > 0) {
+                foreach ($estados as $estado) {
+                    $labels[] = $estado->estado;
+                    $data[] = $estado->total;
+                }
+            } else {
+                // Usar conteo simple si no hay estados
+                $totalProyectos = DB::table('proyecto_almacen')->count();
+                $labels = ['Activos'];
+                $data = [$totalProyectos];
+            }
+
+            return [
+                'labels' => $labels,
+                'data' => $data
+            ];
+        } catch (\Exception $e) {
+            // Datos de fallback - asumir todos activos
+            $totalProyectos = $this->getProyectosActivos();
+            return [
+                'labels' => ['Activos'],
+                'data' => [$totalProyectos]
+            ];
+        }
+    }
+
+    /**
      * Obtener resumen completo del dashboard
      */
     public function getDashboardSummary(): JsonResponse
@@ -322,7 +522,13 @@ class DashboardController extends Controller
                 'data' => [
                     'stats' => $statsResponse->getData()->data ?? [],
                     'recent_activity' => $activityResponse->getData()->data ?? [],
-                    'alerts' => $alertsResponse->getData()->data ?? []
+                    'alerts' => $alertsResponse->getData()->data ?? [],
+                    'charts' => [
+                        'movimientos_por_mes' => $this->getMovimientosPorMes(),
+                        'productos_por_familia' => $this->getProductosPorFamilia(),
+                        'inventario_por_bodega' => $this->getInventarioPorBodega(),
+                        'proyectos_por_estado' => $this->getProyectosPorEstado()
+                    ]
                 ]
             ]);
 
