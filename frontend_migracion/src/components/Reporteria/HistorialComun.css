@@ -55,13 +55,13 @@
 .input-busqueda:focus,
 .select-filtro:focus {
   outline: none;
-  border-color: #3498db;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  border-color: #5f9fd8;
+  box-shadow: 0 0 0 3px rgba(95, 159, 216, 0.1);
 }
 
 .btn-recargar {
   padding: 12px 24px;
-  background: #3498db;
+  background: #5f9fd8;
   color: white;
   border: none;
   border-radius: 8px;
@@ -73,7 +73,7 @@
 }
 
 .btn-recargar:hover {
-  background: #2980b9;
+  background: #74c9e8;
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
@@ -93,7 +93,7 @@
 }
 
 .historial-tabla thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   color: white;
 }
 

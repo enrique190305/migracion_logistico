@@ -12,11 +12,11 @@
   align-items: center;
   gap: 20px;
   padding: 30px 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   border-radius: 15px;
   color: white;
   margin-bottom: 30px;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(95, 159, 216, 0.3);
 }
 
 .header-icon-kardex {
@@ -76,16 +76,16 @@
 }
 
 .tab-button-kardex.active {
-  background: #667eea;
+  background: #5f9fd8;
   color: white;
-  border-color: #667eea;
+  border-color: #5f9fd8;
   z-index: 1;
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 5px 15px rgba(95, 159, 216, 0.3);
 }
 
 .tab-button-kardex:hover:not(.active) {
   background: #f5f7fa;
-  border-color: #667eea;
+  border-color: #5f9fd8;
 }
 
 .tab-icon-kardex {
@@ -93,7 +93,7 @@
 }
 
 .tab-badge-kardex {
-  background: #667eea;
+  background: #5f9fd8;
   color: white;
   padding: 3px 12px;
   border-radius: 15px;
@@ -111,14 +111,14 @@
 }
 
 .tab-button-kardex:not(.active) .tab-badge-kardex {
-  background: #667eea;
+  background: #5f9fd8;
   color: white;
 }
 
 /* Estadísticas */
 .stats-panel-kardex {
   padding: 20px 30px;
-  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   border-radius: 12px;
   margin-bottom: 20px;
   color: white;
@@ -154,8 +154,8 @@
 }
 
 .search-box-kardex:focus-within {
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #5f9fd8;
+  box-shadow: 0 0 0 3px rgba(95, 159, 216, 0.1);
 }
 
 .search-icon-kardex {

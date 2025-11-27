@@ -1,17 +1,23 @@
 .prestamos-container {
-  padding: 20px;
-  background-color: #f5f7fa;
+  padding: 0;
+  background-color: transparent;
   min-height: 100vh;
 }
 
 .prestamos-header {
-  margin-bottom: 20px;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  border-left: 0.25rem solid #5f9fd8;
 }
 
 .prestamos-header h1 {
-  font-size: 28px;
+  font-size: 1.75rem;
   color: #2c3e50;
-  font-weight: 600;
+  font-weight: 700;
+  margin: 0;
 }
 
 /* Pestañas */
@@ -40,9 +46,9 @@
 }
 
 .tab-btn.active {
-  color: #3498db;
-  border-bottom-color: #3498db;
-  background-color: #e3f2fd;
+  color: #5f9fd8;
+  border-bottom-color: #5f9fd8;
+  background-color: #f0f8ff;
 }
 
 /* Contenido */
@@ -54,17 +60,19 @@
 }
 
 .registro-manual-section {
-  margin-bottom: 30px;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border-left: 4px solid #3498db;
+  margin-bottom: 1.875rem;
+  padding: 1.25rem;
+  background: white;
+  border-radius: 1rem;
+  border-left: 0.25rem solid #5f9fd8;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
 }
 
 .registro-manual-section h3 {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
   color: #2c3e50;
-  font-size: 18px;
+  font-size: 1.125rem;
+  font-weight: 700;
 }
 
 .form-row-4cols {

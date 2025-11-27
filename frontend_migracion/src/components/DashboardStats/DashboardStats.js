@@ -178,34 +178,84 @@ const DashboardStats = ({ dashboardData, error }) => {
         </div>
       )}
 
-      {/* Tarjetas de estadísticas principales */}
-      <div className="stats-cards-grid-stats">
-        <div className="stat-card-stats blue">
-          <div className="stat-icon-stats">📦</div>
-          <div className="stat-content-stats">
-            <h3>{stats.productos_registrados || 267}</h3>
-            <p>Productos Registrados</p>
+      {/* Sección de Estadísticas del Sistema */}
+      <div className="stats-section-wrapper">
+        <h2 className="section-title">Estadísticas del Sistema</h2>
+        
+        <div className="stats-cards-grid-figma">
+          {/* Tarjeta Azul - Productos Registrados */}
+          <div className="stat-card-figma blue-card">
+            <div className="stat-card-content">
+              <div className="stat-icon-figma">📦</div>
+              <div className="stat-info-figma">
+                <h3>{stats.productos_registrados || 267}</h3>
+                <p>Productos Registrados</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta Verde - Proyectos Activos */}
+          <div className="stat-card-figma green-card">
+            <div className="stat-card-content">
+              <div className="stat-icon-figma">📋</div>
+              <div className="stat-info-figma">
+                <h3>{stats.proyectos_activos || 10}</h3>
+                <p>Proyectos Activos</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta Morada - Movimientos este mes */}
+          <div className="stat-card-figma purple-card">
+            <div className="stat-card-content">
+              <div className="stat-icon-figma">📈</div>
+              <div className="stat-info-figma">
+                <h3>{stats.movimientos_mes || 17}</h3>
+                <p>Movimientos este mes</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta Naranja - Personal Activo */}
+          <div className="stat-card-figma orange-card">
+            <div className="stat-card-content">
+              <div className="stat-icon-figma">👥</div>
+              <div className="stat-info-figma">
+                <h3>{stats.personal_activo || 1}</h3>
+                <p>Personal Activo</p>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="stat-card-stats green">
-          <div className="stat-icon-stats">📋</div>
-          <div className="stat-content-stats">
-            <h3>{stats.proyectos_activos || 9}</h3>
-            <p>Proyectos Activos</p>
+      </div>
+
+      {/* Sección de Actividad Reciente */}
+      <div className="activity-section-wrapper">
+        <h2 className="section-title">Actividad Reciente</h2>
+        
+        <div className="activity-list-figma">
+          <div className="activity-item-figma">
+            <div className="activity-icon-figma">📥</div>
+            <div className="activity-info-figma">
+              <h4>Ingreso de materiales</h4>
+              <p>Se registraron 50 unidades de cemento</p>
+            </div>
           </div>
-        </div>
-        <div className="stat-card-stats purple">
-          <div className="stat-icon-stats">📈</div>
-          <div className="stat-content-stats">
-            <h3>{stats.movimientos_mes || 27}</h3>
-            <p>Movimientos este mes</p>
+
+          <div className="activity-item-figma">
+            <div className="activity-icon-figma">📝</div>
+            <div className="activity-info-figma">
+              <h4>Nueva orden de compra</h4>
+              <p>OC-2025-001 creada para proveedor ABC</p>
+            </div>
           </div>
-        </div>
-        <div className="stat-card-stats orange">
-          <div className="stat-icon-stats">👥</div>
-          <div className="stat-content-stats">
-            <h3>{stats.personal_activo || 0}</h3>
-            <p>Personal Activo</p>
+
+          <div className="activity-item-figma">
+            <div className="activity-icon-figma">✅</div>
+            <div className="activity-info-figma">
+              <h4>Orden aprobada</h4>
+              <p>OC-2025-002 aprobada y enviada</p>
+            </div>
           </div>
         </div>
       </div>

@@ -60,7 +60,7 @@
 }
 
 .inventario-table-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%) !important;
   color: white !important;
 }
 
@@ -86,17 +86,17 @@
 }
 
 .chip-stock-alto {
-  background-color: #4caf50 !important;
+  background-color: #66e089 !important;
   color: white !important;
 }
 
 .chip-stock-medio {
-  background-color: #ff9800 !important;
+  background-color: #ffb978 !important;
   color: white !important;
 }
 
 .chip-stock-bajo {
-  background-color: #f44336 !important;
+  background-color: #ff6b6b !important;
   color: white !important;
   animation: pulse 2s infinite;
 }

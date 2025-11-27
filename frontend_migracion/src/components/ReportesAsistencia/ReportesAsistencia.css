@@ -61,25 +61,25 @@
 }
 
 .btn-export {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  background: linear-gradient(135deg, #66e089 0%, #8cffb0 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 224, 137, 0.3);
 }
 
 .btn-export:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(39, 174, 96, 0.4);
+  box-shadow: 0 6px 16px rgba(102, 224, 137, 0.4);
 }
 
 .btn-refresh {
-  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 4px 12px rgba(95, 159, 216, 0.3);
 }
 
 .btn-refresh:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+  box-shadow: 0 6px 16px rgba(95, 159, 216, 0.4);
 }
 
 /* Filtros */

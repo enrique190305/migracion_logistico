@@ -18,12 +18,12 @@
   width: 100px;
   height: 100px;
   margin: 0 auto 24px;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(231, 76, 60, 0.4);
+  box-shadow: 0 8px 24px rgba(95, 159, 216, 0.4);
   animation: scaleIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
@@ -44,7 +44,7 @@
   font-size: 32px;
   font-weight: 700;
   color: #2d3748;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -74,13 +74,13 @@
   border-radius: 20px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  border: 2px solid rgba(231, 76, 60, 0.2);
+  border: 2px solid rgba(95, 159, 216, 0.2);
 }
 
 .info-card-header {
   padding: 24px;
-  background: linear-gradient(135deg, rgba(231, 76, 60, 0.1) 0%, rgba(192, 57, 43, 0.05) 100%);
-  border-bottom: 2px solid rgba(231, 76, 60, 0.2);
+  background: linear-gradient(135deg, rgba(95, 159, 216, 0.1) 0%, rgba(116, 201, 232, 0.05) 100%);
+  border-bottom: 2px solid rgba(95, 159, 216, 0.2);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -89,7 +89,7 @@
 .info-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;

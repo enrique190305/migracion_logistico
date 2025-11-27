@@ -1,42 +1,43 @@
 .registro-proyecto-container {
-  padding: 20px;
+  padding: 0;
   max-width: 1400px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  min-height: calc(100vh - 100px);
+  background: transparent;
+  min-height: calc(100vh - 6.25rem);
 }
 
 /* Header del Proyecto */
 .proyecto-header {
   background: white;
-  padding: 20px 30px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 30px;
+  padding: 1.5rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.875rem;
+  border-left: 0.25rem solid #5f9fd8;
 }
 
 .proyecto-header h2 {
   color: #2c3e50;
-  margin: 0 0 20px 0;
-  font-size: 28px;
-  font-weight: 600;
+  margin: 0 0 1.25rem 0;
+  font-size: 1.75rem;
+  font-weight: 700;
 }
 
 .btn-volver {
-  background: #6c757d;
+  background: #95a5a6;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
   cursor: pointer;
-  font-size: 14px;
-  margin-bottom: 15px;
+  font-size: 0.875rem;
+  margin-bottom: 0.9375rem;
   transition: all 0.3s ease;
 }
 
 .btn-volver:hover {
-  background: #5a6268;
-  transform: translateX(-5px);
+  background: #7f8c8d;
+  transform: translateX(-0.3125rem);
 }
 
 /* Barra de Progreso */
@@ -71,9 +72,9 @@
 }
 
 .progress-step.active .step-number {
-  background: #27ae60;
+  background: linear-gradient(135deg, #66e089 0%, #8cffb0 100%);
   color: white;
-  box-shadow: 0 0 0 4px rgba(39, 174, 96, 0.2);
+  box-shadow: 0 0 0 0.25rem rgba(102, 224, 137, 0.25);
 }
 
 .step-label {
@@ -85,7 +86,7 @@
 }
 
 .progress-step.active .step-label {
-  color: #27ae60;
+  color: #66e089;
   font-weight: 600;
 }
 

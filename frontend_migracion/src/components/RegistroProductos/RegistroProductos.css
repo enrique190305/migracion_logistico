@@ -1,60 +1,57 @@
 .registro-productos-container {
-  padding: 20px;
-  background: #f5f7fa;
+  padding: 0;
+  background: transparent;
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Header con diseño tipo barra superior */
 .registro-productos-header {
-  background: #2c3e50;
-  padding: 20px 30px;
-  border-radius: 0;
-  box-shadow: none;
-  margin-bottom: 25px;
+  background: white;
+  padding: 1.5rem 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-left: 6px solid #3498db;
+  border-left: 0.25rem solid #5f9fd8;
 }
 
 .registro-productos-container .header-title-productos {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 1rem;
 }
 
 .registro-productos-container .header-icon-productos {
-  font-size: 32px;
-  background: #3498db;
-  width: 50px;
-  height: 50px;
+  font-size: 2rem;
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  width: 3.125rem;
+  height: 3.125rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 0.625rem;
 }
 
 .registro-productos-container .header-title-productos h1 {
-  font-size: 24px;
-  color: white;
+  font-size: 1.5rem;
+  color: #2c3e50;
   margin: 0;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 3px;
+  font-weight: 700;
+  letter-spacing: 0.03125rem;
 }
 
 .registro-productos-container .header-title-productos p {
-  color: #bdc3c7;
-  margin: 5px 0 0 0;
-  font-size: 13px;
-  text-transform: none;
-  letter-spacing: normal;
+  color: #95a5a6;
+  margin: 0.3125rem 0 0 0;
+  font-size: 0.875rem;
 }
 
 .registro-productos-container .header-actions-productos {
   display: flex;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 /* Modal Overlay */
@@ -88,12 +85,12 @@
 }
 
 .registro-productos-container .modal-header-productos {
-  background: #34495e;
-  padding: 20px 25px;
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  padding: 1.25rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 3px solid #3498db;
+  border-bottom: 0;
 }
 
 .registro-productos-container .modal-header-productos h2 {

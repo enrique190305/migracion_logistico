@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Sidebar.css';
 
 // ============================================
@@ -43,6 +43,9 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     reporteria: false
   });
   const [toast, setToast] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0 });
+  const tooltipTimerRef = useRef(null);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -209,6 +212,74 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
     }
   ];
 
+  // Determinar qué módulo principal mostrar según el rol del usuario
+  const [currentMainModule, setCurrentMainModule] = useState('logistica');
+  const [selectedCategory, setSelectedCategory] = useState('dashboard');
+  
+  // Definir las categorías principales de LOGÍSTICA con sus iconos
+  const logisticaCategories = [
+    { id: 'dashboard', icon: '🏠', title: 'Dashboard', modules: ['dashboard'] },
+    { id: 'activos', icon: '📦', title: 'Administración de Activos', modules: ['registro-empresa', 'registro-bodega', 'registro-reserva'] },
+    { id: 'compras', icon: '🛒', title: 'Compras y Productos', modules: ['orden-pedido', 'ordenes-compra', 'registro-productos', 'eliminar-oc'] },
+    { id: 'materiales', icon: '📊', title: 'Gestión de Materiales', modules: ['ingreso-materiales', 'traslado-materiales', 'salida-materiales', 'ajuste-inventario'] },
+    { id: 'proveedores', icon: '🏢', title: 'Proveedores y Proyectos', modules: ['registro-proveedores', 'editar-proveedores', 'registro-proyecto', 'kardex', 'registro-familia'] },
+    { id: 'prestamos', icon: '💳', title: 'Gestión y Reportes', modules: ['prestamos', 'historial-prestamos', 'aprobacion-ordenes', 'reporteria'] }
+  ];
+
+  // Definir las categorías principales de RECURSOS HUMANOS con sus iconos
+  const recursosHumanosCategories = [
+    { id: 'dashboard-rrhh', icon: '📊', title: 'Dashboard Supervisor', modules: ['dashboard-supervisor'] },
+    { id: 'reportes-rrhh', icon: '📋', title: 'Reportes', modules: ['reportes-asistencia-rrhh', 'reportes-horarios-rrhh', 'reportes-emergencias-rrhh'] },
+    { id: 'gestion-rrhh', icon: '👥', title: 'Gestión de Usuarios', modules: ['gestion-usuarios-rrhh', 'dashboard-admin-rrhh'] }
+  ];
+
+  // Obtener las categorías según el módulo actual
+  const getCurrentCategories = () => {
+    return currentMainModule === 'logistica' ? logisticaCategories : recursosHumanosCategories;
+  };
+  
+  // Obtener todos los items del módulo actual filtrados por categoría
+  const getCurrentCategoryItems = () => {
+    const module = menuCategories.find(m => m.id === currentMainModule);
+    if (!module) return [];
+    
+    const categories = getCurrentCategories();
+    const category = categories.find(c => c.id === selectedCategory);
+    if (!category) return [];
+    
+    let allItems = [];
+    module.subcategories.forEach(subcat => {
+      const filteredItems = subcat.items.filter(item => {
+        if (item.adminOnly && !isAdmin) return false;
+        if (subcat.rrhhAccess && !isRecursosHumanos) return false;
+        return category.modules.includes(item.id);
+      });
+      allItems = [...allItems, ...filteredItems];
+    });
+    return allItems;
+  };
+
+  // Obtener items de una categoría específica (para tooltips)
+  const getCurrentCategoryItemsForCategory = (categoryId) => {
+    const module = menuCategories.find(m => m.id === currentMainModule);
+    if (!module) return [];
+    
+    const categories = getCurrentCategories();
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return [];
+    
+    let allItems = [];
+    module.subcategories.forEach(subcat => {
+      const filteredItems = subcat.items.filter(item => {
+        if (item.adminOnly && !isAdmin) return false;
+        if (subcat.rrhhAccess && !isRecursosHumanos) return false;
+        return category.modules.includes(item.id);
+      });
+      allItems = [...allItems, ...filteredItems];
+    });
+    return allItems;
+  };
+
   const toggleCategory = (categoryId) => {
     if (isCollapsed) return;
     setExpandedCategories(prev => ({
@@ -272,122 +343,181 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
         </button>
       </div>
 
-      {/* Módulos Principales */}
-      <div className="sidebar-content">
-        {menuCategories.map(mainModule => {
-          // Ocultar el módulo RECURSOS HUMANOS para roles Administrador (1) y Usuario (2)
-          // Solo mostrar RECURSOS HUMANOS para rol Recursos Humanos (3)
-          if (mainModule.id === 'recursosHumanos' && !isRecursosHumanos) {
-            return null;
-          }
-
-          return (
-            <div key={mainModule.id} className="main-module">
-              {/* Header del Módulo Principal */}
-              <div 
-                className={`main-module-header ${expandedCategories[mainModule.id] ? 'expanded' : ''}`}
-                onClick={() => toggleCategory(mainModule.id)}
-                style={{ '--module-color': mainModule.color }}
-                title={isCollapsed ? mainModule.title : ''}
-              >
-                <span className="module-icon">{mainModule.icon}</span>
-                {!isCollapsed && (
-                  <>
-                    <span className="module-title">{mainModule.title}</span>
-                    <span className="expand-icon">
-                      {expandedCategories[mainModule.id] ? '▼' : '▶'}
-                    </span>
-                  </>
-                )}
+      {/* Contenido del Sidebar - Orden correcto: Módulos Generales -> Iconos Laterales -> Submódulos */}
+      <div className="sidebar-main-container">
+        <div className="sidebar-content-figma">
+          {!isCollapsed && (
+            <>
+              {/* Selector de Módulo General (LOGÍSTICA / RECURSOS HUMANOS) */}
+              <div className="sidebar-module-title">
+                <h2>{currentMainModule === 'logistica' ? 'LOGÍSTICA' : 'RECURSOS HUMANOS'}</h2>
               </div>
 
-              {/* Subcategorías del Módulo */}
-              {!isCollapsed && expandedCategories[mainModule.id] && (
-                <div className="module-subcategories">
-                  {mainModule.subcategories.map(category => {
-                    // Ocultar categorías solo para admin si el usuario no es admin
-                    if (category.adminOnly && !isAdmin) {
-                      return null;
-                    }
-                    // Ocultar categorías de RRHH si el usuario no es RRHH
-                    if (category.rrhhAccess && !isRecursosHumanos) {
-                      return null;
-                    }
-
-                    return (
-                      <div key={category.id} className="menu-category">
-                        <div 
-                          className={`category-header ${expandedCategories[category.id] ? 'expanded' : ''}`}
-                          onClick={() => toggleCategory(category.id)}
-                          style={{ '--category-color': category.color }}
-                        >
-                          <span className="category-icon">{category.icon}</span>
-                          {!isCollapsed && (
-                            <>
-                              <span className="category-title">{category.title}</span>
-                              <span className="expand-icon">
-                                {expandedCategories[category.id] ? '▼' : '▶'}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                        
-                        {!isCollapsed && expandedCategories[category.id] && (
-                          <div className="category-items">
-                            {category.items
-                              .filter(item => !item.adminOnly || isAdmin)
-                              .map(item => (
-                              <div 
-                                key={item.id}
-                                className={`menu-item ${activeModule === item.id ? 'active' : ''}`}
-                                onClick={() => handleItemClick(item.id)}
-                              >
-                                <span className="menu-icon">{item.icon}</span>
-                                <span className="menu-title">{item.title}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+              {/* Botones para cambiar de módulo general (si el usuario tiene acceso a RRHH) */}
+              {isRecursosHumanos && (
+                <div className="module-selector">
+                  <button 
+                    className={`module-selector-btn ${currentMainModule === 'logistica' ? 'active' : ''}`}
+                    onClick={() => {
+                      setCurrentMainModule('logistica');
+                      setSelectedCategory('dashboard');
+                    }}
+                  >
+                    🚚 LOGÍSTICA
+                  </button>
+                  <button 
+                    className={`module-selector-btn ${currentMainModule === 'recursosHumanos' ? 'active' : ''}`}
+                    onClick={() => {
+                      setCurrentMainModule('recursosHumanos');
+                      setSelectedCategory('dashboard-rrhh');
+                    }}
+                  >
+                    👔 RECURSOS HUMANOS
+                  </button>
                 </div>
               )}
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Información del Usuario */}
-      {!isCollapsed && (
-        <div className="user-info-sidebar">
-          <div className="user-status">
-            <div className="user-avatar-small">
-              <span>{isAdmin ? '👑' : (isRecursosHumanos ? '👔' : '👤')}</span>
-            </div>
-            <div className="user-details-small">
-              <span className="user-name-small">{user?.nombre || 'Usuario'}</span>
-              <span className={`user-role-small ${isAdmin ? 'admin' : (isRecursosHumanos ? 'rrhh' : 'user')}`}>
-                {isAdmin ? 'Administrador' : (isRecursosHumanos ? 'Recursos Humanos' : 'Usuario')}
-              </span>
-            </div>
-          </div>
-          {(!isAdmin && !isRecursosHumanos) && (
-            <div className="access-notice">
-              <span className="notice-icon">ℹ️</span>
-              <span className="notice-text">Acceso limitado - Algunos módulos restringidos</span>
+              {/* Contenedor con iconos laterales y submódulos */}
+              <div className="sidebar-category-container">
+                {/* Iconos circulares laterales según el módulo general seleccionado */}
+                <div className="sidebar-lateral-icons">
+                  {getCurrentCategories().map(category => (
+                    <button
+                      key={category.id}
+                      className={`lateral-icon-btn ${selectedCategory === category.id ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory(category.id)}
+                      title={category.title}
+                    >
+                      {category.icon}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Lista de submódulos de la categoría seleccionada */}
+                <div className="sidebar-menu-list">
+                  {getCurrentCategoryItems().map(item => (
+                    <button
+                      key={item.id}
+                      className={`sidebar-menu-item ${activeModule === item.id ? 'active' : ''}`}
+                      onClick={() => handleItemClick(item.id)}
+                    >
+                      <span className="menu-item-icon">{item.icon}</span>
+                      <span className="menu-item-text">{item.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Vista colapsada */}
+          {isCollapsed && (
+            <div className="sidebar-collapsed-icons">
+              {getCurrentCategories().map((category, index) => {
+                const categoryItems = getCurrentCategoryItemsForCategory(category.id);
+                return (
+                  <div 
+                    key={category.id} 
+                    className="collapsed-icon-wrapper"
+                    onMouseEnter={(e) => {
+                      if (tooltipTimerRef.current) {
+                        clearTimeout(tooltipTimerRef.current);
+                      }
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTooltipPosition({ top: rect.top });
+                      setHoveredCategory(category.id);
+                    }}
+                    onMouseLeave={() => {
+                      tooltipTimerRef.current = setTimeout(() => {
+                        setHoveredCategory(null);
+                      }, 100);
+                    }}
+                  >
+                    <button
+                      className={`sidebar-icon-btn ${selectedCategory === category.id ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory(category.id)}
+                      title={category.title}
+                    >
+                      {category.icon}
+                    </button>
+                    
+                    {/* Tooltip con submódulos */}
+                    {hoveredCategory === category.id && categoryItems.length > 0 && (
+                      <div 
+                        className="sidebar-tooltip"
+                        style={{ top: tooltipPosition.top }}
+                        onMouseEnter={() => {
+                          if (tooltipTimerRef.current) {
+                            clearTimeout(tooltipTimerRef.current);
+                          }
+                          setHoveredCategory(category.id);
+                        }}
+                        onMouseLeave={() => {
+                          tooltipTimerRef.current = setTimeout(() => {
+                            setHoveredCategory(null);
+                          }, 100);
+                        }}
+                      >
+                        <div className="tooltip-header">
+                          <span className="tooltip-icon">{category.icon}</span>
+                          <span className="tooltip-title">{category.title}</span>
+                        </div>
+                        <div className="tooltip-items">
+                          {categoryItems.map(item => (
+                            <button
+                              key={item.id}
+                              className={`tooltip-item ${activeModule === item.id ? 'active' : ''}`}
+                              onClick={() => {
+                                handleItemClick(item.id);
+                                setHoveredCategory(null);
+                              }}
+                            >
+                              <span className="tooltip-item-icon">{item.icon}</span>
+                              <span className="tooltip-item-text">{item.title}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
+      </div>
+
+      {/* Sección inferior del sidebar */}
+      {!isCollapsed && (
+        <div className="sidebar-bottom-section">
+          <div className="user-info-figma">
+            <div className="user-avatar-figma">
+              <span>👤</span>
+            </div>
+            <div className="user-details-figma">
+              <span className="user-name-figma">{user?.nombre || 'Usuario'}</span>
+              <span className="user-role-figma">
+                {isAdmin ? 'Recursos Humanos' : (isRecursosHumanos ? 'Recursos Humanos' : 'Usuario (Acceso limitado)')}
+              </span>
+            </div>
+          </div>
+          
+          {/* Botón de Ayuda */}
+          <button className="help-button-figma">
+            <span className="help-icon">❓</span>
+            <span className="help-text">AYUDA</span>
+          </button>
+        </div>
       )}
 
-      {/* Ayuda */}
-      <div className="sidebar-footer">
-        <div className="help-item">
-          <span className="menu-icon">❓</span>
-          {!isCollapsed && <span className="menu-title">Ayuda</span>}
+      {/* Vista colapsada - Botón de ayuda */}
+      {isCollapsed && (
+        <div className="sidebar-footer">
+          <button className="help-icon-collapsed" title="Ayuda">
+            ❓
+          </button>
         </div>
-      </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (

@@ -55,7 +55,7 @@
 
 .btn-refresh {
   padding: 12px 24px;
-  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -63,12 +63,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 4px 12px rgba(95, 159, 216, 0.3);
 }
 
 .btn-refresh:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+  box-shadow: 0 6px 16px rgba(95, 159, 216, 0.4);
 }
 
 /* Stats Grid */
@@ -97,7 +97,7 @@
 }
 
 .stat-trabajadores {
-  border-left-color: #3498db;
+  border-left-color: #5f9fd8;
 }
 
 .stat-asistencias {
