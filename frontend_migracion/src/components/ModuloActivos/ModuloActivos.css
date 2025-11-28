@@ -1,0 +1,54 @@
+.modulo-activos-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Pestañas estilo Figma */
+.modulo-activos-tabs {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.5rem;
+  border-radius: 12px 12px 0 0;
+  backdrop-filter: blur(10px);
+  margin-bottom: 0;
+}
+
+.modulo-tab {
+  flex: 1;
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.modulo-tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.modulo-tab.active {
+  background: white;
+  color: #4A9DE8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Contenido */
+.modulo-activos-content {
+  flex: 1;
+  background: white;
+  border-radius: 0 0 20px 20px;
+  padding: 1.5rem;
+  overflow: auto;
+}

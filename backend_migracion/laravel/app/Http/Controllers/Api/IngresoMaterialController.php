@@ -15,26 +15,33 @@ class IngresoMaterialController extends Controller
 {
     /**
      * Listar órdenes pendientes (OC y OS con estado APROBADO o PARCIAL)
+     * Solo muestra órdenes que tengan productos con saldo > 0
      */
     public function listarOrdenesPendientes()
     {
         try {
-            // Obtener OC con estado APROBADO o PARCIAL
-            $ordenesCompra = DB::table('orden_compra')
-                ->whereIn('estado', ['APROBADO', 'PARCIAL'])
-                ->select('correlativo', DB::raw("'OC' as tipo"))
-                ->orderBy('correlativo')
-                ->get();
+            // Obtener OC con productos pendientes (saldo > 0)
+            $ordenesCompra = DB::select("
+                SELECT DISTINCT oc.correlativo, 'OC' as tipo
+                FROM orden_compra oc
+                INNER JOIN detalle_oc d ON oc.id_oc = d.id_oc
+                WHERE oc.estado IN ('APROBADO', 'PARCIAL')
+                AND (d.cantidad - IFNULL(d.cantidad_recibida, 0)) > 0
+                ORDER BY oc.correlativo
+            ");
 
-            // Obtener OS con estado APROBADO o PARCIAL
-            $ordenesServicio = DB::table('orden_servicio')
-                ->whereIn('estado', ['APROBADO', 'PARCIAL'])
-                ->select('correlativo', DB::raw("'OS' as tipo"))
-                ->orderBy('correlativo')
-                ->get();
+            // Obtener OS con servicios pendientes (saldo > 0)
+            $ordenesServicio = DB::select("
+                SELECT DISTINCT os.correlativo, 'OS' as tipo
+                FROM orden_servicio os
+                INNER JOIN detalle_os d ON os.id_os = d.id_os
+                WHERE os.estado IN ('APROBADO', 'PARCIAL')
+                AND (d.cantidad - IFNULL(d.cantidad_recibida, 0)) > 0
+                ORDER BY os.correlativo
+            ");
 
             // Combinar ambas colecciones
-            $ordenes = $ordenesCompra->concat($ordenesServicio);
+            $ordenes = array_merge($ordenesCompra, $ordenesServicio);
 
             return response()->json([
                 'success' => true,
@@ -62,6 +69,8 @@ class IngresoMaterialController extends Controller
                 $orden = DB::table('orden_compra as oc')
                     ->join('proveedor as p', 'oc.id_proveedor', '=', 'p.id_proveedor')
                     ->join('empresa as e', 'oc.id_empresa', '=', 'e.id_empresa')
+                    ->leftJoin('orden_pedido as op', 'oc.id_orden_pedido', '=', 'op.id_orden_pedido')
+                    ->leftJoin('bodega as b', 'op.id_bodega', '=', 'b.id_bodega')
                     ->where('oc.correlativo', $correlativo)
                     ->select(
                         'oc.id_oc',
@@ -71,6 +80,9 @@ class IngresoMaterialController extends Controller
                         'oc.estado',
                         'e.razon_social',
                         'e.id_empresa',
+                        'b.id_bodega',
+                        'b.nombre as bodega_nombre',
+                        'b.ubicacion as bodega_ubicacion',
                         DB::raw("'OC' as tipo")
                     )
                     ->first();
@@ -79,6 +91,8 @@ class IngresoMaterialController extends Controller
                 $orden = DB::table('orden_servicio as os')
                     ->join('proveedor as p', 'os.id_proveedor', '=', 'p.id_proveedor')
                     ->join('empresa as e', 'os.id_empresa', '=', 'e.id_empresa')
+                    ->leftJoin('orden_pedido as op', 'os.id_orden_pedido', '=', 'op.id_orden_pedido')
+                    ->leftJoin('bodega as b', 'op.id_bodega', '=', 'b.id_bodega')
                     ->where('os.correlativo', $correlativo)
                     ->select(
                         'os.id_os',
@@ -88,6 +102,9 @@ class IngresoMaterialController extends Controller
                         'os.estado',
                         'e.razon_social',
                         'e.id_empresa',
+                        'b.id_bodega',
+                        'b.nombre as bodega_nombre',
+                        'b.ubicacion as bodega_ubicacion',
                         DB::raw("'OS' as tipo")
                     )
                     ->first();
@@ -140,20 +157,8 @@ class IngresoMaterialController extends Controller
                         d.codigo_producto,
                         p.descripcion,
                         d.cantidad,
-                        IFNULL((
-                            SELECT SUM(di.cantidad_recibida) 
-                            FROM detalle_ingreso_material di
-                            INNER JOIN ingreso_material im ON di.id_ingreso = im.id_ingreso
-                            WHERE im.id_oc = d.id_oc 
-                            AND di.codigo_producto = d.codigo_producto
-                        ), 0) as cantidad_recibida,
-                        (d.cantidad - IFNULL((
-                            SELECT SUM(di.cantidad_recibida) 
-                            FROM detalle_ingreso_material di
-                            INNER JOIN ingreso_material im ON di.id_ingreso = im.id_ingreso
-                            WHERE im.id_oc = d.id_oc 
-                            AND di.codigo_producto = d.codigo_producto
-                        ), 0)) as saldo,
+                        IFNULL(d.cantidad_recibida, 0) as cantidad_recibida,
+                        (d.cantidad - IFNULL(d.cantidad_recibida, 0)) as saldo,
                         p.unidad,
                         d.precio_unitario
                     FROM detalle_oc d
@@ -175,20 +180,8 @@ class IngresoMaterialController extends Controller
                         d.codigo_servicio as codigo_producto,
                         d.descripcion_servicio as descripcion,
                         d.cantidad,
-                        IFNULL((
-                            SELECT SUM(dc.cantidad_conforme) 
-                            FROM detalle_conformidad_servicio dc
-                            INNER JOIN conformidad_servicio cs ON dc.id_conformidad = cs.id_conformidad
-                            WHERE cs.id_os = d.id_os 
-                            AND dc.codigo_servicio = d.codigo_servicio
-                        ), 0) as cantidad_recibida,
-                        (d.cantidad - IFNULL((
-                            SELECT SUM(dc.cantidad_conforme) 
-                            FROM detalle_conformidad_servicio dc
-                            INNER JOIN conformidad_servicio cs ON dc.id_conformidad = cs.id_conformidad
-                            WHERE cs.id_os = d.id_os 
-                            AND dc.codigo_servicio = d.codigo_servicio
-                        ), 0)) as saldo,
+                        IFNULL(d.cantidad_recibida, 0) as cantidad_recibida,
+                        (d.cantidad - IFNULL(d.cantidad_recibida, 0)) as saldo,
                         d.unidad,
                         d.precio_unitario
                     FROM detalle_os d
@@ -481,6 +474,12 @@ class IngresoMaterialController extends Controller
                 'observaciones' => $producto['observaciones'] ?? ''
             ]);
 
+            // ✅ Actualizar cantidad_recibida en detalle_oc
+            DB::table('detalle_oc')
+                ->where('id_oc', $orden->id_oc)
+                ->where('codigo_producto', $producto['codigo_producto'])
+                ->increment('cantidad_recibida', $producto['cantidad_ingresar']);
+
             // Obtener precio unitario del detalle de OC
             $detalleOC = DB::table('detalle_oc')
                 ->where('id_oc', $orden->id_oc)
@@ -548,6 +547,12 @@ class IngresoMaterialController extends Controller
                 'cantidad_conforme' => $producto['cantidad_ingresar'],
                 'observaciones' => $producto['observaciones'] ?? ''
             ]);
+
+            // ✅ Actualizar cantidad_recibida en detalle_os
+            DB::table('detalle_os')
+                ->where('id_os', $orden->id_os)
+                ->where('codigo_servicio', $producto['codigo_producto'])
+                ->increment('cantidad_recibida', $producto['cantidad_ingresar']);
         }
 
         // Actualizar estado de la OS
@@ -564,18 +569,12 @@ class IngresoMaterialController extends Controller
      */
     private function actualizarEstadoOC($idOC)
     {
-        // Verificar si quedan productos pendientes
+        // Verificar si quedan productos pendientes usando cantidad_recibida
         $pendientes = DB::select("
             SELECT COUNT(*) as total
             FROM detalle_oc d
             WHERE d.id_oc = ?
-            AND (IFNULL(d.cantidad, 0) - IFNULL((
-                SELECT SUM(di.cantidad_recibida)
-                FROM detalle_ingreso_material di
-                INNER JOIN ingreso_material im ON di.id_ingreso = im.id_ingreso
-                WHERE im.id_oc = d.id_oc
-                AND di.codigo_producto = d.codigo_producto
-            ), 0)) > 0
+            AND (IFNULL(d.cantidad, 0) - IFNULL(d.cantidad_recibida, 0)) > 0
         ", [$idOC]);
 
         $nuevoEstado = ($pendientes[0]->total == 0) ? 'COMPLETADA' : 'PARCIAL';
@@ -590,18 +589,12 @@ class IngresoMaterialController extends Controller
      */
     private function actualizarEstadoOS($idOS)
     {
-        // Verificar si quedan servicios pendientes
+        // Verificar si quedan servicios pendientes usando cantidad_recibida
         $pendientes = DB::select("
             SELECT COUNT(*) as total
             FROM detalle_os d
             WHERE d.id_os = ?
-            AND (IFNULL(d.cantidad, 0) - IFNULL((
-                SELECT SUM(dc.cantidad_conforme)
-                FROM detalle_conformidad_servicio dc
-                INNER JOIN conformidad_servicio cs ON dc.id_conformidad = cs.id_conformidad
-                WHERE cs.id_os = d.id_os
-                AND dc.codigo_servicio = d.codigo_servicio
-            ), 0)) > 0
+            AND (IFNULL(d.cantidad, 0) - IFNULL(d.cantidad_recibida, 0)) > 0
         ", [$idOS]);
 
         $nuevoEstado = ($pendientes[0]->total == 0) ? 'COMPLETADA' : 'PARCIAL';
@@ -1057,7 +1050,8 @@ class IngresoMaterialController extends Controller
                     'oc.correlativo as correlativo_oc',
                     'p.nombre as razon_social',
                     'p.ruc',
-                    'b.nombre as nombre_bodega'
+                    'b.nombre as nombre_bodega',
+                    'b.ubicacion as ubicacion_bodega'
                 )
                 ->where('im.id_ingreso', $idIngreso)
                 ->first();
@@ -1123,31 +1117,14 @@ class IngresoMaterialController extends Controller
     public function obtenerReservasPorBodega($idBodega)
     {
         try {
-            Log::info('=== INICIO obtenerReservasPorBodega ===');
-            Log::info('ID Bodega recibido: ' . $idBodega);
-
             // Obtener TODAS las reservas distintas de la bodega desde proyecto_almacen
             $reservas = DB::table('proyecto_almacen as pa')
                 ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
                 ->where('pa.id_bodega', $idBodega)
                 ->where('r.estado', 'ACTIVO')
                 ->select('r.id_reserva', 'r.tipo_reserva')
-                ->distinct() // DISTINCT para evitar duplicados
+                ->distinct()
                 ->get();
-
-            Log::info('Reservas encontradas: ' . $reservas->count(), ['reservas' => $reservas]);
-
-            // Si no encuentra reservas, retornar las 3 opciones estándar
-            if ($reservas->isEmpty()) {
-                Log::warning('No se encontraron reservas específicas para bodega: ' . $idBodega);
-                $reservas = DB::table('reserva')
-                    ->select('id_reserva', 'tipo_reserva')
-                    ->whereIn('tipo_reserva', ['EXTERNA', 'INTERNA', 'COMERCIAL'])
-                    ->where('estado', 'ACTIVO')
-                    ->get();
-            }
-
-            Log::info('=== FIN obtenerReservasPorBodega ===');
 
             return response()->json([
                 'success' => true,
@@ -1155,11 +1132,6 @@ class IngresoMaterialController extends Controller
             ]);
 
         } catch (Exception $e) {
-            Log::error('=== ERROR en obtenerReservasPorBodega ===');
-            Log::error('Mensaje: ' . $e->getMessage());
-            Log::error('Línea: ' . $e->getLine());
-            Log::error('Archivo: ' . $e->getFile());
-            
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener reservas',

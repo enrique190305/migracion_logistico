@@ -30,13 +30,23 @@ const OrdenesCompraServicio = () => {
   // Estados para Información de Orden de Pedido
   const [idOrdenPedido, setIdOrdenPedido] = useState('');
   const [ordenPedidoSeleccionada, setOrdenPedidoSeleccionada] = useState(null);
+  const [bodegaOrdenPedido, setBodegaOrdenPedido] = useState(''); // Bodega de la OP
+  const [bodegaUbicacion, setBodegaUbicacion] = useState(''); // Ubicación de la bodega
   
   // Estados para Información de Empresa (readonly cuando hay orden de pedido, editable si no)
   const [razonSocial, setRazonSocial] = useState('');
   const [idEmpresa, setIdEmpresa] = useState(''); // ID de empresa cuando se selecciona manualmente
   const [proyectoAlmacen, setProyectoAlmacen] = useState('');
   const [correlativo, setCorrelativo] = useState('');
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0]);
+  const obtenerFechaLocal = () => {
+    const fecha = new Date();
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [fecha, setFecha] = useState(obtenerFechaLocal());
   
   // Estados para Información de Proveedor
   const [proveedor, setProveedor] = useState('');
@@ -50,7 +60,7 @@ const OrdenesCompraServicio = () => {
   const [longitud, setLongitud] = useState('');
   const [latitudDestino, setLatitudDestino] = useState('');
   const [longitudDestino, setLongitudDestino] = useState('');
-  const [fechaRequerida, setFechaRequerida] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaRequerida, setFechaRequerida] = useState(obtenerFechaLocal());
   const [destino, setDestino] = useState('');
   
   // Estados para AÑADIR PRODUCTOS manualmente
@@ -151,10 +161,11 @@ const OrdenesCompraServicio = () => {
   // Cerrar lista de productos al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
-      const comboboxContainer = event.target.closest('.form-group');
+      // Verificar si el clic fue en el input o en el dropdown
       const clickedInput = event.target.closest('input[placeholder="Seleccione producto..."]');
+      const clickedDropdown = event.target.closest('.productos-dropdown');
       
-      if (mostrarListaProductos && !clickedInput && !comboboxContainer) {
+      if (mostrarListaProductos && !clickedInput && !clickedDropdown) {
         setMostrarListaProductos(false);
       }
     };
@@ -235,6 +246,8 @@ const OrdenesCompraServicio = () => {
       setRazonSocial('');
       setIdEmpresa('');
       setProyectoAlmacen('');
+      setBodegaOrdenPedido('');
+      setBodegaUbicacion('');
       setProductosAgregados([]);
       return;
     }
@@ -246,12 +259,19 @@ const OrdenesCompraServicio = () => {
       setOrdenPedidoSeleccionada(ordenData);
       
       // Auto-completar Razón Social (readonly)
-      // El backend devuelve razon_social directamente en el objeto
       setRazonSocial(ordenData.razon_social || 'N/A');
       setIdEmpresa(ordenData.id_empresa);
       
-      // Auto-completar Proyecto/Almacén (readonly)
-      // El backend devuelve proyecto_nombre y proyecto_bodega directamente
+      // Auto-completar Bodega (NUEVO)
+      if (ordenData.bodega_nombre) {
+        setBodegaOrdenPedido(ordenData.bodega_nombre);
+        setBodegaUbicacion(ordenData.bodega_ubicacion || '');
+      } else {
+        setBodegaOrdenPedido('N/A');
+        setBodegaUbicacion('');
+      }
+      
+      // Auto-completar Proyecto/Almacén (readonly) - Mantener por compatibilidad
       if (ordenData.proyecto_nombre && ordenData.proyecto_bodega) {
         const proyectoTexto = `${ordenData.proyecto_nombre} - ${ordenData.proyecto_bodega}`;
         setProyectoAlmacen(proyectoTexto);
@@ -260,7 +280,6 @@ const OrdenesCompraServicio = () => {
       }
       
       // Cargar productos SIN PRECIOS desde los detalles de la orden de pedido
-      // El backend devuelve los datos del producto directamente en cada detalle
       const productosDesdeOrden = ordenData.detalles?.map((detalle, index) => ({
         id: Date.now() + index,
         codigo: detalle.codigo_producto || 'N/A',
@@ -717,10 +736,38 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
   // Mostrar mensaje de carga
   if (loading) {
     return (
-      <div className="ordenes-compra-servicio-container">
-        <div className="ordenes-header">
-          <div className="ordenes-header-icon">🛒</div>
-          <h1>ÓRDENES DE COMPRA Y SERVICIOS</h1>
+      <div className="ordenes-compra-servicio-container" style={{
+        width: '100%',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '20px',
+        boxSizing: 'border-box'
+      }}>
+        <div className="ordenes-header" style={{
+          background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)',
+          padding: '25px 40px',
+          borderRadius: '15px',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: '5px',
+          marginBottom: '30px'
+        }}>
+          <h1 style={{
+            color: 'white',
+            margin: '0',
+            fontSize: '28px',
+            fontWeight: '600',
+            letterSpacing: '0.5px'
+          }}>Órdenes de Compra/Servicio</h1>
+          <p style={{
+            color: 'white',
+            margin: '0',
+            fontSize: '14px',
+            opacity: '0.9',
+            fontWeight: '400'
+          }}>Gestión y administración</p>
         </div>
         <div style={{ padding: '40px', textAlign: 'center', fontSize: '18px' }}>
           <div style={{ marginBottom: '20px' }}>⏳ Cargando datos...</div>
@@ -735,10 +782,38 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
   // Mostrar mensaje de error
   if (error) {
     return (
-      <div className="ordenes-compra-servicio-container">
-        <div className="ordenes-header">
-          <div className="ordenes-header-icon">🛒</div>
-          <h1>ÓRDENES DE COMPRA Y SERVICIOS</h1>
+      <div className="ordenes-compra-servicio-container" style={{
+        width: '100%',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+        padding: '20px',
+        boxSizing: 'border-box'
+      }}>
+        <div className="ordenes-header" style={{
+          background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)',
+          padding: '25px 40px',
+          borderRadius: '15px',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: '5px',
+          marginBottom: '30px'
+        }}>
+          <h1 style={{
+            color: 'white',
+            margin: '0',
+            fontSize: '28px',
+            fontWeight: '600',
+            letterSpacing: '0.5px'
+          }}>Órdenes de Compra/Servicio</h1>
+          <p style={{
+            color: 'white',
+            margin: '0',
+            fontSize: '14px',
+            opacity: '0.9',
+            fontWeight: '400'
+          }}>Gestión y administración</p>
         </div>
         <div style={{ padding: '40px', textAlign: 'center' }}>
           <div style={{ color: '#e74c3c', fontSize: '18px', marginBottom: '20px' }}>
@@ -784,24 +859,30 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
       boxSizing: 'border-box'
     }}>
       <div className="ordenes-header" style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)',
         padding: '25px 40px',
         borderRadius: '15px',
-        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
         display: 'flex',
-        alignItems: 'center',
-        gap: '20px',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        gap: '5px',
         marginBottom: '30px'
       }}>
-        <div className="ordenes-header-icon" style={{ fontSize: '48px' }}>🛒</div>
         <h1 style={{
           color: 'white',
           margin: '0',
-          fontSize: '32px',
-          fontWeight: '700',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)',
-          letterSpacing: '1px'
-        }}>ÓRDENES DE COMPRA Y SERVICIOS</h1>
+          fontSize: '28px',
+          fontWeight: '600',
+          letterSpacing: '0.5px'
+        }}>Órdenes de Compra/Servicio</h1>
+        <p style={{
+          color: 'white',
+          margin: '0',
+          fontSize: '14px',
+          opacity: '0.9',
+          fontWeight: '400'
+        }}>Gestión y administración</p>
       </div>
       
       <div className="ordenes-content" style={{
@@ -812,45 +893,135 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
         margin: '0 auto'
       }}>
         {/* NUEVA SECCIÓN: Selección de Orden de Pedido */}
-        <div className="ordenes-card orden-pedido-card">
-          <div className="card-header">
-            <span className="card-icon">📋</span>
-            <h3>ORDEN DE PEDIDO</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+          <div className="ordenes-card orden-pedido-card" style={{
+            background: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+            overflow: 'hidden'
+          }}>
+            <div className="card-header" style={{
+              background: 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)',
+              padding: '15px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px'
+            }}>
+              <span className="card-icon" style={{ fontSize: '24px', color: 'white' }}>📋</span>
+              <h3 style={{
+                color: 'white',
+                margin: '0',
+                fontSize: '16px',
+                fontWeight: '600',
+                letterSpacing: '0.5px'
+              }}>ORDEN DE PEDIDO</h3>
+            </div>
+            <div className="card-body">
+              <div className="form-row">
+                <div className="form-group" style={{ flex: '1' }}>
+                  <label>Orden de Pedido (Pendientes):</label>
+                  <select 
+                    value={idOrdenPedido} 
+                    onChange={(e) => handleOrdenPedidoChange(e.target.value)}
+                    className="form-input"
+                  >
+                    <option value="">Seleccione una orden de pedido...</option>
+                    {ordenesPedidoPendientes.map(orden => (
+                      <option key={orden.id_orden_pedido} value={orden.id_orden_pedido}>
+                        {orden.correlativo}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {ordenesPedidoPendientes.length === 0 && (
+                <div style={{ 
+                  padding: '15px', 
+                  backgroundColor: '#fff3cd', 
+                  borderLeft: '4px solid #ffc107',
+                  marginTop: '10px',
+                  borderRadius: '5px'
+                }}>
+                  <strong>⚠️ No hay Órdenes de Pedido pendientes</strong>
+                  <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
+                    Debe crear una Orden de Pedido con estado "PENDIENTE" antes de generar OC/OS.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="card-body">
-            <div className="form-row">
-              <div className="form-group" style={{ flex: '1' }}>
-                <label>Orden de Pedido (Pendientes):</label>
-                <select 
-                  value={idOrdenPedido} 
-                  onChange={(e) => handleOrdenPedidoChange(e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">Seleccione una orden de pedido...</option>
-                  {ordenesPedidoPendientes.map(orden => (
-                    <option key={orden.id_orden_pedido} value={orden.id_orden_pedido}>
-                      {orden.correlativo}
-                    </option>
-                  ))}
-                </select>
+
+          {/* NUEVA SECCIÓN: Información de Bodega de la Orden de Pedido */}
+          {idOrdenPedido && bodegaOrdenPedido && (
+            <div className="ordenes-card" style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+              overflow: 'hidden'
+            }}>
+              <div className="card-header" style={{
+                background: 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)',
+                padding: '15px 20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px'
+              }}>
+                <span className="card-icon" style={{ fontSize: '24px', color: 'white' }}>🏪</span>
+                <h3 style={{
+                  color: 'white',
+                  margin: '0',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  letterSpacing: '0.5px'
+                }}>BODEGA DE LA ORDEN</h3>
+              </div>
+              <div className="card-body" style={{ padding: '20px' }}>
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ 
+                    fontSize: '14px', 
+                    fontWeight: '600', 
+                    color: '#333',
+                    marginBottom: '8px',
+                    display: 'block'
+                  }}>Bodega:</label>
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8f9fa',
+                    border: '2px solid #e9ecef',
+                    borderRadius: '6px',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    color: '#1643DC'
+                  }}>
+                    {bodegaOrdenPedido}
+                  </div>
+                </div>
+                
+                {bodegaUbicacion && (
+                  <div>
+                    <label style={{ 
+                      fontSize: '14px', 
+                      fontWeight: '600', 
+                      color: '#333',
+                      marginBottom: '8px',
+                      display: 'block'
+                    }}>Ubicación:</label>
+                    <div style={{
+                      padding: '10px',
+                      background: '#f8f9fa',
+                      border: '1px solid #e9ecef',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      color: '#666'
+                    }}>
+                      📍 {bodegaUbicacion}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-            
-            {ordenesPedidoPendientes.length === 0 && (
-              <div style={{ 
-                padding: '15px', 
-                backgroundColor: '#fff3cd', 
-                borderLeft: '4px solid #ffc107',
-                marginTop: '10px',
-                borderRadius: '5px'
-              }}>
-                <strong>⚠️ No hay Órdenes de Pedido pendientes</strong>
-                <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>
-                  Debe crear una Orden de Pedido con estado "PENDIENTE" antes de generar OC/OS.
-                </p>
-              </div>
-            )}
-          </div>
+          )}
         </div>
         
         {/* Sección Superior: Información de Empresa y Proveedor */}
@@ -868,13 +1039,13 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             overflow: 'hidden'
           }}>
             <div className="card-header" style={{
-              background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+              background: 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)',
               padding: '15px 20px',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
-              <span className="card-icon" style={{ fontSize: '24px' }}>🏢</span>
+              <span className="card-icon" style={{ fontSize: '24px', color: 'white' }}>🏢</span>
               <h3 style={{
                 color: 'white',
                 margin: '0',
@@ -955,13 +1126,13 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
             overflow: 'hidden'
           }}>
             <div className="card-header" style={{
-              background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+              background: 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)',
               padding: '15px 20px',
               display: 'flex',
               alignItems: 'center',
               gap: '12px'
             }}>
-              <span className="card-icon" style={{ fontSize: '24px' }}>📦</span>
+            <span className="card-icon" style={{ fontSize: '24px', color: 'white' }}>📦</span>
               <h3 style={{
                 color: 'white',
                 margin: '0',
@@ -1013,7 +1184,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                     disabled={!proveedor}
                     style={{
                       padding: '10px 20px',
-                      backgroundColor: proveedor ? '#2196f3' : '#ccc',
+                      backgroundColor: proveedor ? '#60ABFA' : '#ccc',
                       color: 'white',
                       border: 'none',
                       borderRadius: '5px',
@@ -1040,13 +1211,13 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
           marginBottom: '20px'
         }}>
           <div className="card-header" style={{
-            background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 100%)',
             padding: '15px 20px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px'
           }}>
-            <span className="card-icon" style={{ fontSize: '24px' }}>📋</span>
+            <span className="card-icon" style={{ fontSize: '24px', color: 'white' }}>📋</span>
             <h3 style={{
               color: 'white',
               margin: '0',
@@ -1068,13 +1239,14 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '15px',
-                padding: '30px 20px',
-                border: tipoOrden === 'compra' ? '3px solid #667eea' : '3px solid #e0e0e0',
-                borderRadius: '12px',
+                padding: '40px 20px',
+                border: 'none',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                background: tipoOrden === 'compra' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
-                minHeight: '150px',
-                transition: 'all 0.3s ease'
+                background: tipoOrden === 'compra' ? 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)' : 'white',
+                minHeight: '100px',
+                transition: 'all 0.3s ease',
+                boxShadow: tipoOrden === 'compra' ? '0 4px 12px rgba(96, 171, 250, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.08)'
               }}>
                 <input 
                   type="radio" 
@@ -1084,14 +1256,10 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                   onChange={(e) => setTipoOrden(e.target.value)}
                   style={{ display: 'none' }}
                 />
-                <span className="option-icon" style={{ 
-                  fontSize: '64px',
-                  color: tipoOrden === 'compra' ? 'white' : '#333'
-                }}>🛒</span>
                 <span className="option-text" style={{
-                  fontSize: '20px',
+                  fontSize: '24px',
                   fontWeight: '700',
-                  color: tipoOrden === 'compra' ? 'white' : '#333',
+                  color: tipoOrden === 'compra' ? 'white' : '#4A5568',
                   letterSpacing: '1px',
                   textTransform: 'uppercase'
                 }}>COMPRA</span>
@@ -1102,13 +1270,14 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '15px',
-                padding: '30px 20px',
-                border: tipoOrden === 'servicio' ? '3px solid #667eea' : '3px solid #e0e0e0',
-                borderRadius: '12px',
+                padding: '40px 20px',
+                border: 'none',
+                borderRadius: '8px',
                 cursor: 'pointer',
-                background: tipoOrden === 'servicio' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)',
-                minHeight: '150px',
-                transition: 'all 0.3s ease'
+                background: tipoOrden === 'servicio' ? 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)' : 'white',
+                minHeight: '100px',
+                transition: 'all 0.3s ease',
+                boxShadow: tipoOrden === 'servicio' ? '0 4px 12px rgba(96, 171, 250, 0.3)' : '0 2px 6px rgba(0, 0, 0, 0.08)'
               }}>
                 <input 
                   type="radio" 
@@ -1118,14 +1287,10 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                   onChange={(e) => setTipoOrden(e.target.value)}
                   style={{ display: 'none' }}
                 />
-                <span className="option-icon" style={{ 
-                  fontSize: '64px',
-                  color: tipoOrden === 'servicio' ? 'white' : '#333'
-                }}>🔧</span>
                 <span className="option-text" style={{
-                  fontSize: '20px',
+                  fontSize: '24px',
                   fontWeight: '700',
-                  color: tipoOrden === 'servicio' ? 'white' : '#333',
+                  color: tipoOrden === 'servicio' ? 'white' : '#4A5568',
                   letterSpacing: '1px',
                   textTransform: 'uppercase'
                 }}>SERVICIO</span>
@@ -1223,7 +1388,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
               padding: '10px', 
               backgroundColor: '#e7f3ff', 
               borderRadius: '5px',
-              borderLeft: '4px solid #2196f3'
+              borderLeft: '4px solid #60ABFA'
             }}>
               <strong>💡 Nota:</strong> Use esta sección para agregar productos que no estén en la Orden de Pedido seleccionada.
             </div>
@@ -1241,6 +1406,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                       setMostrarListaProductos(true);
                     }}
                     onFocus={() => setMostrarListaProductos(true)}
+                    onClick={() => setMostrarListaProductos(!mostrarListaProductos)}
                     className="form-input"
                     placeholder="Seleccione producto..."
                     autoComplete="off"
@@ -1250,30 +1416,35 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                       cursor: 'pointer'
                     }}
                   />
-                  <span style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    pointerEvents: 'none',
-                    color: '#666'
-                  }}>▼</span>
+                  <span 
+                    onClick={() => setMostrarListaProductos(!mostrarListaProductos)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      pointerEvents: 'none',
+                  
+                      color: '#666',
+                      userSelect: 'none'
+                    }}
+                  >▼</span>
                   
                   {/* Lista desplegable con posicionamiento absoluto */}
                   {mostrarListaProductos && (
-                    <div style={{
+                    <div className="productos-dropdown" style={{
                       position: 'absolute',
-                      bottom: '100%',
+                      top: '100%',
                       left: 0,
                       right: 0,
                       maxHeight: '350px',
                       overflowY: 'auto',
                       backgroundColor: 'white',
-                      border: '2px solid #667eea',
+                      border: '2px solid #60ABFA',
                       borderRadius: '8px',
                       zIndex: 9999,
-                      boxShadow: '0 -8px 32px rgba(102, 126, 234, 0.3)',
-                      marginBottom: '8px'
+                      boxShadow: '0 8px 32px rgba(96, 171, 250, 0.3)',
+                      marginTop: '8px'
                     }}>
                       {productos
                         .filter(prod => {
@@ -1300,7 +1471,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                               gap: '4px'
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f0f4ff';
+                              e.currentTarget.style.backgroundColor = '#e7f3ff';
                             }}
                             onMouseLeave={(e) => {
                               e.currentTarget.style.backgroundColor = 'white';
@@ -1311,7 +1482,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                               justifyContent: 'space-between',
                               alignItems: 'center'
                             }}>
-                              <strong style={{ color: '#667eea', fontSize: '13px' }}>
+                              <strong style={{ color: '#60ABFA', fontSize: '13px' }}>
                                 {prod.codigo}
                               </strong>
                               <span style={{ 
@@ -1487,7 +1658,7 @@ Forma de pago: ${detalleProveedor.formaPago || 'N/A'}`;
                 padding: '12px', 
                 backgroundColor: '#e7f3ff', 
                 borderRadius: '5px',
-                borderLeft: '4px solid #2196f3'
+                borderLeft: '4px solid #60ABFA'
               }}>
                 <strong>💡 Instrucciones:</strong>
                 <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>

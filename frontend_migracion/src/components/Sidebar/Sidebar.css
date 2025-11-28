@@ -1,8 +1,7 @@
 .sidebar {
   width: 350px;
   height: 100vh;
-  background: rgba(60, 120, 180, 0.5);
-  backdrop-filter: blur(15px);
+  background: linear-gradient(180deg, #4A9DE8 0%, #3B8FDB 50%, #2D81CE 100%);
   color: white;
   display: flex;
   flex-direction: column;
@@ -11,8 +10,8 @@
   left: 0;
   top: 0;
   z-index: 1000;
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  border-right: none;
 }
 
 .sidebar.collapsed {
@@ -164,30 +163,31 @@
 }
 
 .lateral-icon-btn {
-  width: 60px;
-  height: 60px;
+  width: 65px;
+  height: 65px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.85);
-  border: none;
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 28px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  color: white;
 }
 
 .lateral-icon-btn:hover {
   transform: scale(1.1);
-  background: white;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.4);
+  border-color: white;
 }
 
 .lateral-icon-btn.active {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
-  box-shadow: 0 5px 15px rgba(95, 159, 216, 0.5);
+  background: white;
+  color: #4A9DE8;
+  border-color: white;
   transform: scale(1.05);
 }
 
@@ -262,34 +262,34 @@
 }
 
 .sidebar-menu-item {
-  background: rgba(255, 255, 255, 0.95);
-  border: none;
-  border-radius: 10px;
-  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   gap: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  color: #2c3e50;
+  color: white;
   text-align: left;
   width: 100%;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .sidebar-menu-item:hover {
-  background: white;
+  background: rgba(255, 255, 255, 0.3);
   transform: translateX(5px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar-menu-item.active {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
-  color: white;
-  box-shadow: 0 4px 12px rgba(95, 159, 216, 0.4);
-  font-weight: 600;
+  background: white;
+  color: #4A9DE8;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
 }
 
 .menu-item-icon {

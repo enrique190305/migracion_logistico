@@ -9,7 +9,7 @@
 
 /* Header */
 .ordenes-header {
-  background: white;
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   padding: 1.5rem 2rem;
   border-radius: 1rem;
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
@@ -17,17 +17,17 @@
   align-items: center;
   gap: 1.25rem;
   margin-bottom: 1.5rem;
-  border-left: 0.25rem solid #5f9fd8;
+  border-left: none;
   animation: slideDown 0.5s ease-out;
 }
 
 .ordenes-header-icon {
   font-size: 2.5rem;
-  color: #5f9fd8;
+  color: white;
 }
 
 .ordenes-header h1 {
-  color: #2c3e50;
+  color: white;
   margin: 0;
   font-size: 1.75rem;
   font-weight: 700;
@@ -66,7 +66,7 @@
 }
 
 .card-header {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   padding: 1rem 1.25rem;
   display: flex;
   align-items: center;
@@ -112,7 +112,7 @@
 
 /* Tipo de Orden */
 .tipo-orden-card .card-header {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
 }
 
 .tipo-orden-options {
@@ -138,15 +138,15 @@
 }
 
 .tipo-orden-option:hover {
-  border-color: #667eea;
+  border-color: #60ABFA;
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 5px 15px rgba(96, 171, 250, 0.2);
 }
 
 .tipo-orden-option.active {
-  border-color: #667eea;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  border-color: #60ABFA;
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
+  box-shadow: 0 8px 25px rgba(96, 171, 250, 0.4);
 }
 
 .tipo-orden-option.active .option-icon,
@@ -226,8 +226,8 @@ select.form-input {
 .form-input:focus,
 select.form-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #60ABFA;
+  box-shadow: 0 0 0 3px rgba(96, 171, 250, 0.1);
 }
 
 .form-input:disabled,
@@ -260,14 +260,14 @@ select.form-input:focus {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #60ABFA;
+  box-shadow: 0 0 0 3px rgba(96, 171, 250, 0.1);
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #60ABFA;
+  box-shadow: 0 0 0 3px rgba(96, 171, 250, 0.1);
 }
 
 .form-textarea {
@@ -282,8 +282,8 @@ select.form-input:focus {
 
 .form-textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #60ABFA;
+  box-shadow: 0 0 0 3px rgba(96, 171, 250, 0.1);
 }
 
 .subtotal-group {
@@ -294,13 +294,13 @@ select.form-input:focus {
 
 .subtotal-display {
   padding: 12px 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   border-radius: 8px;
   color: white;
   font-weight: 700;
   font-size: 18px;
   text-align: center;
-  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 3px 10px rgba(96, 171, 250, 0.3);
 }
 
 /* Tabla */
@@ -316,7 +316,7 @@ select.form-input:focus {
 }
 
 .tabla-productos thead {
-  background: linear-gradient(135deg, #434343 0%, #000000 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
 }
 
 .tabla-productos thead th {
@@ -353,7 +353,7 @@ select.form-input:focus {
 }
 
 .btn-eliminar {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   color: white;
   border: none;
   padding: 8px 15px;
@@ -361,12 +361,12 @@ select.form-input:focus {
   cursor: pointer;
   font-size: 16px;
   transition: all 0.3s ease;
-  box-shadow: 0 3px 10px rgba(245, 87, 108, 0.3);
+  box-shadow: 0 3px 10px rgba(96, 171, 250, 0.3);
 }
 
 .btn-eliminar:hover {
   transform: scale(1.1);
-  box-shadow: 0 5px 15px rgba(245, 87, 108, 0.5);
+  box-shadow: 0 5px 15px rgba(96, 171, 250, 0.5);
 }
 
 /* Acciones */
@@ -397,13 +397,13 @@ select.form-input:focus {
 }
 
 .btn-insertar {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   color: white;
 }
 
 .btn-insertar:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
+  box-shadow: 0 8px 20px rgba(96, 171, 250, 0.4);
 }
 
 .btn-insertar:disabled {
@@ -412,13 +412,13 @@ select.form-input:focus {
 }
 
 .btn-guardar {
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   color: white;
 }
 
 .btn-guardar:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+  box-shadow: 0 8px 20px rgba(96, 171, 250, 0.4);
 }
 
 .btn-guardar:disabled {
@@ -437,7 +437,7 @@ select.form-input:focus {
 }
 
 .resumen-card .card-header {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
 }
 
 .resumen-row {
@@ -460,7 +460,7 @@ select.form-input:focus {
 
 .resumen-valor {
   font-weight: 700;
-  color: #667eea;
+  color: #60ABFA;
   font-size: 16px;
   font-family: 'Courier New', monospace;
 }
@@ -468,18 +468,18 @@ select.form-input:focus {
 .resumen-total {
   margin-top: 15px;
   padding-top: 20px;
-  border-top: 3px solid #667eea;
+  border-top: 3px solid #60ABFA;
 }
 
 .resumen-total .resumen-label {
   font-size: 20px;
-  color: #667eea;
+  color: #60ABFA;
   font-weight: 700;
 }
 
 .resumen-total .resumen-valor {
   font-size: 26px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -631,7 +631,7 @@ select.form-input:focus {
 
 .btn-ver-proveedor {
   padding: 12px 30px;
-  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -639,16 +639,16 @@ select.form-input:focus {
   font-size: 14px;
   font-weight: 600;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+  box-shadow: 0 4px 12px rgba(96, 171, 250, 0.3);
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .btn-ver-proveedor:hover:not(:disabled) {
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  background: linear-gradient(135deg, #1643DC 0%, #0d2b9e 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(33, 150, 243, 0.4);
+  box-shadow: 0 6px 16px rgba(96, 171, 250, 0.4);
 }
 
 .btn-ver-proveedor:disabled {
@@ -670,17 +670,17 @@ select.form-input:focus {
   padding: 15px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #60ABFA;
   transition: all 0.3s ease;
 }
 
 .info-item:hover {
   background: #e8f1ff;
-  border-left-color: #4a90e2;
+  border-left-color: #1643DC;
 }
 
 .info-item strong {
-  color: #667eea;
+  color: #60ABFA;
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -695,7 +695,7 @@ select.form-input:focus {
 
 .btn-cerrar {
   padding: 10px 30px;
-  background-color: #6c757d;
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   color: white;
   border: none;
   border-radius: 5px;
@@ -706,7 +706,8 @@ select.form-input:focus {
 }
 
 .btn-cerrar:hover {
-  background-color: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(96, 171, 250, 0.3);
 }
 
 .modal-footer {
@@ -749,13 +750,13 @@ select.form-input:focus {
 .subtotal-display {
   width: 100%;
   padding: 12px 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   border-radius: 8px;
   color: white;
   font-weight: 700;
   font-size: 18px;
   text-align: center;
-  box-shadow: 0 3px 10px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 3px 10px rgba(96, 171, 250, 0.3);
 }
 
 /* Mensajes informativos */
@@ -763,12 +764,12 @@ select.form-input:focus {
   padding: 12px 15px;
   background: #e7f3ff;
   border-radius: 5px;
-  border-left: 4px solid #2196f3;
+  border-left: 4px solid #60ABFA;
   margin-bottom: 15px;
 }
 
 .info-message strong {
-  color: #1976d2;
+  color: #1643DC;
   font-weight: 600;
 }
 
@@ -777,7 +778,7 @@ select.form-input:focus {
 .btn-guardar-os {
   width: 100%;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #60ABFA 0%, #1643DC 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -789,7 +790,7 @@ select.form-input:focus {
   justify-content: center;
   gap: 12px;
   transition: all 0.3s ease;
-  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 5px 20px rgba(96, 171, 250, 0.3);
   letter-spacing: 0.5px;
   margin-top: 20px;
 }
@@ -797,7 +798,7 @@ select.form-input:focus {
 .btn-guardar-oc:hover:not(:disabled),
 .btn-guardar-os:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 8px 25px rgba(96, 171, 250, 0.5);
 }
 
 .btn-guardar-oc:disabled,

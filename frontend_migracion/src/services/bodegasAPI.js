@@ -188,3 +188,23 @@ export const obtenerReservasParaTraslado = async () => {
     };
   }
 };
+
+/**
+ * Obtener todas las empresas
+ */
+export const obtenerEmpresas = async () => {
+  try {
+    const response = await axios.get('http://127.0.0.1:8000/api/empresas');
+    return {
+      success: true,
+      data: response.data.data || []
+    };
+  } catch (error) {
+    console.error('Error al obtener empresas:', error);
+    return {
+      success: false,
+      message: error.response?.data?.message || 'Error al cargar empresas',
+      data: []
+    };
+  }
+};

@@ -15,11 +15,20 @@ const SalidaMateriales = () => {
   const [numeroSalida, setNumeroSalida] = useState('');
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState('');
   const [reservaSeleccionada, setReservaSeleccionada] = useState('');
+  const [proyectoSeleccionado, setProyectoSeleccionado] = useState(''); // Nuevo: ID del proyecto
   const [idMovilPersonaSeleccionada, setIdMovilPersonaSeleccionada] = useState(''); // ID para el combobox
   const [responsableSalida, setResponsableSalida] = useState(''); // ID del proyecto_almacen (para guardar)
   const [nombreResponsable, setNombreResponsable] = useState(''); // Nombre del responsable
   const [dniResponsable, setDniResponsable] = useState(''); // DNI del responsable
-  const [fechaSalida, setFechaSalida] = useState(new Date().toISOString().split('T')[0]);
+  const obtenerFechaLocal = () => {
+    const fecha = new Date();
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [fechaSalida, setFechaSalida] = useState(obtenerFechaLocal());
 
   // Estados para agregar productos
   const [productoSeleccionado, setProductoSeleccionado] = useState('');
@@ -33,8 +42,9 @@ const SalidaMateriales = () => {
   // Estados de catálogos
   const [bodegas, setBodegas] = useState([]);
   const [reservas, setReservas] = useState([]);
-  const [responsablesDisponibles, setResponsablesDisponibles] = useState([]); // Lista de personas responsables por reserva
-  const [responsables, setResponsables] = useState([]); // Lista de proyectos disponibles
+  const [proyectosDisponibles, setProyectosDisponibles] = useState([]); // Todos los móviles (CON y SIN PROYECTO)
+  const [responsablesDisponibles, setResponsablesDisponibles] = useState([]); // Solo personas (tipo='SIN PROYECTO') por reserva
+  const [responsables, setResponsables] = useState([]); // Lista completa de proyecto_almacen
   const [productosDisponibles, setProductosDisponibles] = useState([]);
 
   // Estado de productos agregados (tabla)
@@ -82,6 +92,8 @@ const SalidaMateriales = () => {
       const respProyectos = await salidaMaterialesAPI.listarProyectos();
       if (respProyectos.success) {
         setResponsables(respProyectos.data);
+        // Mostrar TODOS los móviles (CON y SIN PROYECTO) en el combobox de proyectos
+        setProyectosDisponibles(respProyectos.data);
       }
 
       // Generar número de salida
@@ -91,7 +103,7 @@ const SalidaMateriales = () => {
       }
 
       // Establecer fecha actual (bloqueada)
-      setFechaSalida(new Date().toISOString().split('T')[0]);
+      setFechaSalida(obtenerFechaLocal());
 
     } catch (error) {
       console.error('Error al cargar datos iniciales:', error);
@@ -149,19 +161,30 @@ const SalidaMateriales = () => {
       setCargando(true);
       setBodegaSeleccionada(idBodega);
       
+      console.log('🔍 Cargando reservas para bodega ID:', idBodega, 'Tipo:', typeof idBodega);
+      console.log('🌐 URL que se va a llamar:', `http://localhost:8000/api/salida-materiales/reservas/${idBodega}`);
+      
       // Cargar reservas de la bodega seleccionada
       const response = await salidaMaterialesAPI.obtenerReservasPorBodega(idBodega);
       
+      console.log('📦 Respuesta de reservas:', response);
+      
       if (response.success) {
+        console.log('✅ Reservas obtenidas:', response.data);
         setReservas(response.data);
         
         if (response.data.length === 0) {
           mostrarMensaje('warning', 'La bodega seleccionada no tiene reservas activas');
+        } else {
+          console.log(`✅ ${response.data.length} reservas cargadas en el estado`);
         }
+      } else {
+        console.error('❌ Error en la respuesta:', response.message);
       }
       
       // Limpiar selecciones dependientes
       setReservaSeleccionada('');
+      setProyectoSeleccionado('');
       setResponsablesDisponibles([]);
       setIdMovilPersonaSeleccionada('');
       setResponsableSalida('');
@@ -197,10 +220,11 @@ const SalidaMateriales = () => {
       const responseResponsables = await salidaMaterialesAPI.obtenerResponsablesPorBodegaReserva(bodegaSeleccionada, idReserva);
       
       if (responseResponsables.success) {
+        // Mostrar TODOS los responsables de movil_persona de la misma empresa
         setResponsablesDisponibles(responseResponsables.data);
         
         if (responseResponsables.data.length === 0) {
-          mostrarMensaje('warning', 'No hay responsables disponibles para esta reserva');
+          mostrarMensaje('warning', 'No hay responsables disponibles para esta empresa');
         }
       }
       
@@ -216,6 +240,7 @@ const SalidaMateriales = () => {
       }
       
       // Limpiar selecciones dependientes
+      setProyectoSeleccionado('');
       setIdMovilPersonaSeleccionada('');
       setResponsableSalida('');
       setNombreResponsable('');
@@ -245,7 +270,7 @@ const SalidaMateriales = () => {
     
     if (responsable) {
       setIdMovilPersonaSeleccionada(idMovilPersona); // Para el combobox
-      setResponsableSalida(responsable.id_proyecto_almacen); // Para guardar
+      setResponsableSalida(idMovilPersona); // Guardar directamente el id_movil_persona
       setNombreResponsable(responsable.nom_ape);
       setDniResponsable(responsable.dni);
     }
@@ -353,6 +378,11 @@ const SalidaMateriales = () => {
 
     if (!reservaSeleccionada) {
       mostrarMensaje('error', '❌ Debe seleccionar una reserva');
+      return;
+    }
+
+    if (!proyectoSeleccionado) {
+      mostrarMensaje('error', '❌ Debe seleccionar un proyecto');
       return;
     }
 
@@ -608,7 +638,33 @@ const SalidaMateriales = () => {
                 </select>
               </div>
 
-              {/* NUEVO: Responsable de la Salida (combobox) */}
+              {/* NUEVO: Proyecto (solo tipo CON PROYECTO) */}
+              <div className="salida-form-group">
+                <label className="salida-form-label">
+                  📋 Proyecto *
+                </label>
+                <select
+                  className="salida-form-select"
+                  value={proyectoSeleccionado}
+                  onChange={(e) => setProyectoSeleccionado(e.target.value)}
+                  disabled={!reservaSeleccionada}
+                >
+                  <option value="">
+                    {reservaSeleccionada ? '-- Seleccione proyecto --' : '-- Primero seleccione una reserva --'}
+                  </option>
+                  {proyectosDisponibles.map((proyecto) => (
+                    <option key={proyecto.id_proyecto_almacen} value={proyecto.id_proyecto_almacen}>
+                      {proyecto.nombre_proyecto}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+            </div>
+
+            <div className="salida-form-row" style={{ marginTop: '15px' }}>
+
+              {/* NUEVO: Responsable de la Salida (combobox - solo tipo SIN PROYECTO) */}
               <div className="salida-form-group">
                 <label className="salida-form-label">
                   👨‍💼 Responsable de la Salida *
@@ -652,7 +708,7 @@ const SalidaMateriales = () => {
 
         {/* CARD 2: DETALLE DEL MATERIAL */}
         <div className="salida-card">
-          <div className="salida-card-header" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <div className="salida-card-header" style={{ background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)' }}>
             <span className="salida-icon">🔍</span>
             <h3 className="salida-card-title">Detalle del Material (Buscar por Descripción)</h3>
           </div>
@@ -778,7 +834,7 @@ const SalidaMateriales = () => {
 
         {/* CARD 3: MATERIALES A ENTREGAR */}
         <div className="salida-card">
-          <div className="salida-card-header" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+          <div className="salida-card-header" style={{ background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)' }}>
             <span className="salida-icon">📦</span>
             <h3 className="salida-card-title">Materiales a Entregar</h3>
           </div>

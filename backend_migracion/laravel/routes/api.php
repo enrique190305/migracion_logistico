@@ -303,7 +303,8 @@ Route::prefix('pedidos')->group(function () {
     
     // Catálogos
     Route::get('/empresas', [OrdenPedidoController::class, 'getEmpresas']);
-    Route::get('/proyectos/{id_empresa}', [OrdenPedidoController::class, 'getProyectosByEmpresa']);
+    Route::get('/bodegas/{id_empresa}', [OrdenPedidoController::class, 'getBodegasByEmpresa']);
+    Route::get('/proyectos/{id_empresa}', [OrdenPedidoController::class, 'getProyectosByEmpresa']); // Mantenido por compatibilidad
     Route::get('/productos', [OrdenPedidoController::class, 'getProductos']);
     
     // Correlativo

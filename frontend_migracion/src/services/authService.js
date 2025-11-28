@@ -32,8 +32,56 @@ apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    // Si el token expiró o es inválido, limpiar el storage
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // Si el token expiró (401) y no hemos intentado refrescar aún
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Intentar refrescar el token
+        console.log('🔄 Token expirado, intentando refrescar...');
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('jwt_token')}`
+          }
+        });
+        
+        if (response.data.success) {
+          const { token } = response.data.data;
+          
+          // Actualizar token en storage
+          localStorage.setItem('jwt_token', token);
+          
+          // Actualizar el header de la petición original
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          
+          console.log('✅ Token refrescado exitosamente');
+          
+          // Reintentar la petición original con el nuevo token
+          return apiClient(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('❌ Error al refrescar token:', refreshError);
+        
+        // Si falla el refresh, limpiar sesión y redirigir al login
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('token_type');
+        localStorage.removeItem('token_expires_in');
+        
+        // Redirigir al login si no estamos ya ahí
+        if (window.location.pathname !== '/') {
+          window.location.href = '/';
+        }
+        
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    // Si es otro tipo de error 401 o ya intentamos refrescar
     if (error.response?.status === 401) {
       localStorage.removeItem('jwt_token');
       localStorage.removeItem('user');
@@ -44,6 +92,7 @@ apiClient.interceptors.response.use(
         window.location.href = '/';
       }
     }
+    
     return Promise.reject(error);
   }
 );

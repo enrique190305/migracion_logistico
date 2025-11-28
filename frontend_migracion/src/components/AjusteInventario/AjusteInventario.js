@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../../services/authService';
 import './AjusteInventario.css';
+import * as XLSX from 'xlsx';
 import {
   Box,
   Card,
@@ -223,37 +224,52 @@ function AjusteInventario() {
       const response = await apiClient.get(`/ajuste-inventario/exportar?${params}`);
       
       if (response.data.success) {
-        // Convertir a CSV
         const datos = response.data.datos;
-        const headers = ['Código', 'Producto', 'Unidad', 'Bodega', 'Reserva', 'Cantidad Disp.', 'Cantidad Res.', 'Total', 'Precio Unit.', 'Valor Total'];
-        const csv = [
-          headers.join(','),
-          ...datos.map(item => [
-            item.codigo_producto,
-            `"${item.nombre_producto}"`,
-            item.unidad_medida,
-            `"${item.bodega}"`,
-            `"${item.reserva}"`,
-            item.cantidad_disponible,
-            item.cantidad_reservada,
-            item.cantidad_total,
-            item.precio_unitario,
-            item.valor_total
-          ].join(','))
-        ].join('\n');
+        
+        console.log('Total de productos a exportar:', datos.length); // Debug
+        
+        // Preparar datos para Excel en el formato de la pantalla
+        const datosExcel = datos.map(item => ({
+          'Bodega': item.bodega,
+          'Código': item.codigo_producto,
+          'Descripción': item.nombre_producto,
+          'Unidad': item.unidad_medida,
+          'Cantidad': parseFloat(item.cantidad_disponible || 0),
+          'Precio Unit.': parseFloat(item.precio_unitario || 0),
+          'Precio Total': parseFloat(item.valor_total || 0)
+        }));
 
-        // Descargar archivo
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `inventario_${new Date().toISOString().slice(0, 10)}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Crear libro de trabajo
+        const ws = XLSX.utils.json_to_sheet(datosExcel);
+        
+        // Ajustar ancho de columnas según el formato visible
+        const columnWidths = [
+          { wch: 25 }, // Bodega
+          { wch: 18 }, // Código
+          { wch: 45 }, // Descripción
+          { wch: 10 }, // Unidad
+          { wch: 12 }, // Cantidad
+          { wch: 14 }, // Precio Unit.
+          { wch: 14 }  // Precio Total
+        ];
+        ws['!cols'] = columnWidths;
 
-        setSuccess('Inventario exportado exitosamente');
+        // Agregar fila de totales al final
+        const totalCantidad = datosExcel.reduce((sum, item) => sum + item.Cantidad, 0);
+        const totalPrecioTotal = datosExcel.reduce((sum, item) => sum + item['Precio Total'], 0);
+        
+        const rowCount = datosExcel.length + 2; // +1 para header, +1 para nueva fila
+        XLSX.utils.sheet_add_aoa(ws, [['TOTAL GENERAL', '', '', '', totalCantidad, '', totalPrecioTotal]], { origin: `A${rowCount}` });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventario');
+
+        // Generar y descargar archivo
+        const fecha = new Date();
+        const fechaActual = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+        XLSX.writeFile(wb, `inventario_${fechaActual}.xlsx`);
+
+        setSuccess(`Inventario exportado exitosamente (${datos.length} productos)`);
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (error) {

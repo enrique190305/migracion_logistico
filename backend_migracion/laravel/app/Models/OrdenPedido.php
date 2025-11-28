@@ -13,7 +13,8 @@ class OrdenPedido extends Model
     protected $fillable = [
         'correlativo',
         'id_empresa',
-        'id_proyecto', // Correcto según estructura de BD
+        'id_bodega', // NUEVO: Bodega destino de la orden
+        'id_proyecto', // Mantenido por compatibilidad, ahora opcional
         'fecha_pedido',
         'observacion',
         'estado',
@@ -32,6 +33,12 @@ class OrdenPedido extends Model
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'id_empresa', 'id_empresa');
+    }
+
+    // Relación con Bodega (NUEVO)
+    public function bodega()
+    {
+        return $this->belongsTo(\App\Models\Bodega::class, 'id_bodega', 'id_bodega');
     }
 
     // Relación con Proyecto Almacen

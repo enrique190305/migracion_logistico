@@ -256,6 +256,10 @@
                 <td>{{ $salida->reserva }}</td>
             </tr>
             <tr>
+                <td>Proyecto:</td>
+                <td>{{ $salida->proyecto_almacen ?? 'N/A' }}</td>
+            </tr>
+            <tr>
                 <td>Responsable:</td>
                 <td>{{ $salida->trabajador }}</td>
             </tr>

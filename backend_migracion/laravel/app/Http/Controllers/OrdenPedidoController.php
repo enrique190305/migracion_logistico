@@ -30,7 +30,37 @@ class OrdenPedidoController extends Controller
     }
 
     /**
+     * Obtener bodegas por empresa
+     */
+    public function getBodegasByEmpresa($id_empresa)
+    {
+        try {
+            // Obtener bodegas de la empresa desde la tabla bodega
+            $bodegas = DB::table('bodega')
+                ->select(
+                    'id_bodega',
+                    'nombre',
+                    'ubicacion',
+                    'estado',
+                    'id_empresa'
+                )
+                ->where('id_empresa', $id_empresa)
+                ->where('estado', 'ACTIVO')
+                ->orderBy('nombre', 'ASC')
+                ->get();
+
+            return response()->json($bodegas);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al obtener bodegas: ' . $e->getMessage(),
+                'id_empresa' => $id_empresa
+            ], 500);
+        }
+    }
+
+    /**
      * Obtener proyectos por empresa (directamente desde proyecto_almacen)
+     * DEPRECADO - Mantenido por compatibilidad
      */
     public function getProyectosByEmpresa($id_empresa)
     {
@@ -124,7 +154,7 @@ class OrdenPedidoController extends Controller
             $validated = $request->validate([
                 'correlativo' => 'required|unique:orden_pedido,correlativo',
                 'id_empresa' => 'required|exists:empresa,id_empresa',
-                'id_proyecto_almacen' => 'required|exists:proyecto_almacen,id_proyecto_almacen',
+                'id_bodega' => 'required|exists:bodega,id_bodega',
                 'fecha_pedido' => 'required|date',
                 'observacion' => 'nullable|string',
                 'detalles' => 'required|array|min:1',
@@ -135,11 +165,12 @@ class OrdenPedidoController extends Controller
 
             DB::beginTransaction();
 
-            // Crear orden de pedido (usar id_proyecto en vez de id_proyecto_almacen)
+            // Crear orden de pedido con bodega
             $orden = OrdenPedido::create([
                 'correlativo' => $validated['correlativo'],
                 'id_empresa' => $validated['id_empresa'],
-                'id_proyecto' => $validated['id_proyecto_almacen'], // Mapear correctamente
+                'id_bodega' => $validated['id_bodega'],
+                'id_proyecto' => null, // Ya no se usa, se mantiene null
                 'fecha_pedido' => $validated['fecha_pedido'],
                 'observacion' => $validated['observacion'] ?? null,
                 'estado' => 'PENDIENTE',

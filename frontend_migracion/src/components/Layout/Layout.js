@@ -35,6 +35,7 @@ import DashboardStats from '../DashboardStats/DashboardStats';
 
 const Layout = ({ onLogout, user: propUser }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarHovered, setSidebarHovered] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [ingresoMaterialesTab, setIngresoMaterialesTab] = useState(null); // Para controlar el tab de Ingreso Materiales
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false); // ✅ Estado del modal de perfil
@@ -57,6 +58,16 @@ const Layout = ({ onLogout, user: propUser }) => {
     setActiveModule(moduleId);
     // Resetear el tab cuando se cambia de módulo manualmente
     setIngresoMaterialesTab(null);
+    // Auto-colapsar el sidebar cuando se selecciona un módulo
+    setSidebarCollapsed(true);
+  };
+
+  const handleSidebarMouseEnter = () => {
+    setSidebarHovered(true);
+  };
+
+  const handleSidebarMouseLeave = () => {
+    setSidebarHovered(false);
   };
 
   // ✅ Manejar apertura del modal de perfil
@@ -162,15 +173,17 @@ const Layout = ({ onLogout, user: propUser }) => {
   return (
     <div className="layout">
       <Sidebar 
-        isCollapsed={sidebarCollapsed}
+        isCollapsed={sidebarCollapsed && !sidebarHovered}
         onToggle={toggleSidebar}
         activeModule={activeModule}
         onModuleChange={handleModuleChange}
         isAdmin={isAdmin}
         user={user}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
       />
       
-      <div className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div className={`main-content ${(sidebarCollapsed && !sidebarHovered) ? 'sidebar-collapsed' : ''}`}>
         {/* Header del contenido principal */}
         <header className="content-header">
           <div className="header-left">
@@ -185,7 +198,7 @@ const Layout = ({ onLogout, user: propUser }) => {
           </div>
           
           <div className="header-right">
-            <div className="user-info">
+            <div className="user-info" onClick={handleOpenProfileModal} title="Editar Perfil">
               <div className="user-avatar">
                 <span>{isAdmin ? '👑' : (isRecursosHumanos ? '👔' : '👤')}</span>
               </div>
@@ -197,15 +210,8 @@ const Layout = ({ onLogout, user: propUser }) => {
                 </span>
               </div>
             </div>
-            
-            {/* ✅ Botón de Editar Perfil */}
-            <button className="profile-edit-btn" onClick={handleOpenProfileModal} title="Editar Perfil">
-              <span className="profile-edit-icon">⚙️</span>
-              <span className="profile-edit-text">Mi Perfil</span>
-            </button>
 
             <button className="logout-btn" onClick={onLogout}>
-              <span className="logout-icon">🚪</span>
               <span className="logout-text">Cerrar Sesión</span>
             </button>
           </div>

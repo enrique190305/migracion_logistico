@@ -21,7 +21,7 @@
   border-radius: 1rem;
   margin-bottom: 1.5rem;
   box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
-  border-left: 0.25rem solid #5f9fd8;
+  border-left: 0.25rem solid #64B2FC;
 }
 
 .salida-icon {
@@ -29,7 +29,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #5f9fd8;
+  color: #64B2FC;
 }
 
 .salida-title {
@@ -121,9 +121,9 @@
 }
 
 .salida-tab.activo {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(100, 178, 252, 0.4);
 }
 
 /* ============================================
@@ -160,7 +160,7 @@
 }
 
 .salida-card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
   padding: 18px 25px;
   display: flex;
@@ -219,8 +219,8 @@
 .salida-form-select:focus,
 .salida-form-textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #64B2FC;
+  box-shadow: 0 0 0 3px rgba(100, 178, 252, 0.1);
 }
 
 .salida-form-input:disabled,
@@ -263,7 +263,7 @@
 }
 
 .salida-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
 }
 
@@ -293,7 +293,7 @@
 }
 
 .salida-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
 }
 
@@ -347,13 +347,13 @@
 }
 
 .salida-table-btn-pdf {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
 }
 
 .salida-table-btn-pdf:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(100, 178, 252, 0.4);
 }
 
 /* ============================================

@@ -274,7 +274,13 @@
             </tr>
             <tr>
                 <td>Bodega:</td>
-                <td>{{ $ingreso->nombre_bodega ?? $ingreso->proyecto_almacen }}</td>
+                <td>
+                    @if($ingreso->nombre_bodega)
+                        {{ $ingreso->nombre_bodega }}@if($ingreso->ubicacion_bodega) - {{ $ingreso->ubicacion_bodega }}@endif
+                    @else
+                        {{ $ingreso->proyecto_almacen }}
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td>Usuario:</td>
@@ -308,7 +314,7 @@
                 <th style="width: 10%;" class="text-center">Unidad</th>
                 <th style="width: 13%;" class="text-right">Cantidad</th>
                 <th style="width: 15%;" class="text-right">Precio Unitario</th>
-                <th style="width: 15%;" class="text-right">Total</th>
+                <th style="width: 15%;" class="text-right">Sub Total</th>
             </tr>
         </thead>
         <tbody>

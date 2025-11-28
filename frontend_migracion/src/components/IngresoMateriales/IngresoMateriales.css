@@ -21,13 +21,13 @@
   align-items: center;
   gap: 1.25rem;
   margin-bottom: 1.5rem;
-  border-left: 0.25rem solid #5f9fd8;
+  border-left: 0.25rem solid #64B2FC;
 }
 
 .ingreso-icon {
   font-size: 2.5rem;
   line-height: 1;
-  color: #5f9fd8;
+  color: #64B2FC;
 }
 
 .ingreso-title {
@@ -172,9 +172,9 @@
 }
 
 .ingreso-tab.activo {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
-  box-shadow: 0 8px 20px rgba(95, 159, 216, 0.4);
+  box-shadow: 0 8px 20px rgba(100, 178, 252, 0.4);
 }
 
 /* ============================================
@@ -200,7 +200,7 @@
 }
 
 .ingreso-card-header {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   padding: 15px 20px;
   display: flex;
   align-items: center;
@@ -258,8 +258,8 @@
 .ingreso-form-select:focus,
 .ingreso-form-textarea:focus {
   outline: none;
-  border-color: #5f9fd8;
-  box-shadow: 0 0 0 3px rgba(95, 159, 216, 0.1);
+  border-color: #64B2FC;
+  box-shadow: 0 0 0 3px rgba(100, 178, 252, 0.1);
 }
 
 .ingreso-form-input:disabled,
@@ -303,7 +303,7 @@
 }
 
 .ingreso-btn-primary {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   color: white;
 }
 
@@ -344,7 +344,7 @@
 }
 
 .ingreso-table thead {
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
 }
 
 .ingreso-table thead th {
@@ -694,7 +694,7 @@
   top: 0;
   bottom: 0;
   width: 35px;
-  background: linear-gradient(135deg, #5f9fd8 0%, #74c9e8 100%);
+  background: linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%);
   border: none;
   border-radius: 0 8px 8px 0;
   cursor: pointer;
@@ -706,7 +706,7 @@
 }
 
 .btn-dropdown-toggle:hover {
-  background: linear-gradient(135deg, #5568d3 0%, #653a8b 100%);
+  background: linear-gradient(135deg, #3A7FE8 0%, #1846DD 100%);
 }
 
 .btn-dropdown-toggle:active {
@@ -729,7 +729,7 @@
   max-height: 300px;
   overflow-y: auto;
   background: white;
-  border: 2px solid #5f9fd8;
+  border: 2px solid #64B2FC;
   border-radius: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   z-index: 99999;
@@ -745,7 +745,7 @@
 
 .dropdown-item:hover {
   background-color: #f0f4ff;
-  border-left: 3px solid #5f9fd8;
+  border-left: 3px solid #64B2FC;
   padding-left: 9px;
 }
 
@@ -789,10 +789,10 @@
 }
 
 .dropdown-productos-fixed::-webkit-scrollbar-thumb {
-  background: #5f9fd8;
+  background: #64B2FC;
   border-radius: 4px;
 }
 
 .dropdown-productos-fixed::-webkit-scrollbar-thumb:hover {
-  background: #74c9e8;
+  background: #3A7FE8;
 }

@@ -17,12 +17,23 @@ const IngresoMateriales = ({ initialTab }) => {
   // Estados para Nuevo Ingreso (OC/OS)
   const [numeroIngreso, setNumeroIngreso] = useState('');
   const [ordenSeleccionada, setOrdenSeleccionada] = useState('');
-  const [fechaIngreso, setFechaIngreso] = useState(new Date().toISOString().split('T')[0]);
+  const obtenerFechaLocal = () => {
+    const fecha = new Date();
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [fechaIngreso, setFechaIngreso] = useState(obtenerFechaLocal());
   const [proveedor, setProveedor] = useState('');
   const [razonSocial, setRazonSocial] = useState('');
   const [idEmpresaOrden, setIdEmpresaOrden] = useState(''); // ID de la empresa de la orden
   const [estado, setEstado] = useState('');
   const [bodegaSeleccionada, setBodegaSeleccionada] = useState('');
+  const [bodegaNombre, setBodegaNombre] = useState(''); // Nombre de bodega heredada
+  const [bodegaUbicacion, setBodegaUbicacion] = useState(''); // Ubicación de bodega heredada
+  const [bodegaHeredada, setBodegaHeredada] = useState(false); // Indica si la bodega viene de la orden
   const [reservaSeleccionada, setReservaSeleccionada] = useState('');
   const [numGuia, setNumGuia] = useState('');
   const [factura, setFactura] = useState('');
@@ -34,7 +45,7 @@ const IngresoMateriales = ({ initialTab }) => {
   const [proveedorDirecto, setProveedorDirecto] = useState('');
   const [bodegaDirecta, setBodegaDirecta] = useState('');
   const [moneda, setMoneda] = useState('');
-  const [fechaIngresoDirecto, setFechaIngresoDirecto] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaIngresoDirecto, setFechaIngresoDirecto] = useState(obtenerFechaLocal());
   const [numGuiaDirecto, setNumGuiaDirecto] = useState('');
   const [facturaDirecto, setFacturaDirecto] = useState('');
   const [observacionesDirecto, setObservacionesDirecto] = useState('');
@@ -253,13 +264,34 @@ const IngresoMateriales = ({ initialTab }) => {
         setEstado(orden.estado);
         setFechaIngreso(orden.fecha);
 
-        // Filtrar bodegas por empresa
-        const bodegasPorEmpresa = bodegas.filter(b => b.empresa?.id_empresa === orden.id_empresa);
-        console.log('🏢 Bodegas filtradas para empresa', orden.razon_social, ':', bodegasPorEmpresa);
-        setBodegasFiltradas(bodegasPorEmpresa);
+        // Si la orden tiene bodega asociada (desde orden de pedido), usarla directamente
+        if (orden.id_bodega) {
+          console.log('🏢 Bodega heredada de Orden de Pedido:', orden.bodega_nombre);
+          setBodegaSeleccionada(orden.id_bodega);
+          setBodegaNombre(orden.bodega_nombre);
+          setBodegaUbicacion(orden.bodega_ubicacion);
+          setBodegaHeredada(true);
+          
+          // Cargar reservas automáticamente para esta bodega
+          try {
+            const respReservas = await ingresoMaterialesAPI.obtenerReservasPorBodega(orden.id_bodega);
+            if (respReservas.success) {
+              setReservas(respReservas.data);
+              console.log('📋 Reservas cargadas:', respReservas.data.length);
+            }
+          } catch (error) {
+            console.error('Error al cargar reservas:', error);
+          }
+        } else {
+          // Si no tiene bodega (órdenes antiguas), filtrar bodegas por empresa
+          const bodegasPorEmpresa = bodegas.filter(b => b.empresa?.id_empresa === orden.id_empresa);
+          console.log('🏢 Bodegas filtradas para empresa', orden.razon_social, ':', bodegasPorEmpresa);
+          setBodegasFiltradas(bodegasPorEmpresa);
+          setBodegaSeleccionada('');
+          setBodegaHeredada(false);
+        }
         
-        // Reset bodega y reserva seleccionadas
-        setBodegaSeleccionada('');
+        // Reset reserva seleccionada
         setReservaSeleccionada('');
       }
 
@@ -379,6 +411,16 @@ const IngresoMateriales = ({ initialTab }) => {
       return;
     }
 
+    if (!numGuia || numGuia.trim() === '') {
+      mostrarMensaje('error', 'El número de guía de remisión es obligatorio');
+      return;
+    }
+
+    if (!factura || factura.trim() === '') {
+      mostrarMensaje('error', 'El número de factura es obligatorio');
+      return;
+    }
+
     if (productosAgregados.length === 0) {
       mostrarMensaje('error', 'Debe agregar al menos un producto');
       return;
@@ -470,6 +512,9 @@ const IngresoMateriales = ({ initialTab }) => {
     setIdEmpresaOrden('');
     setEstado('');
     setBodegaSeleccionada('');
+    setBodegaNombre('');
+    setBodegaUbicacion('');
+    setBodegaHeredada(false);
     setBodegasFiltradas([]); // Limpiar bodegas filtradas
     setReservaSeleccionada('');
     setReservas([]);
@@ -480,7 +525,7 @@ const IngresoMateriales = ({ initialTab }) => {
     setCantidadIngresar('');
     setObservacionProducto('');
     setProductosAgregados([]);
-    setFechaIngreso(new Date().toISOString().split('T')[0]);
+    setFechaIngreso(obtenerFechaLocal());
     setBusquedaProducto('');
     setDropdownAbiertoProducto(false);
   };
@@ -673,25 +718,38 @@ const IngresoMateriales = ({ initialTab }) => {
                 <label className="ingreso-form-label">
                   🏪 Bodega *
                 </label>
-                <select
-                  className="ingreso-form-select"
-                  value={bodegaSeleccionada}
-                  onChange={(e) => setBodegaSeleccionada(e.target.value)}
-                  disabled={!ordenSeleccionada}
-                >
-                  <option value="">
-                    {ordenSeleccionada ? '-- Seleccione bodega --' : '-- Primero seleccione orden --'}
-                  </option>
-                  {bodegasFiltradas.map((bodega) => (
-                    <option key={bodega.id_bodega} value={bodega.id_bodega}>
-                      {bodega.nombre}
-                    </option>
-                  ))}
-                </select>
-                {ordenSeleccionada && bodegasFiltradas.length === 0 && (
-                  <small style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>
-                    ⚠️ No hay bodegas disponibles para la empresa: {razonSocial}
-                  </small>
+                {bodegaHeredada ? (
+                  // Bodega heredada de la orden de pedido (readonly)
+                  <input
+                    type="text"
+                    className="ingreso-form-input"
+                    value={bodegaNombre}
+                    disabled
+                  />
+                ) : (
+                  // Selección manual de bodega (para órdenes antiguas)
+                  <>
+                    <select
+                      className="ingreso-form-select"
+                      value={bodegaSeleccionada}
+                      onChange={(e) => setBodegaSeleccionada(e.target.value)}
+                      disabled={!ordenSeleccionada}
+                    >
+                      <option value="">
+                        {ordenSeleccionada ? '-- Seleccione bodega --' : '-- Primero seleccione orden --'}
+                      </option>
+                      {bodegasFiltradas.map((bodega) => (
+                        <option key={bodega.id_bodega} value={bodega.id_bodega}>
+                          {bodega.nombre}
+                        </option>
+                      ))}
+                    </select>
+                    {ordenSeleccionada && bodegasFiltradas.length === 0 && (
+                      <small style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>
+                        ⚠️ No hay bodegas disponibles para la empresa: {razonSocial}
+                      </small>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -1108,7 +1166,7 @@ const IngresoMateriales = ({ initialTab }) => {
       setProveedorDirecto('');
       setBodegaDirecta('');
       setMoneda('');
-      setFechaIngresoDirecto(new Date().toISOString().split('T')[0]);
+      setFechaIngresoDirecto(obtenerFechaLocal());
       setNumGuiaDirecto('');
       setFacturaDirecto('');
       setObservacionesDirecto('');
@@ -1124,7 +1182,7 @@ const IngresoMateriales = ({ initialTab }) => {
       <div className="ingreso-directo-form">
         
         <div className="ingreso-card">
-          <div className="ingreso-card-header" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+          <div className="ingreso-card-header" style={{ background: 'linear-gradient(135deg, #60ABFA 0%, #1643DC 100%)' }}>
             <span className="ingreso-icon">📥</span>
             <h3 className="ingreso-card-title">Información del Ingreso Directo</h3>
           </div>
@@ -1286,7 +1344,7 @@ const IngresoMateriales = ({ initialTab }) => {
         </div>
 
         <div className="ingreso-card">
-          <div className="ingreso-card-header" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+          <div className="ingreso-card-header" style={{ background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)' }}>
             <span className="ingreso-icon">📦</span>
             <h3 className="ingreso-card-title">Productos a Ingresar</h3>
           </div>

@@ -44,7 +44,15 @@ const TrasladoMateriales = () => {
   const [reservaOrigen, setReservaOrigen] = useState('');
   const [bodegaDestino, setBodegaDestino] = useState('');           // ✨ NUEVO
   const [reservaDestino, setReservaDestino] = useState('');
-  const [fechaTraslado, setFechaTraslado] = useState(new Date().toISOString().split('T')[0]);
+  const obtenerFechaLocal = () => {
+    const fecha = new Date();
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  const [fechaTraslado, setFechaTraslado] = useState(obtenerFechaLocal());
   const [observacionesGenerales, setObservacionesGenerales] = useState('');
   const [confirmModal, setConfirmModal] = useState(null);
 
@@ -317,7 +325,7 @@ const TrasladoMateriales = () => {
         setReservaDestino('');
         setReservasOrigen([]);            // ✨ NUEVO
         setReservasDestino([]);           // ✨ NUEVO
-        setFechaTraslado(new Date().toISOString().split('T')[0]);
+        setFechaTraslado(obtenerFechaLocal());
         setObservacionesGenerales('');
         setProductosATraslador([]);
         limpiarDetalleProducto();
@@ -649,7 +657,7 @@ const TrasladoMateriales = () => {
 
       {/* SECCIÓN 2: DETALLE DEL PRODUCTO */}
       <div className="traslado-card">
-        <div className="traslado-card-header" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+        <div className="traslado-card-header" style={{ background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)' }}>
           <span className="traslado-icon">📦</span>
           <h3 className="traslado-card-title">Detalle del Producto</h3>
         </div>
@@ -795,7 +803,7 @@ const TrasladoMateriales = () => {
 
       {/* SECCIÓN 3: PRODUCTOS A TRASLADAR */}
       <div className="traslado-card">
-        <div className="traslado-card-header" style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+        <div className="traslado-card-header" style={{ background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)' }}>
           <span className="traslado-icon">📋</span>
           <h3 className="traslado-card-title">
             Productos a Trasladar 
@@ -881,7 +889,7 @@ const TrasladoMateriales = () => {
 
       {/* SECCIÓN 4: OBSERVACIONES GENERALES */}
       <div className="traslado-card">
-        <div className="traslado-card-header" style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+        <div className="traslado-card-header" style={{ background: 'linear-gradient(135deg, #64B2FC 0%, #3A7FE8 50%, #1846DD 100%)' }}>
           <span className="traslado-icon">💬</span>
           <h3 className="traslado-card-title">Observaciones</h3>
         </div>

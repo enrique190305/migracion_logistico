@@ -19,9 +19,13 @@ class SalidaMaterialController extends Controller
     {
         try {
             $proyectos = DB::table('proyecto_almacen')
-                ->select('id_proyecto_almacen as id_proyecto', 'nombre_proyecto', 'tipo_movil')
+                ->select(
+                    'id_proyecto_almacen',
+                    'nombre_proyecto',
+                    'tipo_movil as tipo'
+                )
                 ->where('estado', 'ACTIVO')
-                ->where('tipo_movil', 'SIN_PROYECTO') // SOLO movil_persona
+                // Mostrar TODOS (CON_PROYECTO y SIN_PROYECTO)
                 ->orderBy('nombre_proyecto')
                 ->get();
 
@@ -77,13 +81,13 @@ class SalidaMaterialController extends Controller
         try {
             Log::info("=== Obteniendo reservas por bodega: {$idBodega} ===");
             
-            // Obtener solo los tipos de reserva únicos de la bodega
+            // Obtener TODAS las reservas de la bodega (SIN_PROYECTO y CON_PROYECTO)
             $reservas = DB::table('proyecto_almacen as pa')
                 ->join('reserva as r', 'pa.id_reserva', '=', 'r.id_reserva')
                 ->where('pa.id_bodega', $idBodega)
                 ->where('r.estado', 'ACTIVO')
                 ->where('pa.estado', 'ACTIVO')
-                ->where('pa.tipo_movil', 'SIN_PROYECTO')
+                // ✅ QUITADO: ->where('pa.tipo_movil', 'SIN_PROYECTO')
                 ->select(
                     'r.id_reserva',
                     'r.tipo_reserva'
@@ -112,28 +116,44 @@ class SalidaMaterialController extends Controller
 
     /**
      * Obtener responsables (personas) por bodega y reserva
+     * Obtiene directamente de movil_persona filtrado por empresa
      */
     public function obtenerResponsablesPorBodegaReserva($idBodega, $idReserva)
     {
         try {
             Log::info("=== Obteniendo responsables: Bodega={$idBodega}, Reserva={$idReserva} ===");
             
-            $responsables = DB::table('proyecto_almacen as pa')
-                ->join('movil_persona as mp', 'pa.id_referencia', '=', 'mp.id_movil_persona')
-                ->where('pa.id_bodega', $idBodega)
-                ->where('pa.id_reserva', $idReserva)
-                ->where('pa.estado', 'ACTIVO')
-                ->where('pa.tipo_movil', 'SIN_PROYECTO')
+            // Obtener id_empresa de la bodega seleccionada
+            $bodega = DB::table('bodega')
+                ->where('id_bodega', $idBodega)
+                ->first();
+            
+            if (!$bodega) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bodega no encontrada'
+                ], 404);
+            }
+            
+            $idEmpresa = $bodega->id_empresa;
+            Log::info("Empresa de la bodega: {$idEmpresa}");
+            
+            // Obtener responsables directamente de movil_persona filtrados por empresa
+            $responsables = DB::table('movil_persona as mp')
+                ->where('mp.id_empresa', $idEmpresa)
+                ->where('mp.estado', 'ACTIVO')
                 ->select(
                     'mp.id_movil_persona',
                     'mp.nom_ape',
                     'mp.dni',
-                    'pa.id_proyecto_almacen',
-                    'pa.nombre_proyecto'
+                    'mp.ciudad',
+                    'mp.id_empresa',
+                    'mp.id_bodega',
+                    'mp.id_reserva'
                 )
                 ->orderBy('mp.nom_ape')
                 ->get();
-
+            
             Log::info("Responsables encontrados: " . $responsables->count());
 
             return response()->json([
@@ -358,6 +378,8 @@ class SalidaMaterialController extends Controller
                 'nom_ape' => $request->trabajador,
                 'dni' => $request->dni,
                 'area' => $request->area, // Tipo de reserva: EXTERNA, INTERNA, COMERCIAL
+                'id_bodega' => $request->id_bodega,
+                'id_reserva' => $request->id_reserva,
                 'id_personal' => null, // NULL en lugar de 0
                 'fecha_registro' => now()
             ]);
@@ -444,6 +466,8 @@ class SalidaMaterialController extends Controller
     {
         try {
             $query = DB::table('salidas_materiales as sm')
+                ->leftJoin('bodega as b', 'sm.id_bodega', '=', 'b.id_bodega')
+                ->leftJoin('reserva as r', 'sm.id_reserva', '=', 'r.id_reserva')
                 ->select(
                     'sm.numero_salida',
                     'sm.numero_salida as correlativo',
@@ -453,6 +477,10 @@ class SalidaMaterialController extends Controller
                     'sm.nom_ape as usuario',
                     'sm.area as motivo',
                     'sm.dni',
+                    'b.nombre as bodega', // ✅ NUEVO: Nombre de la bodega
+                    'r.tipo_reserva as reserva', // ✅ NUEVO: Tipo de reserva
+                    'sm.id_bodega',
+                    'sm.id_reserva',
                     DB::raw("'CONSUMO' as tipo_salida"),
                     DB::raw('NULL as observaciones'),
                     DB::raw('(SELECT COUNT(*) FROM detalle_salida WHERE numero_salida = sm.numero_salida) as total_productos')
@@ -493,6 +521,8 @@ class SalidaMaterialController extends Controller
     {
         try {
             $salida = DB::table('salidas_materiales as sm')
+                ->leftJoin('bodega as b', 'sm.id_bodega', '=', 'b.id_bodega')
+                ->leftJoin('reserva as r', 'sm.id_reserva', '=', 'r.id_reserva')
                 ->where('sm.numero_salida', $numeroSalida)
                 ->select(
                     'sm.numero_salida',
@@ -500,7 +530,11 @@ class SalidaMaterialController extends Controller
                     'sm.fecha_registro as fecha_salida',
                     'sm.nom_ape as trabajador',
                     'sm.dni',
-                    'sm.area'
+                    'sm.area',
+                    'b.nombre as bodega', // ✅ NUEVO: Nombre de la bodega
+                    'r.tipo_reserva as reserva', // ✅ NUEVO: Tipo de reserva
+                    'sm.id_bodega',
+                    'sm.id_reserva'
                 )
                 ->first();
 
@@ -546,8 +580,10 @@ class SalidaMaterialController extends Controller
         try {
             Log::info("=== Generando PDF para salida: {$numeroSalida} ===");
             
-            // Obtener datos de la salida (sin JOIN, datos ya están en la tabla)
+            // Obtener datos de la salida CON información de bodega y reserva
             $salida = DB::table('salidas_materiales as sm')
+                ->leftJoin('bodega as b', 'sm.id_bodega', '=', 'b.id_bodega')
+                ->leftJoin('reserva as r', 'sm.id_reserva', '=', 'r.id_reserva')
                 ->select(
                     'sm.numero_salida',
                     'sm.proyecto as proyecto_almacen',
@@ -555,7 +591,11 @@ class SalidaMaterialController extends Controller
                     'sm.fecha_registro as fecha_salida',
                     'sm.nom_ape as trabajador',
                     'sm.dni',
-                    'sm.area'
+                    'sm.area',
+                    'b.nombre as bodega', // ✅ NUEVO: Nombre de la bodega
+                    'r.tipo_reserva as reserva', // ✅ NUEVO: Tipo de reserva
+                    'sm.id_bodega',
+                    'sm.id_reserva'
                 )
                 ->where('sm.numero_salida', $numeroSalida)
                 ->first();
@@ -577,23 +617,12 @@ class SalidaMaterialController extends Controller
 
             Log::info("Detalles encontrados: " . count($detalles));
 
-            // Obtener información de bodega y reserva (simplificado)
-            // Usar el campo area que almacena el tipo de reserva (EXTERNA, INTERNA, COMERCIAL)
-            $salida->reserva = $salida->area; // Ya tenemos el tipo de reserva en 'area'
-            
-            // Buscar bodega desde bodega_stock del primer producto
-            $bodega = 'N/A';
-            if (count($detalles) > 0) {
-                $primerProducto = $detalles[0];
-                $bodegaInfo = DB::table('bodega_stock as bs')
-                    ->join('bodega as b', 'bs.id_bodega', '=', 'b.id_bodega')
-                    ->where('bs.codigo_producto', $primerProducto->codigo_producto)
-                    ->select('b.nombre')
-                    ->first();
-                
-                if ($bodegaInfo) {
-                    $bodega = $bodegaInfo->nombre;
-                }
+            // Si no hay bodega/reserva en la BD (registros antiguos), mantener valores por defecto
+            if (!$salida->bodega) {
+                $salida->bodega = 'N/A';
+            }
+            if (!$salida->reserva) {
+                $salida->reserva = $salida->area; // Usar el campo area como fallback
             }
 
             // Obtener firma del responsable desde movil_persona
@@ -612,7 +641,7 @@ class SalidaMaterialController extends Controller
 
             // Agregar información adicional al objeto salida
             $salida->observaciones = '';
-            $salida->bodega = $bodega;
+            // $salida->bodega y $salida->reserva ya vienen del JOIN
             $salida->firma = $firma;
 
             // Preparar datos para la vista

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './OrdenPedido.css';
 import {
   obtenerEmpresas,
-  obtenerProyectosPorEmpresa,
+  obtenerBodegasPorEmpresa,
   obtenerProductos,
   obtenerCorrelativo,
   guardarOrdenPedido
@@ -12,13 +12,13 @@ import Notificacion from './Notificacion';
 const OrdenPedido = () => {
   // Estados para catálogos
   const [empresas, setEmpresas] = useState([]);
-  const [proyectos, setProyectos] = useState([]);
+  const [bodegas, setBodegas] = useState([]);
   const [productos, setProductos] = useState([]);
 
   // Estados para formulario
   const [correlativo, setCorrelativo] = useState('');
   const [idEmpresa, setIdEmpresa] = useState('');
-  const [idProyecto, setIdProyecto] = useState('');
+  const [idBodega, setIdBodega] = useState('');
   const [fechaPedido, setFechaPedido] = useState('');
   const [observacionGeneral, setObservacionGeneral] = useState('');
 
@@ -80,9 +80,12 @@ const OrdenPedido = () => {
       setProductos(productosData);
       setCorrelativo(correlativoData);
       
-      // Fecha actual por defecto
-      const hoy = new Date().toISOString().split('T')[0];
-      setFechaPedido(hoy);
+      // Fecha actual por defecto (zona horaria local)
+      const hoy = new Date();
+      const fechaLocal = hoy.getFullYear() + '-' + 
+                        String(hoy.getMonth() + 1).padStart(2, '0') + '-' + 
+                        String(hoy.getDate()).padStart(2, '0');
+      setFechaPedido(fechaLocal);
 
     } catch (err) {
       mostrarNotificacion(
@@ -103,18 +106,18 @@ const OrdenPedido = () => {
   const handleEmpresaChange = async (e) => {
     const empresaId = e.target.value;
     setIdEmpresa(empresaId);
-    setIdProyecto(''); // Limpiar proyecto seleccionado
-    setProyectos([]); // Limpiar lista de proyectos
+    setIdBodega(''); // Limpiar bodega seleccionada
+    setBodegas([]); // Limpiar lista de bodegas
 
     if (empresaId) {
       try {
-        const proyectosData = await obtenerProyectosPorEmpresa(empresaId);
-        setProyectos(proyectosData);
+        const bodegasData = await obtenerBodegasPorEmpresa(empresaId);
+        setBodegas(bodegasData);
       } catch (err) {
         mostrarNotificacion(
           'error',
-          'Error al Cargar Proyectos',
-          'No se pudieron cargar los proyectos de la empresa seleccionada.',
+          'Error al Cargar Bodegas',
+          'No se pudieron cargar las bodegas de la empresa seleccionada.',
           [
             { label: '❌ Error', valor: err.message || 'Error desconocido' },
             { label: '🏢 Empresa', valor: empresas.find(e => e.id_empresa === parseInt(empresaId))?.razon_social || '' }
@@ -280,8 +283,8 @@ const OrdenPedido = () => {
   // Limpiar formulario
   const limpiarFormulario = async () => {
     setIdEmpresa('');
-    setIdProyecto('');
-    setProyectos([]);
+    setIdBodega('');
+    setBodegas([]);
     setObservacionGeneral('');
     setDetalles([{
       id: 1,
@@ -296,8 +299,12 @@ const OrdenPedido = () => {
     setBusquedaProducto({});
     setDropdownAbierto({});
 
-    const hoy = new Date().toISOString().split('T')[0];
-    setFechaPedido(hoy);
+    // Fecha actual (zona horaria local)
+    const hoy = new Date();
+    const fechaLocal = hoy.getFullYear() + '-' + 
+                      String(hoy.getMonth() + 1).padStart(2, '0') + '-' + 
+                      String(hoy.getDate()).padStart(2, '0');
+    setFechaPedido(fechaLocal);
 
     try {
       const nuevoCorrelativo = await obtenerCorrelativo();
@@ -330,15 +337,15 @@ const OrdenPedido = () => {
         );
         return;
       }
-      if (!idProyecto) {
+      if (!idBodega) {
         mostrarNotificacion(
           'warning',
-          'Proyecto Requerido',
-          'Debe seleccionar un proyecto antes de continuar.',
+          'Bodega Requerida',
+          'Debe seleccionar una bodega antes de continuar.',
           [
-            { label: '⚠️ Campo faltante', valor: 'Proyecto' },
+            { label: '⚠️ Campo faltante', valor: 'Bodega' },
             { label: '🏢 Empresa', valor: empresas.find(e => e.id_empresa === parseInt(idEmpresa))?.razon_social || '' },
-            { label: '📋 Acción', valor: 'Seleccione un proyecto de la lista' }
+            { label: '📋 Acción', valor: 'Seleccione una bodega de la lista' }
           ]
         );
         return;
@@ -379,7 +386,7 @@ const OrdenPedido = () => {
       const ordenData = {
         correlativo,
         id_empresa: parseInt(idEmpresa),
-        id_proyecto_almacen: parseInt(idProyecto),
+        id_bodega: parseInt(idBodega),
         fecha_pedido: fechaPedido,
         observacion: observacionGeneral || null,
         detalles: detallesValidos.map(d => ({
@@ -393,7 +400,7 @@ const OrdenPedido = () => {
       
       // Obtener datos para la notificación
       const empresaSeleccionada = empresas.find(e => e.id_empresa === parseInt(idEmpresa));
-      const proyectoSeleccionado = proyectos.find(p => p.id_proyecto_almacen === parseInt(idProyecto));
+      const bodegaSeleccionada = bodegas.find(b => b.id_bodega === parseInt(idBodega));
       
       mostrarNotificacion(
         'success',
@@ -402,7 +409,7 @@ const OrdenPedido = () => {
         [
           { label: '📋 Correlativo', valor: correlativo },
           { label: '🏢 Empresa', valor: empresaSeleccionada?.razon_social || '' },
-          { label: '📍 Proyecto', valor: proyectoSeleccionado?.nombre_proyecto || '' },
+          { label: '📍 Bodega', valor: bodegaSeleccionada?.nombre || '' },
           { label: '📦 Productos', valor: detallesValidos.length },
           { label: '📅 Fecha', valor: new Date(fechaPedido).toLocaleDateString('es-PE') },
           { label: '✅ Estado', valor: 'PENDIENTE' }
@@ -487,20 +494,20 @@ const OrdenPedido = () => {
               </select>
             </div>
 
-            {/* Proyecto */}
+            {/* Bodega */}
             <div className="form-group full-width">
-              <label>Proyecto *</label>
+              <label>Bodega *</label>
               <select
-                value={idProyecto}
-                onChange={(e) => setIdProyecto(e.target.value)}
+                value={idBodega}
+                onChange={(e) => setIdBodega(e.target.value)}
                 disabled={!idEmpresa}
                 required
               >
-                <option value="">-- Seleccione un proyecto --</option>
-                {proyectos.map(proyecto => (
-                  <option key={proyecto.id_proyecto_almacen} value={proyecto.id_proyecto_almacen}>
-                    {proyecto.nombre_proyecto} 
-                    {proyecto.codigo_proyecto ? ` - ${proyecto.codigo_proyecto}` : ''}
+                <option value="">-- Seleccione una bodega --</option>
+                {bodegas.map(bodega => (
+                  <option key={bodega.id_bodega} value={bodega.id_bodega}>
+                    {bodega.nombre} 
+                    {bodega.ubicacion ? ` - ${bodega.ubicacion}` : ''}
                   </option>
                 ))}
               </select>

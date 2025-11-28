@@ -263,7 +263,7 @@ const Kardex = () => {
 
         data.forEach(item => {
           worksheetData.push([
-            item.proyecto || 'N/A',
+            item.bodega || 'N/A',
             item.codigo_producto,
             item.descripcion,
             item.unidad,
@@ -298,7 +298,7 @@ const Kardex = () => {
             item.descripcion,
             item.unidad,
             item.cantidad,
-            item.proyecto || 'N/A',
+            item.bodega || 'N/A',
             item.documento || 'N/A',
             item.observaciones || 'N/A'
           ]);

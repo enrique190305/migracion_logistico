@@ -103,6 +103,8 @@
 .login-container {
   display: flex;
   min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   position: relative;
   overflow: hidden;
@@ -282,6 +284,7 @@
 .logo-container {
   position: relative;
   z-index: 2;
+  margin-top: 40px;
   margin-bottom: 50px;
   animation: slideInLeft 1s ease-out;
   perspective: 1000px;
@@ -362,7 +365,7 @@
 }
 
 .system-description {
-  margin-bottom: 45px;
+  margin-bottom: 30px;
   animation: slideInLeft 1s ease-out 0.4s backwards;
 }
 
@@ -388,7 +391,7 @@
   font-size: 1.05rem;
   color: white;
   background: rgba(255, 255, 255, 0.15);
-  padding: 18px 24px;
+  padding: 10px 20px;
   border-radius: 15px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -472,7 +475,7 @@
 
 .login-header {
   text-align: center;
-  margin-bottom: 50px;
+  margin-bottom: 25px;
 }
 
 .logo-small {
@@ -484,6 +487,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 25px;
+  margin-top: 45px;
   box-shadow: 0 10px 30px rgba(95, 159, 216, 0.3);
   animation: float 5s ease-in-out infinite;
   transition: all 0.3s ease;
@@ -521,7 +525,7 @@
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 18px;
 }
 
 .form-group {
@@ -739,7 +743,7 @@
   box-shadow: 0 8px 20px rgba(95, 159, 216, 0.4), 0 2px 8px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
-  margin-top: 10px;
+  margin-top: 5px;
   border: 2px solid transparent;
 }
 
@@ -826,8 +830,8 @@
 /* Footer */
 .login-footer {
   text-align: center;
-  margin-top: 45px;
-  padding-top: 30px;
+  margin-top: 25px;
+  padding-top: 18px;
   border-top: 2px solid #e8ecef;
   animation: fadeIn 1s ease-out 0.8s backwards;
 }

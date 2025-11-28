@@ -72,26 +72,24 @@ const RegistroBodega = () => {
   const cargarDatos = async () => {
     setLoading(true);
     try {
-      const [bodegasResponse, statsResponse] = await Promise.all([
+      const [bodegasResponse, statsResponse, empresasResponse] = await Promise.all([
         bodegasAPI.obtenerBodegas(),
-        bodegasAPI.obtenerEstadisticas()
+        bodegasAPI.obtenerEstadisticas(),
+        bodegasAPI.obtenerEmpresas()
       ]);
       
       const bodegasData = bodegasResponse.success ? bodegasResponse.data : [];
       const statsData = statsResponse.success ? statsResponse.data : {};
+      const empresasData = empresasResponse.success ? empresasResponse.data : [];
       
       setBodegas(bodegasData);
       setEstadisticas(statsData);
-
-      // Extraer empresas únicas
-      const empresasUnicas = Array.from(
-        new Set(bodegasData.map(b => JSON.stringify({ 
-          id: b.empresa.id_empresa, 
-          nombre: b.empresa.razon_social 
-        })))
-      ).map(e => JSON.parse(e));
       
-      setEmpresas(empresasUnicas);
+      // Mapear empresas desde el endpoint
+      setEmpresas(empresasData.map(e => ({
+        id: e.id_empresa,
+        nombre: e.razon_social
+      })));
     } catch (error) {
       console.error('Error al cargar datos:', error);
       mostrarModalMensaje('error', '❌ Error de Carga', 'No se pudieron cargar las bodegas. Verifique que el servidor esté activo.');
@@ -111,9 +109,6 @@ const RegistroBodega = () => {
     
     return matchSearch && matchEstado && matchEmpresa;
   });
-
-  // Obtener lista única de empresas para el filtro
-  const empresasUnicas = [...new Set(bodegas.map(b => b.empresa.razon_social))];
 
   // Paginación
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -307,7 +302,7 @@ const RegistroBodega = () => {
             <span>🏢</span>
           </div>
           <div className="stat-info-bodega">
-            <h3>{empresasUnicas.length}</h3>
+            <h3>{empresas.length}</h3>
             <p>Empresas</p>
           </div>
         </div>
@@ -338,8 +333,8 @@ const RegistroBodega = () => {
             <label>Empresa</label>
             <select value={filtroEmpresa} onChange={(e) => setFiltroEmpresa(e.target.value)}>
               <option value="todos">Todas las empresas</option>
-              {empresasUnicas.map((empresa, index) => (
-                <option key={index} value={empresa}>{empresa}</option>
+              {empresas.map((empresa) => (
+                <option key={empresa.id} value={empresa.nombre}>{empresa.nombre}</option>
               ))}
             </select>
           </div>

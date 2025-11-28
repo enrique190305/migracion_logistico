@@ -286,7 +286,7 @@ class OrdenCompraServicioController extends Controller
     public function obtenerOrdenPedido($id)
     {
         try {
-            $orden = OrdenPedido::with(['empresa', 'proyectoAlmacen', 'detalles.producto'])
+            $orden = OrdenPedido::with(['empresa', 'bodega', 'proyectoAlmacen', 'detalles.producto'])
                 ->where('id_orden_pedido', $id)
                 ->first();
 
@@ -296,23 +296,28 @@ class OrdenCompraServicioController extends Controller
                 ], 404);
             }
 
-            // Obtener el proyecto almacen y su bodega
-            $proyectoAlmacen = $orden->proyectoAlmacen;
-            $bodega = null;
-            if ($proyectoAlmacen && $proyectoAlmacen->id_bodega) {
-                $bodega = DB::table('bodega')
-                    ->where('id_bodega', $proyectoAlmacen->id_bodega)
-                    ->first();
+            // Obtener bodega directamente de la orden de pedido
+            $bodegaNombre = null;
+            $bodegaUbicacion = null;
+            if ($orden->bodega) {
+                $bodegaNombre = $orden->bodega->nombre;
+                $bodegaUbicacion = $orden->bodega->ubicacion;
             }
+
+            // Obtener el proyecto almacen (si existe, para compatibilidad)
+            $proyectoAlmacen = $orden->proyectoAlmacen;
 
             return response()->json([
                 'id_orden_pedido' => $orden->id_orden_pedido,
                 'correlativo' => $orden->correlativo,
                 'id_empresa' => $orden->id_empresa,
                 'razon_social' => $orden->empresa ? $orden->empresa->razon_social : null,
-                'id_proyecto_almacen' => $orden->id_proyecto, // Campo correcto
+                'id_bodega' => $orden->id_bodega,
+                'bodega_nombre' => $bodegaNombre,
+                'bodega_ubicacion' => $bodegaUbicacion,
+                'id_proyecto_almacen' => $orden->id_proyecto, // Campo correcto (puede ser null ahora)
                 'proyecto_nombre' => $proyectoAlmacen ? $proyectoAlmacen->nombre_proyecto : null,
-                'proyecto_bodega' => $bodega ? $bodega->nombre : null, // Agregar nombre de bodega
+                'proyecto_bodega' => $bodegaNombre, // Usar bodega de la orden
                 'codigo_proyecto' => $proyectoAlmacen ? $proyectoAlmacen->codigo_proyecto : null,
                 'tipo_movil' => $proyectoAlmacen ? $proyectoAlmacen->tipo_movil : null,
                 'fecha_pedido' => $orden->fecha_pedido,

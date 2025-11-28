@@ -28,7 +28,7 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin, user }) => {
+const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin, user, onMouseEnter, onMouseLeave }) => {
   const [expandedCategories, setExpandedCategories] = useState({
     logistica: true,
     recursosHumanos: false,
@@ -46,6 +46,16 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
   const [hoveredCategory, setHoveredCategory] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0 });
   const tooltipTimerRef = useRef(null);
+
+  // Limpiar tooltip cuando el sidebar deja de estar colapsado
+  useEffect(() => {
+    if (!isCollapsed) {
+      setHoveredCategory(null);
+      if (tooltipTimerRef.current) {
+        clearTimeout(tooltipTimerRef.current);
+      }
+    }
+  }, [isCollapsed]);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
@@ -301,7 +311,11 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
   };
 
   return (
-    <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+    <div 
+      className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
       {/* Header del Sidebar */}
       <div className="sidebar-header">
         <div className="logo-container">
@@ -442,7 +456,7 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
                     </button>
                     
                     {/* Tooltip con submódulos */}
-                    {hoveredCategory === category.id && categoryItems.length > 0 && (
+                    {isCollapsed && hoveredCategory === category.id && categoryItems.length > 0 && (
                       <div 
                         className="sidebar-tooltip"
                         style={{ top: tooltipPosition.top }}

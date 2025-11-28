@@ -522,48 +522,61 @@ class AjusteInventarioController extends Controller
 
     /**
      * Exportar inventario a Excel/CSV
+     * MEJORADO: Usa la misma consulta que obtenerInventario para garantizar consistencia
      */
     public function exportarInventario(Request $request)
     {
         try {
-            $query = DB::table('bodega_stock as bs')
-                ->join('bodega as b', 'bs.id_bodega', '=', 'b.id_bodega')
-                ->join('reserva as r', 'bs.id_reserva', '=', 'r.id_reserva')
-                ->join('producto as p', 'bs.codigo_producto', '=', 'p.codigo_producto')
-                ->select(
-                    'bs.codigo_producto',
-                    'p.descripcion as nombre_producto',
-                    'p.unidad as unidad_medida',
-                    'b.nombre as bodega',
-                    'r.tipo_reserva as reserva',
-                    'bs.cantidad_disponible',
-                    'bs.cantidad_reservada',
-                    DB::raw('(bs.cantidad_disponible + bs.cantidad_reservada) as cantidad_total')
-                );
-                // REMOVIDO: ->where('bs.cantidad_disponible', '>', 0)
+            // NUEVA: Usar la misma consulta que obtenerInventario
+            $sql = "
+                SELECT 
+                    mk.codigo_producto,
+                    COALESCE(p.descripcion, mk.descripcion, 'Sin descripción') as nombre_producto,
+                    COALESCE(p.unidad, mk.unidad, 'UND') as unidad_medida,
+                    COALESCE(b.nombre, 'Sin bodega') as bodega,
+                    'N/A' as reserva,
+                    SUM(CASE 
+                        WHEN mk.tipo_movimiento = 'INGRESO' THEN mk.cantidad 
+                        ELSE -mk.cantidad 
+                    END) as cantidad_disponible,
+                    0 as cantidad_reservada,
+                    SUM(CASE 
+                        WHEN mk.tipo_movimiento = 'INGRESO' THEN mk.cantidad 
+                        ELSE -mk.cantidad 
+                    END) as cantidad_total,
+                    AVG(COALESCE(mk.precio_unitario, 0)) as precio_unitario
+                FROM movimiento_kardex mk
+                LEFT JOIN bodega b ON mk.id_bodega = b.id_bodega
+                LEFT JOIN producto p ON mk.codigo_producto = p.codigo_producto
+                WHERE 1=1
+            ";
 
-            // Aplicar filtros si existen
+            // Aplicar filtros
+            $params = [];
             if ($request->filled('id_bodega')) {
-                $query->where('bs.id_bodega', $request->id_bodega);
+                $sql .= " AND mk.id_bodega = ?";
+                $params[] = $request->id_bodega;
             }
 
             if ($request->filled('id_reserva')) {
-                $query->where('bs.id_reserva', $request->id_reserva);
+                // Ignorar filtro de reserva en export ya que no se usa en esta versión
             }
 
-            $datos = $query->orderBy('p.descripcion', 'asc')->get();
+            $sql .= "
+                GROUP BY mk.codigo_producto, mk.id_bodega, b.nombre, 
+                         p.descripcion, mk.descripcion, p.unidad, mk.unidad
+                HAVING SUM(CASE 
+                    WHEN mk.tipo_movimiento = 'INGRESO' THEN mk.cantidad 
+                    ELSE -mk.cantidad 
+                END) > 0
+                ORDER BY nombre_producto ASC, bodega ASC
+            ";
 
-            // Agregar precios
+            $datos = DB::select($sql, $params);
+
+            // Calcular valor_total para cada producto
             foreach ($datos as $item) {
-                $precio = DB::table('movimiento_kardex')
-                    ->where('codigo_producto', $item->codigo_producto)
-                    ->whereNotNull('precio_unitario')
-                    ->where('precio_unitario', '>', 0)
-                    ->orderBy('fecha', 'desc')
-                    ->value('precio_unitario') ?? 0;
-                
-                $item->precio_unitario = $precio;
-                $item->valor_total = $item->cantidad_disponible * $precio;
+                $item->valor_total = $item->cantidad_disponible * $item->precio_unitario;
             }
 
             return response()->json([
@@ -576,7 +589,7 @@ class AjusteInventarioController extends Controller
             Log::error("Error al exportar inventario: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Error al exportar inventario'
+                'message' => 'Error al exportar inventario: ' . $e->getMessage()
             ], 500);
         }
     }

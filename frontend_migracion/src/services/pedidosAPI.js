@@ -28,7 +28,34 @@ export const obtenerEmpresas = async () => {
 };
 
 /**
+ * Obtener bodegas por empresa
+ */
+export const obtenerBodegasPorEmpresa = async (idEmpresa) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bodegas/${idEmpresa}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      mode: 'cors',
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error al obtener bodegas:', error);
+    throw error;
+  }
+};
+
+/**
  * Obtener proyectos por empresa
+ * DEPRECADO - Mantenido por compatibilidad
  */
 export const obtenerProyectosPorEmpresa = async (idEmpresa) => {
   try {

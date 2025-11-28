@@ -305,12 +305,11 @@
         <thead>
             <tr>
                 <th style="width: 12%;">Código</th>
-                <th style="width: 35%;">Descripción</th>
-                <th style="width: 10%;" class="text-center">Cantidad</th>
-                <th style="width: 10%;" class="text-center">Unidad</th>
-                <th style="width: 13%;" class="text-right">Precio Unitario</th>
-                <th style="width: 10%;" class="text-right">Subtotal</th>
-                <th style="width: 10%;" class="text-right">Total</th>
+                <th style="width: 40%;">Descripción</th>
+                <th style="width: 12%;" class="text-center">Cantidad</th>
+                <th style="width: 12%;" class="text-center">Unidad</th>
+                <th style="width: 12%;" class="text-right">Precio Unitario</th>
+                <th style="width: 12%;" class="text-right">Subtotal</th>
             </tr>
         </thead>
         <tbody>
@@ -333,7 +332,6 @@
                 <td class="text-center">{{ number_format($detalle->cantidad, 0) }}</td>
                 <td class="text-center">{{ $producto ? $producto->unidad : 'UND' }}</td>
                 <td class="text-right">{{ $orden->moneda->simbolo ?? 'S/' }} {{ number_format($detalle->precio_unitario, 2) }}</td>
-                <td class="text-right">{{ $orden->moneda->simbolo ?? 'S/' }} {{ number_format($itemSubtotal, 2) }}</td>
                 <td class="text-right">{{ $orden->moneda->simbolo ?? 'S/' }} {{ number_format($itemSubtotal, 2) }}</td>
             </tr>
             @endforeach
