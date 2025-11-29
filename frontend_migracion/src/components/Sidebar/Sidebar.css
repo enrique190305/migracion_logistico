@@ -302,9 +302,11 @@
 
 .menu-item-text {
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 /* Vista colapsada del sidebar */
@@ -455,9 +457,11 @@
 
 .tooltip-item-text {
   flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 /* Sección inferior del sidebar */
