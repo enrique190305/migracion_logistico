@@ -27,6 +27,19 @@ const GestionUsuarios = () => {
 
   const [formErrors, setFormErrors] = useState({});
 
+  // Función para separar nombre completo en nombres y apellidos
+  const separarNombreCompleto = (nombreCompleto) => {
+    if (!nombreCompleto) return { nombres: '', apellidos: '' };
+    const partes = nombreCompleto.trim().split(' ');
+    if (partes.length === 1) {
+      return { nombres: partes[0], apellidos: '' };
+    }
+    // Asumiendo que las primeras 2 palabras son nombres y el resto apellidos
+    const nombres = partes.slice(0, Math.ceil(partes.length / 2)).join(' ');
+    const apellidos = partes.slice(Math.ceil(partes.length / 2)).join(' ');
+    return { nombres, apellidos };
+  };
+
   useEffect(() => {
     cargarUsuarios();
   }, []);
@@ -39,8 +52,15 @@ const GestionUsuarios = () => {
     try {
       setLoading(true);
       const response = await rrhhService.obtenerTrabajadores();
+      console.log('🔍 Respuesta completa de trabajadores:', response);
       if (response.success) {
-        setUsuarios(response.data || []);
+        const usuarios = response.data || [];
+        console.log('👥 Total usuarios cargados:', usuarios.length);
+        if (usuarios.length > 0) {
+          console.log('👤 Primer usuario (estructura):', usuarios[0]);
+          console.log('📋 Campos disponibles:', Object.keys(usuarios[0]));
+        }
+        setUsuarios(usuarios);
       }
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
@@ -65,14 +85,12 @@ const GestionUsuarios = () => {
           // Validar que usuario sea un objeto
           if (!usuario) return false;
           
-          const nombresCompletos = (usuario.nombres_completos || '').toLowerCase();
-          const documento = (usuario.documento || '').toString();
-          const documentoCompleto = (usuario.documento_completo || '').toLowerCase();
+          const nombreCompleto = (usuario.nombre_completo || '').toLowerCase();
+          const documento = (usuario.documento || '').toString().toLowerCase();
           const correo = (usuario.correo || '').toLowerCase();
           
-          return nombresCompletos.includes(query) ||
-                 documento.includes(busqueda || '') ||
-                 documentoCompleto.includes(query) ||
+          return nombreCompleto.includes(query) ||
+                 documento.includes(query) ||
                  correo.includes(query);
         })
       );
@@ -156,7 +174,20 @@ const GestionUsuarios = () => {
           mostrarMensaje(response.message || 'Error al registrar usuario', 'error');
         }
       } else {
-        const response = await rrhhService.actualizarUsuario(usuarioSeleccionado.id_usuario, {
+        console.log('🔄 Actualizando usuario...');
+        console.log('🎯 Usuario ID:', usuarioSeleccionado.id || usuarioSeleccionado.id_usuario);
+        console.log('📝 Datos a enviar:', {
+          tipo_documento: formData.tipo_documento,
+          documento: formData.documento,
+          nombres: formData.nombres,
+          apellidos: formData.apellidos,
+          correo: formData.correo || null,
+          telefono: formData.telefono || null,
+          rol: formData.rol
+        });
+        
+        const userId = usuarioSeleccionado.id || usuarioSeleccionado.id_usuario;
+        const response = await rrhhService.actualizarUsuario(userId, {
           tipo_documento: formData.tipo_documento,
           documento: formData.documento,
           nombres: formData.nombres,
@@ -167,18 +198,24 @@ const GestionUsuarios = () => {
           ...(formData.contrasena && { contrasena: formData.contrasena })
         });
 
+        console.log('📦 Respuesta de actualización:', response);
+
         if (response.success) {
           mostrarMensaje('Usuario actualizado exitosamente', 'success');
           limpiarFormulario();
           setShowModal(false);
           await cargarUsuarios();
         } else {
+          console.error('❌ Error en respuesta:', response.message);
           mostrarMensaje(response.message || 'Error al actualizar usuario', 'error');
         }
       }
     } catch (error) {
-      console.error('Error al guardar usuario:', error);
-      mostrarMensaje('Error al guardar usuario', 'error');
+      console.error('💥 Error al guardar usuario:', error);
+      console.error('💥 Error response:', error.response?.data);
+      console.error('💥 Error message:', error.message);
+      const errorMsg = error.response?.data?.message || error.message || 'Error al guardar usuario';
+      mostrarMensaje(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -191,17 +228,41 @@ const GestionUsuarios = () => {
   };
 
   const handleEditarUsuario = (usuario) => {
+    console.log('🔍 Usuario completo recibido:', usuario);
+    console.log('📋 Campos del usuario:', Object.keys(usuario));
+    console.log('🆔 ID del usuario:', usuario.id || usuario.id_usuario);
+    
+    // Extraer documento sin el prefijo tipo
+    let documento = usuario.documento || '';
+    let tipoDocumento = 'DNI';
+    if (documento.includes('-')) {
+      const partes = documento.split('-');
+      tipoDocumento = partes[0];
+      documento = partes[1];
+    }
+    
+    // Separar nombre_completo en nombres y apellidos
+    const { nombres, apellidos } = separarNombreCompleto(usuario.nombre_completo);
+    
+    console.log('👤 Nombre completo:', usuario.nombre_completo);
+    console.log('👤 Nombres separados:', nombres);
+    console.log('👤 Apellidos separados:', apellidos);
+    
     setModalMode('edit');
     setUsuarioSeleccionado(usuario);
     setFormData({
-      tipo_documento: usuario.tipo_documento || 'DNI',
-      documento: usuario.documento,
-      nombres: usuario.nombres || '',
-      apellidos: usuario.apellidos || '',
+      tipo_documento: tipoDocumento,
+      documento: documento,
+      nombres: nombres,
+      apellidos: apellidos,
       correo: usuario.correo || '',
       telefono: usuario.telefono || '',
-      rol: usuario.rol?.nombre || 'Trabajador',
+      rol: usuario.rol?.nombre || usuario.id_rol || 'Trabajador',
       contrasena: ''
+    });
+    console.log('📝 FormData configurado:', {
+      nombres: nombres,
+      apellidos: apellidos
     });
     setShowModal(true);
   };
@@ -214,7 +275,22 @@ const GestionUsuarios = () => {
   const confirmarEliminacion = async () => {
     try {
       setLoading(true);
-      const response = await rrhhService.eliminarUsuario(usuarioAEliminar.id_usuario);
+      
+      console.log('🗑️ Eliminando usuario...');
+      console.log('👤 Usuario a eliminar:', usuarioAEliminar);
+      console.log('🆔 ID del usuario:', usuarioAEliminar.id || usuarioAEliminar.id_usuario);
+      
+      const userId = usuarioAEliminar.id || usuarioAEliminar.id_usuario;
+      
+      if (!userId) {
+        console.error('❌ No se encontró el ID del usuario');
+        mostrarMensaje('Error: No se encontró el ID del usuario', 'error');
+        return;
+      }
+      
+      const response = await rrhhService.eliminarUsuario(userId);
+      
+      console.log('📦 Respuesta de eliminación:', response);
       
       if (response.success) {
         mostrarMensaje('Usuario eliminado exitosamente', 'success');
@@ -222,11 +298,15 @@ const GestionUsuarios = () => {
         setUsuarioAEliminar(null);
         await cargarUsuarios();
       } else {
+        console.error('❌ Error en respuesta:', response.message);
         mostrarMensaje(response.message || 'Error al eliminar usuario', 'error');
       }
     } catch (error) {
-      console.error('Error al eliminar usuario:', error);
-      mostrarMensaje('Error al eliminar usuario', 'error');
+      console.error('💥 Error al eliminar usuario:', error);
+      console.error('💥 Error response:', error.response?.data);
+      console.error('💥 Error message:', error.message);
+      const errorMsg = error.response?.data?.message || error.message || 'Error al eliminar usuario';
+      mostrarMensaje(errorMsg, 'error');
     } finally {
       setLoading(false);
     }
@@ -384,11 +464,11 @@ const GestionUsuarios = () => {
                               <i className={`fas ${usuario.rol?.nombre === 'Trabajador' ? 'fa-user' : 'fa-user-tie'}`}></i>
                             </div>
                             <div className="usuario-info">
-                              <h4>{usuario.nombres_completos}</h4>
-                              <p className="usuario-documento">{usuario.documento_completo}</p>
+                              <h4>{usuario.nombre_completo}</h4>
+                              <p className="usuario-documento">{usuario.documento}</p>
                               <p className="usuario-rol">
                                 <i className="fas fa-user-tag"></i>
-                                {usuario.rol?.nombre || 'Sin rol'}
+                                {usuario.rol?.nombre || usuario.id_rol || 'Sin rol'}
                               </p>
                               {usuario.correo && (
                                 <p className="usuario-correo">
@@ -470,11 +550,11 @@ const GestionUsuarios = () => {
                               <i className={`fas ${usuario.rol?.nombre === 'Trabajador' ? 'fa-user' : 'fa-user-tie'}`}></i>
                             </div>
                             <div className="usuario-info">
-                              <h4>{usuario.nombres_completos}</h4>
-                              <p className="usuario-documento">{usuario.documento_completo}</p>
+                              <h4>{usuario.nombre_completo}</h4>
+                              <p className="usuario-documento">{usuario.documento}</p>
                               <p className="usuario-rol">
                                 <i className="fas fa-user-tag"></i>
-                                {usuario.rol?.nombre || 'Sin rol'}
+                                {usuario.rol?.nombre || usuario.id_rol || 'Sin rol'}
                               </p>
                               {usuario.correo && (
                                 <p className="usuario-correo">
@@ -654,7 +734,7 @@ const GestionUsuarios = () => {
               <i className="fas fa-exclamation-triangle"></i>
             </div>
             <h2>Confirmar Eliminación</h2>
-            <p>¿Está seguro de que desea eliminar a <strong>{usuarioAEliminar?.nombres_completos}</strong>?</p>
+            <p>¿Está seguro de que desea eliminar a <strong>{usuarioAEliminar?.nombre_completo}</strong>?</p>
             <p className="warning-text">Esta acción no se puede deshacer.</p>
             <div className="form-actions">
               <button 
