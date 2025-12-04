@@ -217,6 +217,16 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
             { id: 'gestion-usuarios-rrhh', title: 'Administrar Usuarios', icon: '👤' },
             { id: 'dashboard-admin-rrhh', title: 'Dashboard Administrador', icon: '🎯' }
           ]
+        },
+        {
+          id: 'reclutamiento',
+          title: 'Reclutamiento',
+          icon: '🎯',
+          color: '#66e089',
+          items: [
+            { id: 'vacantes', title: 'Vacantes', icon: '💼' },
+            { id: 'postulantes', title: 'Postulantes', icon: '👨‍💼' }
+          ]
         }
       ]
     }
@@ -240,7 +250,8 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
   const recursosHumanosCategories = [
     { id: 'dashboard-rrhh', icon: '📊', title: 'Dashboard Supervisor', modules: ['dashboard-supervisor'] },
     { id: 'reportes-rrhh', icon: '📋', title: 'Reportes', modules: ['reportes-asistencia-rrhh', 'reportes-horarios-rrhh', 'reportes-emergencias-rrhh'] },
-    { id: 'gestion-rrhh', icon: '👥', title: 'Gestión de Usuarios', modules: ['gestion-usuarios-rrhh', 'dashboard-admin-rrhh'] }
+    { id: 'gestion-rrhh', icon: '👥', title: 'Gestión de Usuarios', modules: ['gestion-usuarios-rrhh', 'dashboard-admin-rrhh'] },
+    { id: 'reclutamiento', icon: '🎯', title: 'Reclutamiento', modules: ['vacantes', 'postulantes'] }
   ];
 
   // Obtener las categorías según el módulo actual

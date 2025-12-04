@@ -628,3 +628,19 @@ Route::middleware(['jwt.auth', 'admin'])->prefix('ajuste-inventario')->group(fun
     // Exportar
     Route::get('/exportar', [AjusteInventarioController::class, 'exportarInventario']);
 });
+
+/*
+|--------------------------------------------------------------------------
+| API Routes - Reclutamiento (Google Sheets)
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\ReclutamientoController;
+
+Route::middleware(['jwt.auth'])->prefix('reclutamiento')->group(function () {
+    // Vacantes
+    Route::get('/vacantes', [ReclutamientoController::class, 'getVacantes']);
+    
+    // Postulantes
+    Route::get('/postulantes', [ReclutamientoController::class, 'getPostulantes']);
+    Route::get('/postulantes/{id_unico}', [ReclutamientoController::class, 'getPostulanteDetalle']);
+});

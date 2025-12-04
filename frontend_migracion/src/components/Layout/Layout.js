@@ -29,6 +29,8 @@ import ReportesHorarios from '../ReportesHorarios/ReportesHorarios';
 import GestionUsuarios from '../GestionUsuarios/GestionUsuarios';
 import DashboardAdministrador from '../DashboardAdministrador/DashboardAdministrador';
 import DashboardStats from '../DashboardStats/DashboardStats';
+import Vacantes from '../Reclutamiento/Vacantes';
+import Postulantes from '../Reclutamiento/Postulantes';
 
 
 
@@ -165,6 +167,10 @@ const Layout = ({ onLogout, user: propUser }) => {
         return <GestionUsuarios />;
       case 'dashboard-admin-rrhh':
         return <DashboardAdministrador />;
+      case 'vacantes':
+        return <Vacantes />;
+      case 'postulantes':
+        return <Postulantes />;
       default:
         return <DashboardContent />;
     }
@@ -361,6 +367,9 @@ const getModuleTitle = (moduleId) => {
     'reportes-horarios-rrhh': 'Reportes Horarios',
     'reportes-emergencias-rrhh': 'Reportes de Emergencias',
     'gestion-usuarios-rrhh': 'Gestión de Usuarios',
+    'dashboard-admin-rrhh': 'Dashboard Administrador',
+    'vacantes': 'Gestión de Vacantes',
+    'postulantes': 'Gestión de Postulantes',
     'dashboard-admin-rrhh': 'Dashboard Administrador'
   };
   return titles[moduleId] || 'Módulo';
