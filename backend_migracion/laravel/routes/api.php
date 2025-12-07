@@ -639,6 +639,7 @@ use App\Http\Controllers\ReclutamientoController;
 Route::middleware(['jwt.auth'])->prefix('reclutamiento')->group(function () {
     // Vacantes
     Route::get('/vacantes', [ReclutamientoController::class, 'getVacantes']);
+    Route::put('/vacantes/{job_key}', [ReclutamientoController::class, 'updateVacante']);
     
     // Postulantes
     Route::get('/postulantes', [ReclutamientoController::class, 'getPostulantes']);

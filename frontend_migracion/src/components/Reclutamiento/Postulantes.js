@@ -4,6 +4,7 @@ import './Postulantes.css';
 
 const Postulantes = () => {
   const [postulantes, setPostulantes] = useState([]);
+  const [postulantesOriginales, setPostulantesOriginales] = useState([]);
   const [filtros, setFiltros] = useState({
     idoneo: '',
     puntuacion_min: '',
@@ -15,19 +16,28 @@ const Postulantes = () => {
     campo: 'puntuacion',
     direccion: 'desc'
   });
+  const [modalDetalle, setModalDetalle] = useState(false);
+  const [postulanteSeleccionado, setPostulanteSeleccionado] = useState(null);
 
   useEffect(() => {
     cargarPostulantes();
   }, []);
+
+  // Aplicar filtros automáticamente cuando cambien
+  useEffect(() => {
+    aplicarFiltros();
+  }, [filtros, postulantesOriginales]);
 
   const cargarPostulantes = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await getPostulantes(filtros);
+      // Cargar todos los postulantes sin filtros
+      const response = await getPostulantes({});
       
       if (response.success) {
+        setPostulantesOriginales(response.data);
         setPostulantes(response.data);
       } else {
         setError(response.message || 'Error al cargar postulantes');
@@ -40,6 +50,47 @@ const Postulantes = () => {
     }
   };
 
+  const aplicarFiltros = () => {
+    let resultado = [...postulantesOriginales];
+
+    // Filtro de búsqueda (nombre, correo o puesto)
+    if (filtros.busqueda && filtros.busqueda.trim() !== '') {
+      const busqueda = filtros.busqueda.toLowerCase().trim();
+      resultado = resultado.filter(p => 
+        (p.nombre?.toLowerCase() || '').includes(busqueda) ||
+        (p.correo?.toLowerCase() || '').includes(busqueda) ||
+        (p.puesto_objetivo?.toLowerCase() || '').includes(busqueda)
+      );
+    }
+
+    // Filtro de idoneidad
+    if (filtros.idoneo && filtros.idoneo !== '') {
+      if (filtros.idoneo === 'sí' || filtros.idoneo === 'si') {
+        resultado = resultado.filter(p => 
+          p.idoneo?.toUpperCase() === 'TRUE' || 
+          p.idoneo?.toLowerCase() === 'sí' || 
+          p.idoneo?.toLowerCase() === 'si'
+        );
+      } else if (filtros.idoneo === 'no') {
+        resultado = resultado.filter(p => 
+          p.idoneo?.toUpperCase() === 'FALSE' || 
+          p.idoneo?.toLowerCase() === 'no' ||
+          !p.idoneo
+        );
+      }
+    }
+
+    // Filtro de puntuación mínima
+    if (filtros.puntuacion_min && filtros.puntuacion_min !== '') {
+      const puntuacionMin = parseFloat(filtros.puntuacion_min);
+      resultado = resultado.filter(p => 
+        parseFloat(p.puntuacion || 0) >= puntuacionMin
+      );
+    }
+
+    setPostulantes(resultado);
+  };
+
   const handleFiltroChange = (e) => {
     const { name, value } = e.target;
     setFiltros(prev => ({
@@ -48,17 +99,12 @@ const Postulantes = () => {
     }));
   };
 
-  const handleBuscar = () => {
-    cargarPostulantes();
-  };
-
   const handleLimpiar = () => {
     setFiltros({
       idoneo: '',
       puntuacion_min: '',
       busqueda: ''
     });
-    setTimeout(() => cargarPostulantes(), 100);
   };
 
   const handleRefrescar = () => {
@@ -98,6 +144,16 @@ const Postulantes = () => {
     return 'puntuacion-baja';
   };
 
+  const handleVerDetalle = (postulante) => {
+    setPostulanteSeleccionado(postulante);
+    setModalDetalle(true);
+  };
+
+  const handleCerrarModal = () => {
+    setModalDetalle(false);
+    setPostulanteSeleccionado(null);
+  };
+
   return (
     <div className="postulantes-container">
       {/* Header */}
@@ -131,7 +187,11 @@ const Postulantes = () => {
           </div>
           <div className="stat-info">
             <div className="stat-value">
-              {postulantes.filter(p => p.idoneo?.toLowerCase() === 'sí').length}
+              {postulantes.filter(p => 
+                p.idoneo?.toUpperCase() === 'TRUE' || 
+                p.idoneo?.toLowerCase() === 'sí' || 
+                p.idoneo?.toLowerCase() === 'si'
+              ).length}
             </div>
             <div className="stat-label">Idóneos</div>
           </div>
@@ -167,7 +227,6 @@ const Postulantes = () => {
               placeholder="Nombre, correo o puesto..."
               value={filtros.busqueda}
               onChange={handleFiltroChange}
-              onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
             />
           </div>
 
@@ -200,11 +259,8 @@ const Postulantes = () => {
           </div>
 
           <div className="filtros-actions">
-            <button className="btn-buscar" onClick={handleBuscar} disabled={loading}>
-              <i className="fas fa-search"></i> Buscar
-            </button>
             <button className="btn-limpiar" onClick={handleLimpiar} disabled={loading}>
-              <i className="fas fa-eraser"></i> Limpiar
+              <i className="fas fa-eraser"></i> LIMPIAR
             </button>
           </div>
         </div>
@@ -286,8 +342,18 @@ const Postulantes = () => {
                         </span>
                       </td>
                       <td>
-                        <span className={`idoneo-badge idoneo-${postulante.idoneo?.toLowerCase() === 'sí' ? 'si' : 'no'}`}>
-                          {postulante.idoneo || 'N/A'}
+                        <span className={`idoneo-badge ${
+                          (postulante.idoneo?.toUpperCase() === 'TRUE' || 
+                           postulante.idoneo?.toLowerCase() === 'sí' || 
+                           postulante.idoneo?.toLowerCase() === 'si') 
+                            ? 'idoneo-si' 
+                            : 'idoneo-no'
+                        }`}>
+                          {(postulante.idoneo?.toUpperCase() === 'TRUE' || 
+                            postulante.idoneo?.toLowerCase() === 'sí' || 
+                            postulante.idoneo?.toLowerCase() === 'si') 
+                              ? 'TRUE' 
+                              : 'FALSE'}
                         </span>
                       </td>
                       <td>
@@ -302,6 +368,7 @@ const Postulantes = () => {
                           </button>
                           <button 
                             className="btn-ver-detalle"
+                            onClick={() => handleVerDetalle(postulante)}
                             title="Ver detalles"
                           >
                             <i className="fas fa-eye"></i>
@@ -314,6 +381,128 @@ const Postulantes = () => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal de Detalle del Postulante */}
+      {modalDetalle && postulanteSeleccionado && (
+        <div className="modal-overlay" onClick={handleCerrarModal}>
+          <div className="modal-content-detalle" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-user-circle"></i> Detalle del Postulante
+              </h2>
+              <button className="btn-close-modal" onClick={handleCerrarModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body-detalle">
+              <div className="postulante-info-grid">
+                {/* Información Personal */}
+                <div className="info-section">
+                  <h3><i className="fas fa-user"></i> Información Personal</h3>
+                  <div className="info-item">
+                    <label>Nombre Completo:</label>
+                    <span>{postulanteSeleccionado.nombre || 'N/A'}</span>
+                  </div>
+                  <div className="info-item">
+                    <label>Correo Electrónico:</label>
+                    <span>{postulanteSeleccionado.correo || 'N/A'}</span>
+                  </div>
+                  <div className="info-item">
+                    <label>Fecha de Registro:</label>
+                    <span>
+                      {postulanteSeleccionado.fecha_registro 
+                        ? new Date(postulanteSeleccionado.fecha_registro).toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric'
+                          })
+                        : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <label>ID Único:</label>
+                    <span className="codigo-badge">{postulanteSeleccionado.id_unico || 'N/A'}</span>
+                  </div>
+                </div>
+
+                {/* Información Profesional */}
+                <div className="info-section">
+                  <h3><i className="fas fa-briefcase"></i> Información Profesional</h3>
+                  <div className="info-item">
+                    <label>Puesto Objetivo:</label>
+                    <span>{postulanteSeleccionado.puesto_objetivo || 'N/A'}</span>
+                  </div>
+                  <div className="info-item">
+                    <label>Años de Experiencia:</label>
+                    <span>{postulanteSeleccionado.años_experiencia || '0'} años</span>
+                  </div>
+                  <div className="info-item">
+                    <label>Puntuación:</label>
+                    <span className={`puntuacion-badge ${getPuntuacionClass(postulanteSeleccionado.puntuacion)}`}>
+                      {parseFloat(postulanteSeleccionado.puntuacion || 0).toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <label>Estado de Idoneidad:</label>
+                    <span className={`idoneo-badge ${
+                      (postulanteSeleccionado.idoneo?.toUpperCase() === 'TRUE' || 
+                       postulanteSeleccionado.idoneo?.toLowerCase() === 'sí' || 
+                       postulanteSeleccionado.idoneo?.toLowerCase() === 'si') 
+                        ? 'idoneo-si' 
+                        : 'idoneo-no'
+                    }`}>
+                      {(postulanteSeleccionado.idoneo?.toUpperCase() === 'TRUE' || 
+                        postulanteSeleccionado.idoneo?.toLowerCase() === 'sí' || 
+                        postulanteSeleccionado.idoneo?.toLowerCase() === 'si') 
+                          ? 'IDÓNEO' 
+                          : 'NO IDÓNEO'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Datos Adicionales */}
+                {Object.keys(postulanteSeleccionado).length > 8 && (
+                  <div className="info-section full-width">
+                    <h3><i className="fas fa-info-circle"></i> Información Adicional</h3>
+                    <div className="info-grid-extra">
+                      {Object.entries(postulanteSeleccionado)
+                        .filter(([key]) => !['nombre', 'correo', 'fecha_registro', 'id_unico', 
+                                             'puesto_objetivo', 'años_experiencia', 'puntuacion', 
+                                             'idoneo', 'enlace_archivo'].includes(key))
+                        .map(([key, value]) => (
+                          <div key={key} className="info-item-extra">
+                            <label>{key.replace(/_/g, ' ').toUpperCase()}:</label>
+                            <span>{value || 'N/A'}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* CV */}
+                {postulanteSeleccionado.enlace_archivo && (
+                  <div className="info-section full-width">
+                    <h3><i className="fas fa-file-pdf"></i> Curriculum Vitae</h3>
+                    <button 
+                      className="btn-ver-cv-large"
+                      onClick={() => window.open(postulanteSeleccionado.enlace_archivo, '_blank')}
+                    >
+                      <i className="fas fa-external-link-alt"></i> Abrir CV en nueva pestaña
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button className="btn-cerrar-modal" onClick={handleCerrarModal}>
+                <i className="fas fa-times"></i> Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

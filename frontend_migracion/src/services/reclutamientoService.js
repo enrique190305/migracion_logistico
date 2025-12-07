@@ -81,3 +81,24 @@ export const getPostulanteDetalle = async (idUnico) => {
     throw error;
   }
 };
+
+/**
+ * Actualiza una vacante en Google Sheets
+ * @param {string} jobKey - Código de la vacante
+ * @param {Object} datos - Datos de la vacante a actualizar
+ * @returns {Promise<Object>}
+ */
+export const updateVacante = async (jobKey, datos) => {
+  try {
+    const response = await axios.put(
+      `${API_URL}/reclutamiento/vacantes/${jobKey}`,
+      datos,
+      getAuthHeaders()
+    );
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar vacante:', error);
+    throw error;
+  }
+};

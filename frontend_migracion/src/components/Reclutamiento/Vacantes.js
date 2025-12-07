@@ -1,28 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { getVacantes } from '../../services/reclutamientoService';
+import { getVacantes, updateVacante } from '../../services/reclutamientoService';
 import './Vacantes.css';
 
 const Vacantes = () => {
   const [vacantes, setVacantes] = useState([]);
+  const [vacantesOriginales, setVacantesOriginales] = useState([]);
   const [filtros, setFiltros] = useState({
     estado: '',
     busqueda: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modalEditar, setModalEditar] = useState(false);
+  const [vacanteEditar, setVacanteEditar] = useState(null);
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     cargarVacantes();
   }, []);
+
+  // Aplicar filtros automáticamente cuando cambien
+  useEffect(() => {
+    aplicarFiltros();
+  }, [filtros, vacantesOriginales]);
 
   const cargarVacantes = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      const response = await getVacantes(filtros);
+      // Cargar todas las vacantes sin filtros
+      const response = await getVacantes({});
       
       if (response.success) {
+        setVacantesOriginales(response.data);
         setVacantes(response.data);
       } else {
         setError(response.message || 'Error al cargar vacantes');
@@ -35,6 +46,28 @@ const Vacantes = () => {
     }
   };
 
+  const aplicarFiltros = () => {
+    let resultado = [...vacantesOriginales];
+
+    // Filtro de búsqueda (código o nombre de vacante)
+    if (filtros.busqueda && filtros.busqueda.trim() !== '') {
+      const busqueda = filtros.busqueda.toLowerCase().trim();
+      resultado = resultado.filter(v => 
+        (v.job_key?.toLowerCase() || '').includes(busqueda) ||
+        (v.nombre_vacante?.toLowerCase() || '').includes(busqueda)
+      );
+    }
+
+    // Filtro de estado
+    if (filtros.estado && filtros.estado !== '') {
+      resultado = resultado.filter(v => 
+        v.estado?.toLowerCase() === filtros.estado.toLowerCase()
+      );
+    }
+
+    setVacantes(resultado);
+  };
+
   const handleFiltroChange = (e) => {
     const { name, value } = e.target;
     setFiltros(prev => ({
@@ -43,20 +76,90 @@ const Vacantes = () => {
     }));
   };
 
-  const handleBuscar = () => {
-    cargarVacantes();
-  };
-
   const handleLimpiar = () => {
     setFiltros({
       estado: '',
       busqueda: ''
     });
-    setTimeout(() => cargarVacantes(), 100);
   };
 
   const handleRefrescar = () => {
     cargarVacantes();
+  };
+
+  const handleAbrirModalEditar = (vacante) => {
+    setVacanteEditar({ ...vacante });
+    setModalEditar(true);
+  };
+
+  const handleCerrarModal = () => {
+    setModalEditar(false);
+    setVacanteEditar(null);
+    setError(null);
+  };
+
+  const handleCambioFormulario = (e) => {
+    const { name, value } = e.target;
+    setVacanteEditar(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleGuardarVacante = async () => {
+    if (!vacanteEditar) return;
+
+    // Validaciones
+    if (!vacanteEditar.nombre_vacante || !vacanteEditar.nombre_vacante.trim()) {
+      setError('El nombre de la vacante es obligatorio');
+      return;
+    }
+
+    if (!vacanteEditar.estado) {
+      setError('Debe seleccionar un estado');
+      return;
+    }
+
+    if (!vacanteEditar.min_years || parseFloat(vacanteEditar.min_years) < 0) {
+      setError('Los años mínimos deben ser un número válido');
+      return;
+    }
+
+    if (!vacanteEditar.threshold || parseFloat(vacanteEditar.threshold) < 0 || parseFloat(vacanteEditar.threshold) > 100) {
+      setError('La puntuación mínima debe estar entre 0 y 100');
+      return;
+    }
+
+    if (!vacanteEditar.target_titles || !vacanteEditar.target_titles.trim()) {
+      setError('Los puestos objetivo son obligatorios');
+      return;
+    }
+
+    setGuardando(true);
+    setError(null);
+
+    try {
+      const response = await updateVacante(vacanteEditar.job_key, {
+        nombre_vacante: vacanteEditar.nombre_vacante.trim(),
+        estado: vacanteEditar.estado,
+        min_years: parseFloat(vacanteEditar.min_years),
+        threshold: parseFloat(vacanteEditar.threshold),
+        target_titles: vacanteEditar.target_titles.trim(),
+      });
+
+      if (response.success) {
+        // Actualizar la lista de vacantes
+        await cargarVacantes();
+        handleCerrarModal();
+      } else {
+        setError(response.message || 'Error al actualizar la vacante');
+      }
+    } catch (err) {
+      setError('Error de conexión al actualizar la vacante');
+      console.error(err);
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -89,7 +192,6 @@ const Vacantes = () => {
               placeholder="Buscar por nombre o código..."
               value={filtros.busqueda}
               onChange={handleFiltroChange}
-              onKeyPress={(e) => e.key === 'Enter' && handleBuscar()}
             />
           </div>
 
@@ -103,17 +205,13 @@ const Vacantes = () => {
             >
               <option value="">Todos</option>
               <option value="activa">Activa</option>
-              <option value="cerrada">Cerrada</option>
-              <option value="pausada">Pausada</option>
+              <option value="inactiva">Inactiva</option>
             </select>
           </div>
 
           <div className="filtros-actions">
-            <button className="btn-buscar" onClick={handleBuscar} disabled={loading}>
-              <i className="fas fa-search"></i> Buscar
-            </button>
             <button className="btn-limpiar" onClick={handleLimpiar} disabled={loading}>
-              <i className="fas fa-eraser"></i> Limpiar
+              <i className="fas fa-eraser"></i> LIMPIAR
             </button>
           </div>
         </div>
@@ -186,12 +284,15 @@ const Vacantes = () => {
                         </div>
                       </td>
                       <td>
-                        <button 
-                          className="btn-ver-detalle"
-                          title="Ver detalles"
-                        >
-                          <i className="fas fa-eye"></i>
-                        </button>
+                        <div className="acciones-vacante">
+                          <button 
+                            className="btn-editar"
+                            onClick={() => handleAbrirModalEditar(vacante)}
+                            title="Editar vacante"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -199,6 +300,147 @@ const Vacantes = () => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Modal de Edición */}
+      {modalEditar && vacanteEditar && (
+        <div className="modal-overlay" onClick={handleCerrarModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>
+                <i className="fas fa-edit"></i> Editar Vacante
+              </h2>
+              <button className="btn-close-modal" onClick={handleCerrarModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div className="modal-body">
+              {error && (
+                <div className="error-message-modal">
+                  <i className="fas fa-exclamation-circle"></i>
+                  {error}
+                </div>
+              )}
+
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="job_key">Código</label>
+                  <input
+                    type="text"
+                    id="job_key"
+                    name="job_key"
+                    value={vacanteEditar.job_key || ''}
+                    disabled
+                    className="input-disabled"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="nombre_vacante">
+                    Nombre de la Vacante <span className="required">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="nombre_vacante"
+                    name="nombre_vacante"
+                    value={vacanteEditar.nombre_vacante || ''}
+                    onChange={handleCambioFormulario}
+                    placeholder="Ej: Desarrollador Backend"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="estado">
+                    Estado <span className="required">*</span>
+                  </label>
+                  <select
+                    id="estado"
+                    name="estado"
+                    value={vacanteEditar.estado || ''}
+                    onChange={handleCambioFormulario}
+                  >
+                    <option value="">Seleccione...</option>
+                    <option value="activa">Activa</option>
+                    <option value="inactiva">Inactiva</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="min_years">
+                    Años Mínimos <span className="required">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="min_years"
+                    name="min_years"
+                    value={vacanteEditar.min_years || ''}
+                    onChange={handleCambioFormulario}
+                    min="0"
+                    step="0.5"
+                    placeholder="Ej: 2"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="threshold">
+                    Puntuación Mínima <span className="required">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    id="threshold"
+                    name="threshold"
+                    value={vacanteEditar.threshold || ''}
+                    onChange={handleCambioFormulario}
+                    min="0"
+                    max="100"
+                    step="1"
+                    placeholder="Ej: 60"
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                  <label htmlFor="target_titles">
+                    Puestos Objetivo <span className="required">*</span>
+                  </label>
+                  <textarea
+                    id="target_titles"
+                    name="target_titles"
+                    value={vacanteEditar.target_titles || ''}
+                    onChange={handleCambioFormulario}
+                    rows="3"
+                    placeholder="Ej: backend, backend developer, desarrollador backend..."
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button 
+                className="btn-cancelar-modal" 
+                onClick={handleCerrarModal}
+                disabled={guardando}
+              >
+                <i className="fas fa-times"></i> Cancelar
+              </button>
+              <button 
+                className="btn-guardar-modal" 
+                onClick={handleGuardarVacante}
+                disabled={guardando}
+              >
+                {guardando ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i> Guardando...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save"></i> Guardar Cambios
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
