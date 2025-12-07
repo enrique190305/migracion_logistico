@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Endpoints RRHH - Programación</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        .section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .token-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .endpoint {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border: 1px solid #e1e8ed;
+        }
+        .endpoint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+        .method-GET { background: #27ae60; }
+        .method-POST { background: #f39c12; }
+        .method-DELETE { background: #e74c3c; }
+        .url {
+            font-family: monospace;
+            color: #2c3e50;
+            font-size: 13px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.pending {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+        }
+        .test-all-btn {
+            background: #27ae60;
+            font-size: 16px;
+            padding: 15px 30px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        .clear-btn {
+            background: #95a5a6;
+            margin-left: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status-success { background: #d4edda; color: #155724; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .summary {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Test Endpoints RRHH - Programación de Horarios</h1>
+
+        <div class="section">
+            <h3>🔐 Configuración</h3>
+            <label><strong>Token de Autorización (jwt_token_rrhh):</strong></label>
+            <input 
+                type="text" 
+                id="token" 
+                class="token-input"
+                placeholder="Pega aquí tu token de RRHH"
+                value="93|WVaxN3lowWI6N6Zxf6nzkI0sUd5rUY91rcDwfsOT7d498dec"
+            >
+            <small>💡 El token se obtiene automáticamente desde localStorage si estás logueado</small>
+        </div>
+
+        <button class="test-all-btn" onclick="probarTodos()">
+            🚀 Probar Todos los Endpoints
+        </button>
+
+        <div class="section">
+            <h3>📡 Endpoints de Programación</h3>
+
+            <!-- Obtener Trabajadores -->
+            <div class="endpoint" id="endpoint-trabajadores">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-GET">GET</span>
+                        <span class="url">/programacion/trabajadores</span>
+                        <span class="status-badge" id="status-trabajadores" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('trabajadores')">Probar</button>
+                </div>
+                <div id="result-trabajadores" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Obtener Horarios -->
+            <div class="endpoint" id="endpoint-horarios">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-GET">GET</span>
+                        <span class="url">/programacion/horarios</span>
+                        <span class="status-badge" id="status-horarios" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('horarios')">Probar</button>
+                </div>
+                <div id="result-horarios" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Obtener Programación del Día -->
+            <div class="endpoint" id="endpoint-dia">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-GET">GET</span>
+                        <span class="url">/programacion/dia?fecha=2025-12-06</span>
+                        <span class="status-badge" id="status-dia" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('dia')">Probar</button>
+                </div>
+                <div id="result-dia" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Guardar Asignaciones -->
+            <div class="endpoint" id="endpoint-guardar">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-POST">POST</span>
+                        <span class="url">/programacion/guardar</span>
+                        <span class="status-badge" id="status-guardar" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('guardar')">Probar</button>
+                </div>
+                <small>Body: { "fecha": "2025-12-06", "asignaciones": [{ "id_usuario": 235, "id_horario": 1 }] }</small>
+                <div id="result-guardar" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Asignar Masivo -->
+            <div class="endpoint" id="endpoint-masivo">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-POST">POST</span>
+                        <span class="url">/programacion/asignar-masivo</span>
+                        <span class="status-badge" id="status-masivo" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('masivo')">Probar</button>
+                </div>
+                <small>Body: { "fecha": "2025-12-06", "id_horario": 1 }</small>
+                <div id="result-masivo" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Limpiar Día -->
+            <div class="endpoint" id="endpoint-limpiar">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-DELETE">DELETE</span>
+                        <span class="url">/programacion/limpiar?fecha=2025-12-06</span>
+                        <span class="status-badge" id="status-limpiar" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('limpiar')">Probar</button>
+                </div>
+                <div id="result-limpiar" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- Estadísticas del Día -->
+            <div class="endpoint" id="endpoint-estadisticas">
+                <div class="endpoint-header">
+                    <div>
+                        <span class="method method-GET">GET</span>
+                        <span class="url">/programacion/estadisticas?fecha=2025-12-06</span>
+                        <span class="status-badge" id="status-estadisticas" style="display:none;"></span>
+                    </div>
+                    <button onclick="probar('estadisticas')">Probar</button>
+                </div>
+                <div id="result-estadisticas" class="result" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="summary" id="summary" style="display:none;">
+            <h3>📊 Resumen de Pruebas</h3>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://bappasistencia.processmart.net/api/v1';
+
+        // Intentar obtener token de localStorage
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('jwt_token_rrhh');
+            if (token) {
+                document.getElementById('token').value = token;
+                console.log('✅ Token cargado desde localStorage');
+            }
+        });
+
+        const endpoints = {
+            trabajadores: {
+                method: 'GET',
+                url: '/programacion/trabajadores'
+            },
+            horarios: {
+                method: 'GET',
+                url: '/programacion/horarios'
+            },
+            dia: {
+                method: 'GET',
+                url: '/programacion/dia?fecha=2025-12-06'
+            },
+            guardar: {
+                method: 'POST',
+                url: '/programacion/guardar',
+                body: {
+                    fecha: '2025-12-06',
+                    asignaciones: [
+                        {
+                            id_usuario: 235,
+                            id_horario: 1
+                        }
+                    ]
+                }
+            },
+            masivo: {
+                method: 'POST',
+                url: '/programacion/asignar-masivo',
+                body: {
+                    fecha: '2025-12-06',
+                    id_horario: 1
+                }
+            },
+            limpiar: {
+                method: 'DELETE',
+                url: '/programacion/limpiar?fecha=2025-12-06'
+            },
+            estadisticas: {
+                method: 'GET',
+                url: '/programacion/estadisticas?fecha=2025-12-06'
+            }
+        };
+
+        async function probar(endpointName) {
+            const token = document.getElementById('token').value;
+            const resultDiv = document.getElementById(`result-${endpointName}`);
+            const statusDiv = document.getElementById(`status-${endpointName}`);
+            const endpoint = endpoints[endpointName];
+
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result pending';
+            resultDiv.textContent = '⏳ Probando...';
+            statusDiv.style.display = 'none';
+
+            try {
+                const options = {
+                    method: endpoint.method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                };
+
+                if (endpoint.body) {
+                    options.body = JSON.stringify(endpoint.body);
+                }
+
+                const response = await fetch(API_URL + endpoint.url, options);
+                const data = await response.json();
+
+                let resultado = `Status: ${response.status} ${response.statusText}\n`;
+                resultado += `URL: ${API_URL}${endpoint.url}\n`;
+                resultado += `Method: ${endpoint.method}\n`;
+                if (endpoint.body) {
+                    resultado += `Body enviado: ${JSON.stringify(endpoint.body, null, 2)}\n`;
+                }
+                resultado += `\nRespuesta:\n${JSON.stringify(data, null, 2)}`;
+
+                resultDiv.textContent = resultado;
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    statusDiv.className = 'status-badge status-success';
+                    statusDiv.textContent = '✅ OK';
+                } else {
+                    resultDiv.className = 'result error';
+                    statusDiv.className = 'status-badge status-error';
+                    statusDiv.textContent = `❌ ${response.status}`;
+                }
+                statusDiv.style.display = 'inline-block';
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ ERROR:\n\n${error.message}`;
+                statusDiv.className = 'status-badge status-error';
+                statusDiv.textContent = '❌ ERROR';
+                statusDiv.style.display = 'inline-block';
+            }
+        }
+
+        async function probarTodos() {
+            document.getElementById('summary').style.display = 'none';
+            
+            const resultados = {};
+            
+            for (const endpointName of Object.keys(endpoints)) {
+                await probar(endpointName);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                const resultDiv = document.getElementById(`result-${endpointName}`);
+                resultados[endpointName] = resultDiv.className.includes('success');
+            }
+
+            mostrarResumen(resultados);
+        }
+
+        function mostrarResumen(resultados) {
+            const summary = document.getElementById('summary');
+            const content = document.getElementById('summary-content');
+            
+            const exitosos = Object.values(resultados).filter(r => r).length;
+            const fallidos = Object.keys(resultados).length - exitosos;
+
+            let html = `<strong>Endpoints probados:</strong> ${Object.keys(resultados).length}<br>`;
+            html += `<strong style="color: #27ae60;">✅ Exitosos:</strong> ${exitosos}<br>`;
+            html += `<strong style="color: #e74c3c;">❌ Fallidos:</strong> ${fallidos}<br><br>`;
+
+            if (fallidos === Object.keys(resultados).length) {
+                html += `<p style="color: #e74c3c; font-weight: bold;">⚠️ NINGÚN ENDPOINT FUNCIONA</p>`;
+                html += `<p>Los endpoints de /programacion/* NO existen en el backend o requieren implementación.</p>`;
+                html += `<p><strong>Recomendación:</strong> Usa mock data o solicita la implementación de estos endpoints.</p>`;
+            } else if (exitosos === Object.keys(resultados).length) {
+                html += `<p style="color: #27ae60; font-weight: bold;">🎉 TODOS LOS ENDPOINTS FUNCIONAN</p>`;
+                html += `<p>El backend está completamente implementado y listo para usar.</p>`;
+            } else {
+                html += `<p style="color: #f39c12; font-weight: bold;">⚠️ IMPLEMENTACIÓN PARCIAL</p>`;
+                html += `<p>Algunos endpoints funcionan pero otros no. Revisa cada uno individualmente.</p>`;
+            }
+
+            content.innerHTML = html;
+            summary.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

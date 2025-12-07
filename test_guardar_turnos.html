@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Guardar Turnos - RRHH</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #3498db;
+            padding-bottom: 15px;
+        }
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 13px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+        }
+        .trabajador-item {
+            background: #fff;
+            border: 2px solid #e1e8ed;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .trabajador-info {
+            flex: 1;
+        }
+        .trabajador-item select {
+            width: 200px;
+            margin: 0;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+        button.success {
+            background: #27ae60;
+        }
+        button.danger {
+            background: #e74c3c;
+        }
+        button.add {
+            background: #16a085;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.pending {
+            background: #fff3cd;
+            border: 2px solid #ffeeba;
+            color: #856404;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn-group button {
+            flex: 1;
+        }
+        .info-box {
+            background: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .remove-btn {
+            background: #e74c3c;
+            padding: 8px 15px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Guardar Turnos - RRHH</h1>
+
+        <div class="info-box">
+            <strong>📋 Formato esperado por el backend:</strong>
+            <pre style="margin-top:10px; background: white; padding: 10px; border-radius: 4px;">
+{
+  "fecha": "2025-12-06",
+  "asignaciones": [
+    { "id_usuario": 51, "id_horario": 1 },
+    { "id_usuario": 223, "id_horario": 2 }
+  ]
+}</pre>
+        </div>
+
+        <div class="config-section">
+            <label>🔐 Token de Autorización:</label>
+            <input 
+                type="text" 
+                id="token" 
+                placeholder="Pega aquí tu token jwt_token_rrhh"
+                value="93|WVaxN3lowWI6N6Zxf6nzkI0sUd5rUY91rcDwfsOT7d498dec"
+            >
+
+            <label>📅 Fecha:</label>
+            <input 
+                type="date" 
+                id="fecha" 
+                value="2025-12-06"
+            >
+        </div>
+
+        <div class="config-section">
+            <h3>👥 Asignaciones de Turnos</h3>
+            <div id="trabajadores-list"></div>
+            <button class="add" onclick="agregarTrabajador()">➕ Agregar Trabajador</button>
+        </div>
+
+        <div class="btn-group">
+            <button class="success" onclick="enviarAsignaciones()">
+                💾 Guardar Asignaciones
+            </button>
+            <button onclick="cargarPayloadManual()">
+                📝 Modo Manual (JSON)
+            </button>
+            <button class="danger" onclick="limpiarResultado()">
+                🗑️ Limpiar
+            </button>
+        </div>
+
+        <!-- Modo Manual -->
+        <div id="modo-manual" style="display:none; margin-top: 20px;">
+            <div class="config-section">
+                <label>📝 Payload JSON Manual:</label>
+                <textarea id="payload-manual" placeholder='{"fecha": "2025-12-06", "asignaciones": [{"id_usuario": 51, "id_horario": 1}]}'></textarea>
+                <button class="success" onclick="enviarPayloadManual()">📤 Enviar JSON Manual</button>
+                <button onclick="volverModoVisual()">⬅️ Volver a Modo Visual</button>
+            </div>
+        </div>
+
+        <div id="resultado" class="result" style="display:none;"></div>
+    </div>
+
+    <script>
+        const API_URL = 'https://bappasistencia.processmart.net/api/v1';
+        let contadorTrabajadores = 0;
+
+        // Intentar cargar token de localStorage
+        window.addEventListener('load', () => {
+            const token = localStorage.getItem('jwt_token_rrhh');
+            if (token) {
+                document.getElementById('token').value = token;
+            }
+            // Agregar 2 trabajadores por defecto
+            agregarTrabajador(51);
+            agregarTrabajador(223);
+        });
+
+        function agregarTrabajador(idUsuario = null) {
+            contadorTrabajadores++;
+            const list = document.getElementById('trabajadores-list');
+            const item = document.createElement('div');
+            item.className = 'trabajador-item';
+            item.id = `trabajador-${contadorTrabajadores}`;
+            item.innerHTML = `
+                <div class="trabajador-info">
+                    <label>ID Usuario:</label>
+                    <input 
+                        type="number" 
+                        id="usuario-${contadorTrabajadores}" 
+                        placeholder="ID del usuario" 
+                        value="${idUsuario || ''}"
+                        style="width: 150px; display: inline-block; margin-right: 20px;"
+                    >
+                    <label>Turno:</label>
+                    <select id="horario-${contadorTrabajadores}">
+                        <option value="1">T1 - Turno Mañana</option>
+                        <option value="2">T2 - Turno Intermedio</option>
+                        <option value="3">Descanso</option>
+                    </select>
+                </div>
+                <button class="remove-btn" onclick="eliminarTrabajador(${contadorTrabajadores})">❌</button>
+            `;
+            list.appendChild(item);
+        }
+
+        function eliminarTrabajador(id) {
+            const item = document.getElementById(`trabajador-${id}`);
+            if (item) item.remove();
+        }
+
+        function obtenerAsignaciones() {
+            const asignaciones = [];
+            const items = document.querySelectorAll('.trabajador-item');
+            
+            items.forEach((item, index) => {
+                const id = item.id.split('-')[1];
+                const idUsuario = parseInt(document.getElementById(`usuario-${id}`).value);
+                const idHorario = parseInt(document.getElementById(`horario-${id}`).value);
+                
+                if (!isNaN(idUsuario) && !isNaN(idHorario)) {
+                    asignaciones.push({ id_usuario: idUsuario, id_horario: idHorario });
+                }
+            });
+            
+            return asignaciones;
+        }
+
+        async function enviarAsignaciones() {
+            const token = document.getElementById('token').value;
+            const fecha = document.getElementById('fecha').value;
+            const asignaciones = obtenerAsignaciones();
+
+            if (asignaciones.length === 0) {
+                mostrarResultado('⚠️ No hay asignaciones válidas para enviar', 'error');
+                return;
+            }
+
+            const payload = {
+                fecha: fecha,
+                asignaciones: asignaciones
+            };
+
+            await enviarRequest(payload, token);
+        }
+
+        async function enviarRequest(payload, token) {
+            const resultDiv = document.getElementById('resultado');
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result pending';
+            resultDiv.textContent = '⏳ Enviando solicitud...\n\nPayload:\n' + JSON.stringify(payload, null, 2);
+
+            try {
+                const response = await fetch(API_URL + '/programacion/guardar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                let resultado = `📤 SOLICITUD ENVIADA\n`;
+                resultado += `${'='.repeat(60)}\n\n`;
+                resultado += `URL: ${API_URL}/programacion/guardar\n`;
+                resultado += `Method: POST\n`;
+                resultado += `Status: ${response.status} ${response.statusText}\n\n`;
+                resultado += `📋 Payload enviado:\n`;
+                resultado += JSON.stringify(payload, null, 2);
+                resultado += `\n\n📥 Respuesta del servidor:\n`;
+                resultado += JSON.stringify(data, null, 2);
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultado = '✅ ÉXITO - Asignaciones guardadas correctamente\n\n' + resultado;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultado = `❌ ERROR ${response.status}\n\n` + resultado;
+                }
+
+                resultDiv.textContent = resultado;
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ ERROR DE CONEXIÓN\n\n${error.message}\n\nVerifica que el backend esté disponible.`;
+            }
+        }
+
+        function cargarPayloadManual() {
+            document.getElementById('modo-manual').style.display = 'block';
+            const payload = {
+                fecha: document.getElementById('fecha').value,
+                asignaciones: obtenerAsignaciones()
+            };
+            document.getElementById('payload-manual').value = JSON.stringify(payload, null, 2);
+        }
+
+        function volverModoVisual() {
+            document.getElementById('modo-manual').style.display = 'none';
+        }
+
+        async function enviarPayloadManual() {
+            const token = document.getElementById('token').value;
+            const payloadText = document.getElementById('payload-manual').value;
+
+            try {
+                const payload = JSON.parse(payloadText);
+                await enviarRequest(payload, token);
+            } catch (error) {
+                mostrarResultado('❌ JSON inválido:\n\n' + error.message, 'error');
+            }
+        }
+
+        function mostrarResultado(texto, tipo) {
+            const resultDiv = document.getElementById('resultado');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${tipo}`;
+            resultDiv.textContent = texto;
+        }
+
+        function limpiarResultado() {
+            document.getElementById('resultado').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

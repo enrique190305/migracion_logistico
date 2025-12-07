@@ -383,8 +383,7 @@ const getModuleTitle = (moduleId) => {
     'gestion-usuarios-rrhh': 'Gestión de Usuarios',
     'dashboard-admin-rrhh': 'Dashboard Administrador',
     'vacantes': 'Gestión de Vacantes',
-    'postulantes': 'Gestión de Postulantes',
-    'dashboard-admin-rrhh': 'Dashboard Administrador'
+    'postulantes': 'Gestión de Postulantes'
   };
   return titles[moduleId] || 'Módulo';
 };

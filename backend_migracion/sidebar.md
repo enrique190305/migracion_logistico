@@ -218,16 +218,6 @@ const Sidebar = ({ isCollapsed, onToggle, activeModule, onModuleChange, isAdmin,
             { id: 'gestion-usuarios-rrhh', title: 'Administrar Usuarios', icon: '👤' },
             { id: 'dashboard-admin-rrhh', title: 'Dashboard Administrador', icon: '🎯' }
           ]
-        },
-        {
-          id: 'reclutamiento',
-          title: 'Reclutamiento',
-          icon: '🎯',
-          color: '#66e089',
-          items: [
-            { id: 'vacantes', title: 'Vacantes', icon: '💼' },
-            { id: 'postulantes', title: 'Postulantes', icon: '👨‍💼' }
-          ]
         }
       ]
     }

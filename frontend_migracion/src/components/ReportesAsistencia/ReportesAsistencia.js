@@ -15,10 +15,10 @@ const ReportesAsistencia = () => {
   const [trabajadores, setTrabajadores] = useState([]);
   const [sedes, setSedes] = useState([]);
   
-  // Estados de filtros
+  // Estados de filtros (sin fechas predeterminadas para mostrar todos los registros)
   const [filtros, setFiltros] = useState({
-    fecha_inicio: new Date().toISOString().split('T')[0],
-    fecha_fin: new Date().toISOString().split('T')[0],
+    fecha_inicio: '',
+    fecha_fin: '',
     id_usuario: '',
     id_sede: '',
     tipo: '' // entrada, salida
@@ -35,9 +35,12 @@ const ReportesAsistencia = () => {
 
   useEffect(() => {
     cargarDatosIniciales();
+    // Cargar asistencias solo una vez al inicio
+    cargarAsistencias();
   }, []);
 
   useEffect(() => {
+    // Solo recargar si hay cambios en los filtros después del montaje inicial
     cargarAsistencias();
   }, [filtros]);
 
@@ -65,12 +68,36 @@ const ReportesAsistencia = () => {
       setLoading(true);
       const params = {};
       
-      if (filtros.fecha_inicio) params.fecha_inicio = filtros.fecha_inicio;
-      if (filtros.fecha_fin) params.fecha_fin = filtros.fecha_fin;
-      if (filtros.id_usuario) params.id_usuario = filtros.id_usuario;
-      if (filtros.id_sede) params.id_sede = filtros.id_sede;
-      if (filtros.tipo) params.tipo = filtros.tipo;
+      // Si no hay fechas, usar un rango amplio (1 año atrás hasta 1 mes adelante)
+      if (filtros.fecha_inicio && filtros.fecha_inicio.trim()) {
+        params.fecha_inicio = filtros.fecha_inicio;
+      } else {
+        // Fecha de hace 1 año
+        const unAnoAtras = new Date();
+        unAnoAtras.setFullYear(unAnoAtras.getFullYear() - 1);
+        params.fecha_inicio = unAnoAtras.toISOString().split('T')[0];
+      }
+      
+      if (filtros.fecha_fin && filtros.fecha_fin.trim()) {
+        params.fecha_fin = filtros.fecha_fin;
+      } else {
+        // Fecha de 1 mes adelante
+        const unMesAdelante = new Date();
+        unMesAdelante.setMonth(unMesAdelante.getMonth() + 1);
+        params.fecha_fin = unMesAdelante.toISOString().split('T')[0];
+      }
+      
+      if (filtros.id_usuario) {
+        params.id_usuario = filtros.id_usuario;
+      }
+      if (filtros.id_sede) {
+        params.id_sede = filtros.id_sede;
+      }
+      if (filtros.tipo && filtros.tipo.trim()) {
+        params.tipo = filtros.tipo;
+      }
 
+      console.log('📤 Parámetros enviados al backend:', params);
       const response = await obtenerReporteAsistencia(params);
       
       console.log('📊 Datos de asistencia recibidos:', response);

@@ -57,10 +57,10 @@ const ReportesHorarios = () => {
       setLoading(true);
       setError('');
       
-      // Probar diferentes formatos de parámetros
+      // Usar id_usuario y fecha
       const params = {
-        usuario_id: trabajadorId,  // Cambiar a usuario_id
-        fecha: fechaSeleccionada    // Cambiar a fecha simple
+        id_usuario: trabajadorId,
+        fecha: fechaSeleccionada
       };
       
       console.log('🔍 Buscando reportes horarios...');
@@ -74,6 +74,13 @@ const ReportesHorarios = () => {
       console.log('✅ Success:', response.success);
       console.log('📦 Data:', response.data);
       console.log('📏 Cantidad de registros:', response.data ? response.data.length : 0);
+      
+      if (response.data && response.data.length > 0) {
+        console.log('🔍 Primer registro completo:', response.data[0]);
+        console.log('🔍 Campos del primer registro:', Object.keys(response.data[0]));
+        console.log('🔍 Campo estado específico:', response.data[0].estado);
+        console.log('🔍 Tipo de estado:', typeof response.data[0].estado);
+      }
 
       if (response.success) {
         const reportes = response.data || [];

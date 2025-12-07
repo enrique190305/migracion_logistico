@@ -1,0 +1,260 @@
+/* Estilos para Calendario Mensual */
+
+.calendario-mensual-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: 25px;
+}
+
+.calendario-header {
+  background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+}
+
+.calendario-titulo {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+}
+
+.btn-mes {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-mes:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+.btn-mes:active {
+  transform: scale(0.95);
+}
+
+.calendario-dias-semana {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #F9FAFB;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.dia-semana {
+  padding: 12px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: #6B7280;
+  text-transform: uppercase;
+}
+
+.calendario-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 15px;
+  background: #FAFAFA;
+}
+
+.calendario-dia {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  position: relative;
+  background: white;
+  font-weight: 600;
+}
+
+.calendario-dia:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #4F46E5;
+}
+
+.calendario-dia-vacio {
+  background: transparent !important;
+  cursor: default;
+}
+
+.calendario-dia-vacio:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
+
+.numero-dia {
+  font-size: 16px;
+  color: #1F2937;
+}
+
+.badge-hoy {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  background: #EF4444;
+  color: white;
+  font-size: 9px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+/* Colores según turno predominante */
+.mayoria-t1 {
+  background: linear-gradient(135deg, #DBEAFE 0%, #BFDBFE 100%);
+  border-color: #3B82F6;
+}
+
+.mayoria-t1:hover {
+  background: linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%);
+}
+
+.mayoria-t2 {
+  background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+  border-color: #10B981;
+}
+
+.mayoria-t2:hover {
+  background: linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%);
+}
+
+.mayoria-descanso {
+  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+  border-color: #6B7280;
+}
+
+.mayoria-descanso:hover {
+  background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
+}
+
+.sin-asignar {
+  background: white;
+  border-color: #E5E7EB;
+}
+
+.sin-asignar:hover {
+  background: #F9FAFB;
+}
+
+.dia-seleccionado {
+  border: 3px solid #4F46E5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  transform: scale(1.05);
+}
+
+.dia-hoy .numero-dia {
+  color: #EF4444;
+  font-weight: 900;
+}
+
+/* Leyenda */
+.calendario-leyenda {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 15px;
+  background: #F9FAFB;
+  border-top: 2px solid #E5E7EB;
+  flex-wrap: wrap;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6B7280;
+}
+
+.leyenda-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #E5E7EB;
+}
+
+.leyenda-t1 {
+  background: linear-gradient(135deg, #BFDBFE 0%, #93C5FD 100%);
+  border-color: #3B82F6;
+}
+
+.leyenda-t2 {
+  background: linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 100%);
+  border-color: #10B981;
+}
+
+.leyenda-descanso {
+  background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
+  border-color: #6B7280;
+}
+
+.leyenda-sin-asignar {
+  background: white;
+  border-color: #D1D5DB;
+}
+
+.leyenda-texto {
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .calendario-grid {
+    gap: 5px;
+    padding: 10px;
+  }
+
+  .numero-dia {
+    font-size: 14px;
+  }
+
+  .calendario-titulo {
+    font-size: 16px;
+  }
+
+  .btn-mes {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+
+  .dia-semana {
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .calendario-leyenda {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .numero-dia {
+    font-size: 15px;
+  }
+}
